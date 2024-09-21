@@ -81,7 +81,9 @@ class Tools:
 
 
     def isWorthBuying(self, coinCode, minFrame):
-        drops = self.minDepth(self.getCoinData(coinCode , "7D"), minFrame)
+        weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
+        
+        drops = self.minDepth(weeklyTotalCoinData, minFrame)
         lastDrop = drops[-1]
         
         minDropPourcentage = 0.05
@@ -93,15 +95,16 @@ class Tools:
         if time.time()-int(lastDrop["key"]) > releventTimeFrame: # drop trop vieux
             return False
         if lastDrop["drop"] < minDropPourcentage: # drop pas assez important
-            return False            
-        
-        weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
-        weeklyAvgPrice = self.average(weeklyTotalCoinData)
-
+            return False     
+               
         dailyTotalCoinData = self.getCoinData(coinCode, "1D")
         dailyAvgPrice = self.average(dailyTotalCoinData)
+        weeklyAvgPrice = self.average(weeklyTotalCoinData)
+
         if (weeklyAvgPrice - dailyAvgPrice) / weeklyAvgPrice > maxDescentPourcentage: # si la crypto descend trop en général (on peut considérer qu'elle s'effondre)
             return False
+        
+        
         
         if (float(weeklyTotalCoinData[-2]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-2]["price"]) > maxFreefallPourcentage: 
             #si la crypto est en chute libre (en si elle descend à la verticale)

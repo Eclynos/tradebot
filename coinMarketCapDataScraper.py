@@ -1,6 +1,8 @@
 from tools import *
+import time
 
 if __name__ == "__main__":
+    startTime=time.time()
     t = Tools()
 
     codeToIDDico = {}
@@ -10,7 +12,9 @@ if __name__ == "__main__":
     for k in codeToIDDico.keys():
         print(k, " : ", t.isWorthBuying(k, 50000))
 
-    # print(t.getRealMins(t.getMathLocalMins(t.getCoinData("ETH", "7D"), "7D"), 50000))
+    print("finished scanning :", len(list(codeToIDDico.keys())), "cryptos in", time.time() - startTime, "s.")
+
+    # print(t.getRealMins(t.getMathLocalyMins(t.getCoinData("ETH", "7D"), "7D"), 50000))
     # print(t.isInDrop("KAS", "7D", 50000))
     # print(t.isWorthBuying("SOL", 50000))
     # print(t.getCoinData("KAS", "7D"))

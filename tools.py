@@ -58,40 +58,57 @@ class Tools:
         minList = []
 
         for x in interestingMins:
-            descMin = 1
+            dropMax = 0
             for y in totalMins:
-                if int(x["key"]) - int(y["key"]) > 0 and int(x["key"]) - int(y["key"]) < minFrame and descMin > x["price"]/y["price"]:
-                    descMin = x["price"]/y["price"]
+                if int(x["key"]) - int(y["key"]) > 0 and int(x["key"]) - int(y["key"]) < minFrame and dropMax < 1-x["price"]/y["price"]:
+                    dropMax = 1- x["price"]/y["price"]
 
-            minList.append({"key" : x["key"], "price" : x["price"], "drop" : descMin})
+            minList.append({"key" : x["key"], "price" : x["price"], "drop" : dropMax})
         return minList
     
     def isInDrop(self, coinCode, timeFrame, minFrame):
         allGoodDrops = self.minDepth(self.getCoinData(coinCode , timeFrame), minFrame) 
         return time.time() - int(allGoodDrops[-1]["key"]) < 1000
         
-    def average(self, dataDict):
+    def average(self, dataList):
         total = 0
-        numberOfEntries = len(list(dataDict.keys()))
-        for k in dataDict.keys():
-            total += dataDict[k]["price"]
+        numberOfEntries = len(dataList)
+        for i in range(numberOfEntries):
+            total += float(dataList[i]["price"])
         
         return total/numberOfEntries
+
+
 
     def isWorthBuying(self, coinCode, minFrame):
         drops = self.minDepth(self.getCoinData(coinCode , "7D"), minFrame)
         lastDrop = drops[-1]
         
-        minDropPourcentage = 0.95
+        minDropPourcentage = 0.05
         releventTimeFrame=900 
+        maxDescentPourcentage=0.02
+        maxFreefallPourcentage = 0.04
 
 
         if time.time()-int(lastDrop["key"]) > releventTimeFrame: # drop trop vieux
             return False
-        if lastDrop["drop"] > minDropPourcentage: # drop pas assez important
+        if lastDrop["drop"] < minDropPourcentage: # drop pas assez important
             return False            
-        if 
+        
+        weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
+        weeklyAvgPrice = self.average(weeklyTotalCoinData)
 
-        print(drops)
-
-        return
+        dailyTotalCoinData = self.getCoinData(coinCode, "1D")
+        dailyAvgPrice = self.average(dailyTotalCoinData)
+        if (weeklyAvgPrice - dailyAvgPrice) / weeklyAvgPrice > maxDescentPourcentage: # si la crypto descend trop en général (on peut considérer qu'elle s'effondre)
+            return False
+        
+        if (float(weeklyTotalCoinData[-2]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-2]["price"]) > maxFreefallPourcentage: 
+            #si la crypto est en chute libre (en si elle descend à la verticale)
+            return False
+        
+        if (float(weeklyTotalCoinData[-3]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-3]["price"]) > maxFreefallPourcentage: 
+            #même test sur l'index d'avant juste pour être safe
+            return False
+        
+        return True

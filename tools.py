@@ -88,7 +88,7 @@ class Tools:
         weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
         if len(weeklyTotalCoinData) == 0: # Si ça a buggué
             print(f"BUG (Weekly) {coinCode} \t")
-            return False
+            return (False, 1)
         
         drops = self.minDepth(weeklyTotalCoinData, minFrame)
         lastDrop = drops[-1]
@@ -100,27 +100,27 @@ class Tools:
 
 
         if time.time()-int(lastDrop["key"]) > releventTimeFrame: # drop trop vieux
-            return False
+            return (False, 0)
         if lastDrop["drop"] < minDropPourcentage: # drop pas assez important
-            return False     
+            return (False, 0)     
                
         dailyTotalCoinData = self.getCoinData(coinCode, "1D")
         if len(dailyTotalCoinData) == 0: # Si ça a buggué
             print(f"BUG (Daily) {coinCode} \t")
-            return False
+            return (False, 1)
         dailyAvgPrice = self.average(dailyTotalCoinData)
         weeklyAvgPrice = self.average(weeklyTotalCoinData)
 
         if (weeklyAvgPrice - dailyAvgPrice) / weeklyAvgPrice > maxDescentPourcentage: # si la crypto descend trop en général (on peut considérer qu'elle s'effondre)
-            return False
+            return (False, 0)
         
         
         if (float(weeklyTotalCoinData[-2]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-2]["price"]) > maxFreefallPourcentage: 
             #si la crypto est en chute libre (en si elle descend à la verticale)
-            return False
+            return (False, 0)
         
         if (float(weeklyTotalCoinData[-3]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-3]["price"]) > maxFreefallPourcentage: 
             #même test sur l'index d'avant juste pour être safe
-            return False
+            return (False, 0)
         
-        return True
+        return (True, 0)

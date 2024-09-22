@@ -3,8 +3,11 @@ import threading
 import time
 
 def testWorth(key, t, l):
-    if t.isWorthBuying(key, 50000):
+    isWorth = t.isWorthBuying(key, 50000)
+    if isWorth[0]:
         l.append(key)
+    elif isWorth[1] == 1:
+        l.append("!") # caractère spécial pour indiquer que le bot est flag comme DDOS
 
 if __name__ == "__main__":
     codeToIDDico = {}
@@ -12,6 +15,7 @@ if __name__ == "__main__":
         codeToIDDico=json.load(json_File)
 
     numberOfCryptos = len(list(codeToIDDico.keys()))
+    blockSize = 5
 
     t = Tools(codeToIDDico)
     threadList = []
@@ -21,13 +25,24 @@ if __name__ == "__main__":
         threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
 
 
-
     for i in range(1000): # on teste que sur les 1000 plus grosses cryptos
         threadList[i].start()
-        if i%5 == 0:
+
+        
+        if i%blockSize == 0:
             time.sleep(1)
+            isFlagged = False
+            for j in range(len(interestingCoins)-1, max(len(interestingCoins) - blockSize, 0)-1, -1):
+                if interestingCoins[j] == "!":
+                    interestingCoins.pop(j)
+                    isFlagged = True
+
+            if isFlagged:
+                time.sleep(30)
 
             print(interestingCoins)
+
+                
             
 
     # print(t.getRealMins(t.getMathLocalyMins(t.getCoinData("ETH", "7D"), "7D"), 50000))

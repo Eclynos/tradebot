@@ -86,7 +86,8 @@ class Tools:
 
     def isWorthBuying(self, coinCode, minFrame):
         weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
-        if weeklyTotalCoinData == []: # Si ça a buggué
+        if len(weeklyTotalCoinData) == 0: # Si ça a buggué
+            print(f"BUG (Weekly) {coinCode} \t")
             return False
         
         drops = self.minDepth(weeklyTotalCoinData, minFrame)
@@ -104,6 +105,9 @@ class Tools:
             return False     
                
         dailyTotalCoinData = self.getCoinData(coinCode, "1D")
+        if len(dailyTotalCoinData) == 0: # Si ça a buggué
+            print(f"BUG (Daily) {coinCode} \t")
+            return False
         dailyAvgPrice = self.average(dailyTotalCoinData)
         weeklyAvgPrice = self.average(weeklyTotalCoinData)
 

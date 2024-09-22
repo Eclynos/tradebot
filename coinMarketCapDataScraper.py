@@ -22,9 +22,9 @@ if __name__ == "__main__":
 
 
 
-    for i in range(numberOfCryptos):
+    for i in range(1000): # on teste que sur les 1000 plus grosses cryptos
         threadList[i].start()
-        if i%20 == 0:
+        if i%5 == 0:
             time.sleep(1)
 
             print(interestingCoins)

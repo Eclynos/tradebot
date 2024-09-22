@@ -24,9 +24,9 @@ if __name__ == "__main__":
 
     for i in range(numberOfCryptos):
         threadList[i].start()
-        if i%100 == 0:
+        if i%20 == 0:
             time.sleep(1)
-            
+
             print(interestingCoins)
             
 

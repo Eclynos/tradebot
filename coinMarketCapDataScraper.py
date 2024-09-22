@@ -1,8 +1,10 @@
 from tools import *
 import threading
+import time
 
-def testWorth(key, t):
-    print(key, " : ", t.isWorthBuying(key, 50000))
+def testWorth(key, t, l):
+    if t.isWorthBuying(key, 50000):
+        l.append(key)
 
 if __name__ == "__main__":
     codeToIDDico = {}
@@ -13,12 +15,20 @@ if __name__ == "__main__":
 
     t = Tools(codeToIDDico)
     threadList = []
+    interestingCoins = []
 
     for k in codeToIDDico.keys():
-        threadList.append(threading.Thread(target=testWorth, args=(k,t)))
+        threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
+
+
 
     for i in range(numberOfCryptos):
         threadList[i].start()
+        if i%100 == 0:
+            time.sleep(1)
+            
+            print(interestingCoins)
+            
 
     # print(t.getRealMins(t.getMathLocalyMins(t.getCoinData("ETH", "7D"), "7D"), 50000))
     # print(t.isInDrop("KAS", "7D", 50000))

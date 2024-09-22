@@ -13,8 +13,15 @@ class Tools:
             return {}
 
         r = requests.get(f'https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id={self.codeToIDDico[coinCode]}&range={timeFrame}')
-        r=r.json()
-        r=r["data"]["points"]
+        try:
+            r=r.json()
+        except:
+            return []
+        
+        r=r["data"]
+        if "points" not in r.keys():
+            print(f"ERROR [{coinCode}] :", r)
+        r=r["points"]
         l = []
         for k in r.keys():
             l.append({"key" : k, "price" : r[k]["v"][0], "volume" : r[k]["v"][1], "mc" : r[k]["v"][2]})
@@ -79,6 +86,8 @@ class Tools:
 
     def isWorthBuying(self, coinCode, minFrame):
         weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
+        if weeklyTotalCoinData == []: # Si ça a buggué
+            return False
         
         drops = self.minDepth(weeklyTotalCoinData, minFrame)
         lastDrop = drops[-1]

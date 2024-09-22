@@ -3,12 +3,12 @@ import time
 
 if __name__ == "__main__":
     startTime=time.time()
-    t = Tools()
 
     codeToIDDico = {}
     with open('./codeToID.json','r') as json_File :
         codeToIDDico=json.load(json_File)
 
+    t = Tools(codeToIDDico)
     for k in codeToIDDico.keys():
         print(k, " : ", t.isWorthBuying(k, 50000))
 

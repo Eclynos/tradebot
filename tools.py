@@ -3,11 +3,8 @@ import json
 import time
 
 class Tools:
-    def __init__(self) -> None:
-        self.codeToIDDico = {}
-
-        with open('./codeToID.json','r') as json_File :
-            self.codeToIDDico=json.load(json_File)
+    def __init__(self, IDDico) -> None:
+        self.codeToIDDico = IDDico
 
     def getCoinData(self, coinCode : str, timeFrame : str) -> list:
 
@@ -103,7 +100,6 @@ class Tools:
 
         if (weeklyAvgPrice - dailyAvgPrice) / weeklyAvgPrice > maxDescentPourcentage: # si la crypto descend trop en général (on peut considérer qu'elle s'effondre)
             return False
-        
         
         
         if (float(weeklyTotalCoinData[-2]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-2]["price"]) > maxFreefallPourcentage: 

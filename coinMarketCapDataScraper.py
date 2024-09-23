@@ -9,23 +9,11 @@ def testWorth(key, t, l):
     elif isWorth[1] == 1:
         l.append("!") # caractère spécial pour indiquer que le bot est flag comme DDOS
 
-if __name__ == "__main__":
-    codeToIDDico = {}
-    with open('./codeToID.json','r') as json_File :
-        codeToIDDico=json.load(json_File)
-
+def showWorthCoins(codeToIDDico):
     numberOfCryptos = len(list(codeToIDDico.keys()))
     blockSize = 5
-
-    t = Tools(codeToIDDico)
     threadList = []
     interestingCoins = []
-    # print(t.minDepth(t.getCoinData("ethereum", "7D"), 50000))
-
-    # print(t.getCoinData("bitcoin", "7D"))
-    # print(t.nthDegreeRegression(t.getCoinData("ethereum", "7D"), 2))
-
-
     for k in codeToIDDico.keys():
         threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
 
@@ -46,3 +34,18 @@ if __name__ == "__main__":
                 time.sleep(30)
 
             print(interestingCoins)
+
+
+if __name__ == "__main__":
+    codeToIDDico = {}
+    with open('./codeToID.json','r') as json_File :
+        codeToIDDico=json.load(json_File)
+
+    t = Tools(codeToIDDico)
+
+    data = t.getCoinData("ethereum", "7D")
+    print(t.nthDegreeRegression(data, 1))
+    print(t.nthDegreeRegression(data, 2))
+
+
+

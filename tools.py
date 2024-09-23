@@ -84,6 +84,27 @@ class Tools:
 
 
 
+    def linearTrendLine(self, dataList):
+        numberOfEntries = len(dataList)
+        # https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline
+        sumOfX = 0
+        sumOfXsquared = 0
+        sumOfY = 0
+        sumOfXY = 0
+        for i in range(numberOfEntries):
+            sumOfX += int(dataList[i]["key"])
+            sumOfXsquared += int(dataList[i]["key"])**2
+            sumOfY += float(dataList[i]["price"])
+            sumofXY += int(dataList[i]["key"]) * float(dataList[i]["price"])
+
+        slope = (numberOfEntries * sumOfXY - sumOfX*sumOfY) / (numberOfEntries * sumOfXsquared - (sumOfX)**2) 
+
+        offset = (sumOfY - slope * sumOfX) / numberOfEntries
+
+        return (slope, offset)
+        
+
+
     def isWorthBuying(self, coinCode, minFrame):
         weeklyTotalCoinData = self.getCoinData(coinCode, "7D")
         if len(weeklyTotalCoinData) == 0: # Si ça a buggué
@@ -124,3 +145,4 @@ class Tools:
             return (False, 0)
         
         return (True, 0)
+    

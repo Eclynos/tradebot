@@ -21,26 +21,29 @@ if __name__ == "__main__":
     threadList = []
     interestingCoins = []
 
-    for k in codeToIDDico.keys():
-        threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
+    print(t.linearTrendLine(t.getCoinData("node-ai", "7D")))
+    print(t.nthDegreeRegression(t.getCoinData("node-ai", "7D"), 3))
+
+    # for k in codeToIDDico.keys():
+    #     threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
 
 
-    for i in range(1000): # on teste que sur les 1000 plus grosses cryptos
-        threadList[i].start()
+    # for i in range(1000): # on teste que sur les 1000 plus grosses cryptos
+    #     threadList[i].start()
 
         
-        if i%blockSize == 0:
-            time.sleep(1)
-            isFlagged = False
-            for j in range(len(interestingCoins)-1, max(len(interestingCoins) - blockSize, 0)-1, -1):
-                if interestingCoins[j] == "!":
-                    interestingCoins.pop(j)
-                    isFlagged = True
+    #     if i%blockSize == 0:
+    #         time.sleep(1)
+    #         isFlagged = False
+    #         for j in range(len(interestingCoins)-1, max(len(interestingCoins) - blockSize, 0)-1, -1):
+    #             if interestingCoins[j] == "!":
+    #                 interestingCoins.pop(j)
+    #                 isFlagged = True
 
-            if isFlagged:
-                time.sleep(30)
+    #         if isFlagged:
+    #             time.sleep(30)
 
-            print(interestingCoins)
+    #         print(interestingCoins)
 
                 
             

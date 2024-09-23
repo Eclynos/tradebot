@@ -1,6 +1,7 @@
 import requests
 import json
 import time
+import numpy
 
 class Tools:
     def __init__(self, IDDico) -> None:
@@ -87,21 +88,56 @@ class Tools:
     def linearTrendLine(self, dataList):
         numberOfEntries = len(dataList)
         # https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline
-        sumOfX = 0
-        sumOfXsquared = 0
-        sumOfY = 0
-        sumOfXY = 0
+        
+        A = [[0,0],[0,0]]
+        B = [0,0]
         for i in range(numberOfEntries):
-            sumOfX += int(dataList[i]["key"])
-            sumOfXsquared += int(dataList[i]["key"])**2
-            sumOfY += float(dataList[i]["price"])
-            sumofXY += int(dataList[i]["key"]) * float(dataList[i]["price"])
+            A[0][0] += (int(dataList[i]["key"])**2)
+            A[0][1] += int(dataList[i]["key"])
+            B[0] += int(dataList[i]["key"]) * float(dataList[i]["price"])
+            B[1] += float(dataList[i]["price"])
+        A[1][0] = A[0][1]
+        A[1][1] = numberOfEntries
 
-        slope = (numberOfEntries * sumOfXY - sumOfX*sumOfY) / (numberOfEntries * sumOfXsquared - (sumOfX)**2) 
+        for i in range(len(A)):
+            for j in range(len(A[0])):
+                A[i][j] = float(A[i][j])
 
-        offset = (sumOfY - slope * sumOfX) / numberOfEntries
+        X = numpy.linalg.solve(A, B)
 
-        return (slope, offset)
+        return X
+    
+    def nthDegreeRegression(self, dataList, degree):
+        numberOfEntries = len(dataList)
+
+        A = []
+        for _ in range(degree +1):
+            A.append([0 for __ in range(degree+1)])
+        
+        B = [0 for _ in range(degree +1)]
+
+        for i in range(numberOfEntries):
+            for l in range(degree +1):
+                for c in range(l, degree+1):
+                    A[l][c] += int(dataList[i]["key"])**(2*degree - l - c)
+        
+        for l in range(degree +1):
+            for c in range(l):
+                A[l][c] = A[c][l]
+
+        for i in range(degree+1):
+            for j in range(degree+1):
+                A[i][j] = float(A[i][j])
+
+        for i in range(numberOfEntries):
+            for l in range(degree+1):
+                B[l] += int(dataList[i]["key"])**(degree-l) * float(dataList[i]["price"])
+
+        X = numpy.linalg.solve(A,B)
+        return X
+
+
+        
         
 
 

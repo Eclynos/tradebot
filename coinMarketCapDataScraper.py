@@ -20,37 +20,29 @@ if __name__ == "__main__":
     t = Tools(codeToIDDico)
     threadList = []
     interestingCoins = []
+    # print(t.minDepth(t.getCoinData("ethereum", "7D"), 50000))
 
-    print(t.linearTrendLine(t.getCoinData("node-ai", "7D")))
-    print(t.nthDegreeRegression(t.getCoinData("node-ai", "7D"), 3))
-
-    # for k in codeToIDDico.keys():
-    #     threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
+    # print(t.getCoinData("bitcoin", "7D"))
+    # print(t.nthDegreeRegression(t.getCoinData("ethereum", "7D"), 2))
 
 
-    # for i in range(1000): # on teste que sur les 1000 plus grosses cryptos
-    #     threadList[i].start()
+    for k in codeToIDDico.keys():
+        threadList.append(threading.Thread(target=testWorth, args=(k, t, interestingCoins)))
+
+
+    for i in range(500): # on teste que sur les 1000 plus grosses cryptos
+        threadList[i].start()
 
         
-    #     if i%blockSize == 0:
-    #         time.sleep(1)
-    #         isFlagged = False
-    #         for j in range(len(interestingCoins)-1, max(len(interestingCoins) - blockSize, 0)-1, -1):
-    #             if interestingCoins[j] == "!":
-    #                 interestingCoins.pop(j)
-    #                 isFlagged = True
+        if i%blockSize == 0:
+            time.sleep(1)
+            isFlagged = False
+            for j in range(len(interestingCoins)-1, max(len(interestingCoins) - blockSize, 0)-1, -1):
+                if interestingCoins[j] == "!":
+                    interestingCoins.pop(j)
+                    isFlagged = True
 
-    #         if isFlagged:
-    #             time.sleep(30)
+            if isFlagged:
+                time.sleep(30)
 
-    #         print(interestingCoins)
-
-                
-            
-
-    # print(t.getRealMins(t.getMathLocalyMins(t.getCoinData("ETH", "7D"), "7D"), 50000))
-    # print(t.isInDrop("KAS", "7D", 50000))
-    # print(t.isWorthBuying("SOL", 50000))
-    # print(t.getCoinData("KAS", "7D"))
-    # print(t.getMathLocalMins(t.getCoinData("KAS", "7D")))
-    # print(t.getRealMins(t.getCoinData("KAS", "7D"), 50000))
+            print(interestingCoins)

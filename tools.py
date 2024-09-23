@@ -70,11 +70,7 @@ class Tools:
 
             minList.append({"key" : x["key"], "price" : x["price"], "drop" : dropMax})
         return minList
-    
-    def isInDrop(self, coinCode, timeFrame, minFrame):
-        allGoodDrops = self.minDepth(self.getCoinData(coinCode , timeFrame), minFrame) 
-        return time.time() - int(allGoodDrops[-1]["key"]) < 1000
-        
+
     def average(self, dataList):
         total = 0
         numberOfEntries = len(dataList)
@@ -82,34 +78,15 @@ class Tools:
             total += float(dataList[i]["price"])
         
         return total/numberOfEntries
-
-
-
-    def linearTrendLine(self, dataList):
-        numberOfEntries = len(dataList)
-        # https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline
-        
-        A = [[0,0],[0,0]]
-        B = [0,0]
-        for i in range(numberOfEntries):
-            A[0][0] += (int(dataList[i]["key"])**2)
-            A[0][1] += int(dataList[i]["key"])
-            B[0] += int(dataList[i]["key"]) * float(dataList[i]["price"])
-            B[1] += float(dataList[i]["price"])
-        A[1][0] = A[0][1]
-        A[1][1] = numberOfEntries
-
-        for i in range(len(A)):
-            for j in range(len(A[0])):
-                A[i][j] = float(A[i][j])
-
-        X = numpy.linalg.solve(A, B)
-
-        return X
     
     def nthDegreeRegression(self, dataList, degree):
+        # Extrapolation des calculcs matriciels trouvés ici :
+        # https://www.varsitytutors.com/hotmath/hotmath_help/topics/quadratic-regression
+
         numberOfEntries = len(dataList)
 
+        minX = int(dataList[0]["key"])
+        
         A = []
         for _ in range(degree +1):
             A.append([0 for __ in range(degree+1)])
@@ -119,7 +96,7 @@ class Tools:
         for i in range(numberOfEntries):
             for l in range(degree +1):
                 for c in range(l, degree+1):
-                    A[l][c] += int(dataList[i]["key"])**(2*degree - l - c)
+                    A[l][c] += (int(dataList[i]["key"])-minX)**(2*degree - l - c)
         
         for l in range(degree +1):
             for c in range(l):
@@ -131,14 +108,10 @@ class Tools:
 
         for i in range(numberOfEntries):
             for l in range(degree+1):
-                B[l] += int(dataList[i]["key"])**(degree-l) * float(dataList[i]["price"])
+                B[l] += (int(dataList[i]["key"])-minX)**(degree-l) * float(dataList[i]["price"])
 
         X = numpy.linalg.solve(A,B)
         return X
-
-
-        
-        
 
 
     def isWorthBuying(self, coinCode, minFrame):

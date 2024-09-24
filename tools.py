@@ -2,6 +2,7 @@ import requests
 import json
 import time
 import numpy
+# import ccxt
 
 class Tools:
     def __init__(self, IDDico) -> None:
@@ -158,4 +159,21 @@ class Tools:
             return (False, 0)
         
         return (True, 0)
+
+
+  
+class Wallet:
+    def __init__(self, access_key, secret_key, passphrase) -> None:
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.passphrase = passphrase
+        
+    def place_order(self, coinCode):
+        pass
+    
+    def buy(self, coinCode):
+        pass
+    
+    def sell(self, coinCode):
+        pass
     

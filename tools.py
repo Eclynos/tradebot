@@ -174,19 +174,38 @@ class Wallet:
         })
         self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
         balance = self.exchange.fetch_balance() # effectuer les opérations dans l'environnement test (sandbox)
+        self.exchange.verbose = True # pour le debug
         
-    def place_order(self, coinCode):
-        pass
-    
-    async def buy(self, coinCode):
+    async def place_order(self, coinCode, BuyorSell, amount, price):
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
-        self.exchange.verbose = True
-        orders = await self.exchange.create_orders([{
-            
-            },{
-                
-            }])
+        orders = await self.exchange.create_orders({
+                'symbol': ''+'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
+                'type': 'limit',
+                'side': BuyorSell,
+                'amount': amount,
+                'price': price,
+            })
+        print(orders)
     
-    async def sell(self, coinCode):
+    async def buy(self, coinCode, amount):
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
+        orders = await self.exchange.create_orders({
+                'symbol': ''+'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
+                'type': 'market',
+                'side': 'buy',
+                'amount': amount,
+            })
+        print(orders)
     
+    async def sell(self, coinCode, amount): # on pourra faire en sorte de sell un pourcentage et pas un amount
+        await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
+        orders = await self.exchange.create_orders({
+            'symbol': ''+'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
+            'type': 'market',
+            'side': 'sell',
+            'amount': amount,
+        })
+        print(orders)
+        
+    def disconnect(self): # à faire à la fin de l'utilisation, à la fin du code
+        self.exchange.close()

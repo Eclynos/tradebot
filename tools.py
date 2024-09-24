@@ -2,7 +2,7 @@ import requests
 import json
 import time
 import numpy
-# import ccxt
+import ccxt
 
 class Tools:
     def __init__(self, IDDico) -> None:
@@ -167,13 +167,26 @@ class Wallet:
         self.access_key = access_key
         self.secret_key = secret_key
         self.passphrase = passphrase
+        self.exchange = ccxt.bitget({ # etablie la connexion au compte
+        'apiKey': access_key,
+        'secret': secret_key,
+        'password': passphrase,
+        })
+        self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
+        balance = self.exchange.fetch_balance() # effectuer les opérations dans l'environnement test (sandbox)
         
     def place_order(self, coinCode):
         pass
     
-    def buy(self, coinCode):
-        pass
+    async def buy(self, coinCode):
+        await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
+        self.exchange.verbose = True
+        orders = await self.exchange.create_orders([{
+            
+            },{
+                
+            }])
     
-    def sell(self, coinCode):
-        pass
+    async def sell(self, coinCode):
+        await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
     

@@ -192,6 +192,25 @@ class Wallet:
             })
         print(orders)
         
+        
+    async def cancel_order(self, coinCode, order_id): # ne fonctionne pas encore
+        """Tente de supprimer un ordre"""
+        try:
+            response = await self.exchange.cancel_order(order_id, coinCode)
+            print(response)
+        except Exception as e:
+            print("Order cancelling failed")
+            print(e)
+            
+            
+    async def cancel_all_orders(self):
+        """Tente de supprimer tous les ordres (!= toutes les positions)"""
+        try:
+            response = await self.exchange.cancel_all_orders()
+            print(response)
+        except Exception as e:
+            print(e)
+        
     
     async def buy(self, coinCode, amount):
         """Achète directement une crypto"""
@@ -235,11 +254,13 @@ class Wallet:
     
        
     async def orderBook(self, coinCode):
-        """Donne l'order book des trades sur un symbole""" # Voir diff avec history
+        """Donne l'order book des trades sur un symbole"""
         orderbook = await self.exchange.watch_order_book_for_symbols(coinCode + '/USDT')
-        print(orderbook['symbol'], orderbook['asks'][0], orderbook['bids'][0])
+        print(orderbook['symbol'], orderbook['asks'][0], orderbook['bids'][0], orderbook["datetime"])
 
         
     async def disconnect(self): # à faire à la fin de l'utilisation du compte, à la fin du code
         """Déconnecte le compte lié"""
         await self.exchange.close()
+        
+# Regarder si on peut récupérer les IDs des order avec une commande ou si on a besoin de les stocker lorsqu'on les crée

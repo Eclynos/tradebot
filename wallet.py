@@ -1,4 +1,5 @@
 import ccxt.pro as ccxt
+import asyncio
 
 class Wallet:
     def __init__(self, access_key, secret_key, passphrase) -> None:
@@ -6,15 +7,20 @@ class Wallet:
         self.secret_key = secret_key
         self.passphrase = passphrase
         
+        self.exchange = None
+        
+        
+    async def connect(self):
         self.exchange = ccxt.bitget({ # etablie la connexion au compte
-        'apiKey': access_key,
-        'secret': secret_key,
-        'password': passphrase,
+        'apiKey': self.access_key,
+        'secret': self.secret_key,
+        'password': self.passphrase,
         })
         
         self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
-        balance = self.exchange.fetch_balance() # effectuer les opérations dans l'environnement test (sandbox)
+        balance = await self.exchange.fetch_balance() # effectuer les opérations dans l'environnement test (sandbox)
         self.exchange.verbose = True # pour le debug
+        print(f"Connected! Balance: {balance}")
         
         
     async def place_order(self, coinCode, BuyorSell, amount, price):
@@ -74,13 +80,18 @@ class Wallet:
             'amount': amount,
         })
         print(orders)
+        
+    
+    async def watchAllPositions(self):
+        """Regarde toutes les positions actuelles sur tous les symboles"""
+        trades = await self.exchange.watch_positions()
+        return trades
       
       
     async def watchPositions(self, coinCode):
         """Regarde les positions actuelles pour un symbole"""
         trades = await self.exchange.watch_positions(coinCode + '/USDT:USDT') # si l'argument est None, donne toutes les positions sur chaque symbole
-        print(trades)
-        return trades  
+        return trades
     
         
     async def transactionHistory(self, coinCode):

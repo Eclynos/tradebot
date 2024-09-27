@@ -16,7 +16,7 @@ class Wallet:
         self.secret_key = secret_key
         self.passphrase = passphrase
         
-        self.mode_sandbox = False
+        self.mode_sandbox = True
         
         self.exchange = None
         

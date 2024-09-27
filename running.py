@@ -17,11 +17,6 @@ async def main():
 
     symbols = await w.getAllSymbols()
 
-    import aiofiles
-    async with aiofiles.open('symbolsID', 'w') as fichier:
-        for symbol in reversed(symbols):
-            await fichier.write(symbol + "\n")
-
     #positions = await w.check_positions()
 
     await w.disconnect()

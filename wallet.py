@@ -1,5 +1,14 @@
 import ccxt.pro as ccxt
-import asyncio
+import requests
+
+
+def ping_test(url="http://www.google.com", timeout=5):
+    try:
+        response = requests.get(url, timeout=timeout)
+        return True if response.status_code == 200 else False
+    except (requests.ConnectionError, requests.Timeout):
+        return False
+    
 
 class Wallet:
     def __init__(self, access_key, secret_key, passphrase) -> None:
@@ -7,7 +16,7 @@ class Wallet:
         self.secret_key = secret_key
         self.passphrase = passphrase
         
-        self.mode_sandbox = True
+        self.mode_sandbox = False
         
         self.exchange = None
         
@@ -22,6 +31,7 @@ class Wallet:
         
         if self.mode_sandbox:
             self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
+        
         balance = await self.exchange.fetch_balance() # effectuer les opérations dans l'environnement test (sandbox)
         self.exchange.verbose = True # pour le debug
         print(f"Connected! Balance: {balance}")
@@ -45,7 +55,7 @@ class Wallet:
             
         
         
-    async def cancel_order(self, coinCode, order_id): # ne fonctionne pas encore
+    async def cancel_order(self, coinCode, order_id):
         """Tente de supprimer un ordre"""
         try:
             response = await self.exchange.cancel_order(order_id, coinCode)
@@ -140,11 +150,7 @@ class Wallet:
         await self.exchange.load_markets()
         markets = self.exchange.markets
         symbols = list(markets.keys())
-
-        print("Symboles disponibles :")
-        for symbol in symbols:
-            print(symbol)
-        
+        print("ok")
         return symbols
 
 
@@ -157,5 +163,3 @@ class Wallet:
         except Exception as e:
             print("Failed disconnecting")
             print(e)
-        
-# Regarder si on peut récupérer les IDs des order avec une commande ou si on a besoin de les stocker lorsqu'on les crée

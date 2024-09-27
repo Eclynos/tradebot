@@ -3,14 +3,18 @@ from api_keys import Keys
 import asyncio
 import time
     
+    
 async def main():
     k = Keys()
     w = Wallet(k.access_key, k.secret_key, k.passphrase)
     
     await w.connect()
     
-    positions = await w.watchAllPositions()
-    print(positions)
+    positions = await w.check_positions()
+    
+    await w.buy("BTC", 0.005)
+    
+    positions = await w.check_positions()
     
     await w.disconnect()
 

@@ -11,6 +11,7 @@ class Wallet:
         
         
     async def connect(self):
+        """Connect account with api keys to python"""
         self.exchange = ccxt.bitget({ # etablie la connexion au compte
         'apiKey': self.access_key,
         'secret': self.secret_key,
@@ -27,7 +28,7 @@ class Wallet:
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
-        orders = await self.exchange.create_orders({
+        orders = await self.exchange.create_order({
                 'symbol': coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
                 'type': 'limit',
                 'side': BuyorSell,
@@ -60,7 +61,7 @@ class Wallet:
         """Achète directement une crypto"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
-        orders = await self.exchange.create_orders({
+        orders = await self.exchange.create_order({
                 'symbol': coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
                 'type': 'market',
                 'side': 'buy',
@@ -73,7 +74,7 @@ class Wallet:
         """Vend directement une crypto"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
-        orders = await self.exchange.create_orders({
+        orders = await self.exchange.create_order({
             'symbol': coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
             'type': 'market',
             'side': 'sell',
@@ -82,10 +83,19 @@ class Wallet:
         print(orders)
         
     
-    async def watchAllPositions(self):
-        """Regarde toutes les positions actuelles sur tous les symboles"""
-        trades = await self.exchange.watch_positions()
-        return trades
+    async def check_positions(self):
+        """Vérifie les positions ouvertes sur le compte."""
+        try:
+            positions = await self.exchange.fetch_positions()
+            if positions:
+                print("Positions ouvertes :")
+                for position in positions:
+                    print(position)
+                return positions
+            else:
+                print("Aucune position ouverte.")
+        except Exception as e:
+            print(f"Erreur lors de la récupération des positions : {e}")
       
       
     async def watchPositions(self, coinCode):
@@ -110,6 +120,11 @@ class Wallet:
         
     async def disconnect(self): # à faire à la fin de l'utilisation du compte, à la fin du code
         """Déconnecte le compte lié"""
-        await self.exchange.close()
+        try:
+            await self.exchange.close()
+            print("Disconnected")
+        except Exception as e:
+            print("Failed disconnecting")
+            print(e)
         
 # Regarder si on peut récupérer les IDs des order avec une commande ou si on a besoin de les stocker lorsqu'on les crée

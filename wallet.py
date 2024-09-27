@@ -7,6 +7,8 @@ class Wallet:
         self.secret_key = secret_key
         self.passphrase = passphrase
         
+        self.mode_sandbox = True
+        
         self.exchange = None
         
         
@@ -18,7 +20,8 @@ class Wallet:
         'password': self.passphrase,
         })
         
-        self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
+        if self.mode_sandbox:
+            self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
         balance = await self.exchange.fetch_balance() # effectuer les opérations dans l'environnement test (sandbox)
         self.exchange.verbose = True # pour le debug
         print(f"Connected! Balance: {balance}")
@@ -28,14 +31,18 @@ class Wallet:
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
-        orders = await self.exchange.create_order({
-                'symbol': coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
-                'type': 'limit',
-                'side': BuyorSell,
-                'amount': amount,
-                'price': price,
-            })
-        print(orders)
+        try:
+            order = await self.exchange.create_order(
+                    symbol = coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
+                    type = 'limit',
+                    side = BuyorSell,
+                    amount = amount,
+                    price = price,
+                )
+            print(order)
+        except Exception as e:
+            print(f"Erreur lors du placement de l'ordre de {coinCode} : {e}")
+            
         
         
     async def cancel_order(self, coinCode, order_id): # ne fonctionne pas encore
@@ -61,26 +68,36 @@ class Wallet:
         """Achète directement une crypto"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
-        orders = await self.exchange.create_order({
-                'symbol': coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
-                'type': 'market',
-                'side': 'buy',
-                'amount': amount,
-            })
-        print(orders)
+        try:
+            symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.mode_sandbox else coinCode + '/USDT:USDT'
+            
+            order = await self.exchange.create_order(
+                    symbol = symbol,
+                    type = 'market',
+                    side = 'buy',
+                    amount = amount,
+                )
+            print(order)
+        except Exception as e:
+            print(f"Erreur lors de l'achat de {coinCode} : {e}")
         
     
     async def sell(self, coinCode, amount): # on pourra faire en sorte de sell un pourcentage et pas un amount
         """Vend directement une crypto"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
-        orders = await self.exchange.create_order({
-            'symbol': coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
-            'type': 'market',
-            'side': 'sell',
-            'amount': amount,
-        })
-        print(orders)
+        try:
+            symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.mode_sandbox else coinCode + '/USDT:USDT'
+            
+            order = await self.exchange.create_order(
+                symbol = symbol,
+                type = 'market',
+                side = 'sell',
+                amount = amount,
+            )
+            print(order)
+        except Exception as e:
+            print(f"Erreur lors de la vente de {coinCode} : {e}")
         
     
     async def check_positions(self):
@@ -116,6 +133,20 @@ class Wallet:
         """Donne l'order book des trades sur un symbole"""
         orderbook = await self.exchange.watch_order_book_for_symbols(coinCode + '/USDT')
         print(orderbook['symbol'], orderbook['asks'][0], orderbook['bids'][0], orderbook["datetime"])
+        
+        
+    async def getAllSymbols(self):
+        """Récupère et affiche tous les symboles de trading disponibles sur l'échange"""
+        await self.exchange.load_markets()
+        markets = self.exchange.markets
+        symbols = list(markets.keys())
+
+        print("Symboles disponibles :")
+        for symbol in symbols:
+            print(symbol)
+        
+        return symbols
+
 
         
     async def disconnect(self): # à faire à la fin de l'utilisation du compte, à la fin du code

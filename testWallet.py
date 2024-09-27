@@ -10,11 +10,13 @@ async def main():
     
     await w.connect()
     
-    positions = await w.check_positions()
+    #symbols = await w.getAllSymbols()
+    
+    #positions = await w.check_positions()
     
     await w.buy("BTC", 0.005)
     
-    positions = await w.check_positions()
+    #positions = await w.check_positions()
     
     await w.disconnect()
 

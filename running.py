@@ -5,17 +5,21 @@ import asyncio
     
 async def main():
     k = Keys()
-    w = Wallet(k.access_key, k.secret_key, k.passphrase)
+    w = Wallet(k.access_key, k.secret_key, k.passphrase, False)
 
     if not ping_test():
         print("erreur")
         return;
 
     await w.connect()
+    
+    #positions = await w.watchPositions('BTC')
+    #print(positions)    
 
-    await w.buy("BTC", 0.005)
+    await w.buy('BTC', 0.00017, "EUR")
 
-    positions = await w.check_positions()
+    #positions = await w.check_positions()
+    #print(positions)
 
     await w.disconnect()
 

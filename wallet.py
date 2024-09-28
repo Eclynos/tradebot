@@ -51,27 +51,28 @@ class Wallet:
 
 
     def market_mode(self, mode):
-        """
-        Défini le marché sur lequel on veut échanger
-        spot : trading "classique" où les cryptos sont achetées ou vendues immédiatement au prix actuel du marché.
-        swap : trading de contrats à terme perpétuels. Ces contrats n'ont pas de date d'expiration, contrairement aux futures classiques.
-        future : trading de contrats à terme (futures) qui ont une date d'expiration. Ces contrats permettent de spéculer sur le prix d'une crypto à une date ultérieure.
-        margin : trading sur marge, où tu empruntes des fonds pour acheter ou vendre une crypto, ce qui te permet d'avoir un effet de levier sur tes transactions.
+        """Défini le marché sur lequel on veut échanger
+        
+        Args:
+            mode('spot'): trading "classique" où les cryptos sont achetées ou vendues immédiatement au prix actuel du marché.
+            mode('swap'): trading de contrats à terme perpétuels. Ces contrats n'ont pas de date d'expiration, contrairement aux futures classiques.
+            mode('future'): trading de contrats à terme (futures) qui ont une date d'expiration. Ces contrats permettent de spéculer sur le prix d'une crypto à une date ultérieure.
+            mode('margin'): trading sur marge, où tu empruntes des fonds pour acheter ou vendre une crypto, ce qui te permet d'avoir un effet de levier sur tes transactions.
         """
         
         if mode in ['spot', 'swap', 'future', 'margin']:
             self.exchange.options['defaultType'] = mode
         else:
             print("Wrong market mode")
-            
+        
             
     def leverage_mode(self, mode):
+        """Défini le mode de gestion du risque
+
+        Args:
+            mode ('isolated'): sépare la marge utilisée pour chaque position
+            mode ('cross'): toutes les positions partagent le même solde disponible pour éviter la liquidation -> plus dangereux
         """
-        Défini le mode de gestion du risque
-        isolated : sépare la marge utilisée pour chaque position.
-        cross : toutes les positions partagent le même solde disponible pour éviter la liquidation -> plus dangereux
-        """
-        
         if mode == 'isolated' or mode == 'cross':
             self.exchange.options['marginMode'] = mode
         else:
@@ -84,11 +85,12 @@ class Wallet:
 
 
     async def position_mode(self, mode, coinCode, currency):
-        """
-        Configure le mode de gestion des positions
-        hedge : ouvrir à la fois des positions longues et courtes simultanément pour un même actif
-        one-way : avoir qu'une seule position ouverte sur une paire de trading à un moment donné.
+        """Configure le mode de gestion des positions
         (On va presque toujours utiliser hedge parce que one-way empêche de mettre des SL par exemple)
+        
+        Args:
+            mode('hedge'): ouvrir à la fois des positions longues et courtes simultanément pour un même actif
+            mode('one-way'): avoir qu'une seule position ouverte sur une paire de trading à un moment donné.
         """
         
         if mode == 'hedge' or mode == 'one-way':
@@ -234,13 +236,13 @@ class Wallet:
       
       
     async def watchPositions(self, coinCode, currency):
-        """Regarde les positions actuelles pour un symbole"""
+        """Regarde les positions actuelles pour une paire de trading"""
         trades = await self.exchange.watch_positions_for_symbols(coinCode + '/EUR') # si l'argument est None, donne toutes les positions sur chaque symbole
         return trades
     
         
     async def transactionHistory(self, coinCode, currency):
-        """Donne l'historique des trades sur un symbole (crypto)"""
+        """Donne l'historique des trades sur une paire"""
         trades = await self.exchange.fetch_my_trades(coinCode + '/' + currency)
         
         for trade in trades:
@@ -248,7 +250,7 @@ class Wallet:
     
        
     async def orderBook(self, coinCode):
-        """Donne l'order book des trades sur un symbole"""
+        """Donne l'order book des trades sur une paire"""
         orderbook = await self.exchange.watch_order_book_for_symbols(coinCode + '/USDT')
         print(orderbook['symbol'], orderbook['asks'][0], orderbook['bids'][0], orderbook["datetime"])
         
@@ -257,9 +259,39 @@ class Wallet:
 
         
     async def getAllSymbols(self):
-        """Récupère et affiche tous les symboles de trading disponibles sur l'échange"""
+        """Récupère et affiche tous les paires de trading disponibles sur l'échange"""
         await self.exchange.load_markets()
         markets = self.exchange.markets
         symbols = list(markets.keys())
-        print("ok")
         return symbols
+    
+    
+    async def getPrice(self, coinCode, currency):
+        """Donne le prix instantané d'un symbole par rapport à une monnaie.
+        
+        Args:
+            coinCode: La crypto-monnaie dont on veut connaître le prix, par exemple 'BTC'.
+            currency: La devise par rapport à laquelle on veut connaître le prix, par exemple 'USDT' ou 'EUR'.
+            
+        Returns:
+            Le prix actuel de la paire de trading sous forme de float.
+        """
+        try:
+            await self.exchange.load_markets()
+            if currency == "USDT":
+                symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.sandbox_mode else coinCode + '/USDT:USDT'
+            elif currency == "EUR":
+                if self.sandbox_mode:
+                    print("No sandbox for EUR")
+                    return
+                symbol = coinCode + '/EUR'
+            else:
+                print("Wrong currency specified")
+                return
+
+            ticker = await self.exchange.fetch_ticker(symbol)
+            price = ticker['last']  # Récupère le prix de la dernière transaction sur la blockchain
+            print(f"Le prix actuel de {coinCode}/{currency} est : {price}")
+            return price
+        except Exception as e:
+            print(f"Erreur lors de la récupération du prix de {coinCode}/{currency} : {e}") 

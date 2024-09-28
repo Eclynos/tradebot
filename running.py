@@ -13,13 +13,9 @@ async def main():
 
     await w.connect()
     
-    #positions = await w.watchPositions('BTC')
-    #print(positions)    
-
-    await w.buy('BTC', 0.00017, "EUR")
-
-    #positions = await w.check_positions()
-    #print(positions)
+    w.market_mode('spot')
+    
+    w.getPrice("BTC", "EUR")
 
     await w.disconnect()
 

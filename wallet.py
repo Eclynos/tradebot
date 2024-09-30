@@ -16,8 +16,6 @@ class Wallet:
         self.secret_key = secret_key
         self.passphrase = passphrase
         
-        self.sandbox_mode = sandbox_mode
-        
         self.exchange = None
         
         
@@ -28,9 +26,6 @@ class Wallet:
             'secret': self.secret_key,
             'password': self.passphrase,
         })
-        
-        if self.sandbox_mode:
-            self.exchange.set_sandbox_mode(True) # Le mode sandbox permet de tester des stratégies de trading ou d'effectuer des opérations fictives dans un environnement de simulation sans engager de fonds réels. À utiliser pour tester l'api
         
         balance = await self.exchange.fetch_balance() # Recupere les informations sur le wallet utilise
         self.exchange.verbose = False # pour le debug si True
@@ -103,21 +98,13 @@ class Wallet:
 # ORDER MANAGING
 
 
-    async def place_order(self, coinCode, BuyorSell, amount, price, currency):
+    async def place_order(self, symbol, BuyorSell, amount, price, currency):
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
         try:
-            if currency == "USDT":
-                symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.sandbox_mode else coinCode + '/USDT:USDT'
-            elif currency == "EUR":
-                symbol = print("No sandbox for eur") if self.sandbox_mode else coinCode + '/EUR'
-            else:
-                print("Wrong buy currency")
-                return
-            
             order = await self.exchange.create_order(
-                    symbol = coinCode +'/USDT:USDT', # trouver quelque chose pour remplir les symboles, le but est d'obtenir par exemple : 'ETH/USDT:USDT'
+                    symbol = symbol,
                     type = 'limit',
                     side = BuyorSell,
                     amount = amount,
@@ -125,14 +112,14 @@ class Wallet:
                 )
             print(order)
         except Exception as e:
-            print(f"Erreur lors du placement de l'ordre de {coinCode} : {e}")
+            print(f"Erreur lors du placement de l'ordre de {symbol} : {e}")
             
         
         
-    async def cancel_order(self, coinCode, order_id):
+    async def cancel_order(self, symbol, order_id):
         """Tente de supprimer un ordre (!= vendre une position)"""
         try:
-            response = await self.exchange.cancel_order(order_id, coinCode)
+            response = await self.exchange.cancel_order(order_id, symbol)
             print(response)
         except Exception as e:
             print("Order cancelling failed")
@@ -146,21 +133,13 @@ class Wallet:
             print(response)
         except Exception as e:
             print(e)
-        
-    
-    async def buy(self, coinCode, amount, currency="EUR"):
+
+
+    async def buy(self, symbol, amount):
         """Achète directement une crypto"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
         try:
-            if currency == "USDT":
-                symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.sandbox_mode else coinCode + '/USDT:USDT'
-            elif currency == "EUR":
-                symbol = print("No sandbox for eur") if self.sandbox_mode else coinCode + '/EUR'
-            else:
-                print("Wrong buy currency")
-                return
-            
             order = await self.exchange.create_order(
                     symbol = symbol,
                     type = 'market',
@@ -169,35 +148,22 @@ class Wallet:
                 )
             print(order)
         except Exception as e:
-            print(f"Erreur lors de l'achat de {coinCode} : {e}")
+            print(f"Erreur lors de l'achat de {symbol} : {e}")
         
     
-    async def sell(self, coinCode, amount, currency="EUR"): 
-        """Vend directement une crypto"""
+    async def sell(self, symbol, amount): 
+        """Vend directement un nombre d'une crypto"""
         await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
         try:
-            if currency == "USDT":
-                symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.sandbox_mode else coinCode + '/USDT:USDT'
-            elif currency == "EUR":
-                if self.sandbox_mode:
-                    print("No sandbox for EUR")
-                    return
-                symbol = coinCode + '/EUR'
-            else:
-                print("Wrong sell currency")
-                return
-
-            # Vérifie le solde disponible
             balance = await self.exchange.fetch_balance()
-            available_amount = balance['free'].get(coinCode, 0)
-            print(f"Solde disponible de {coinCode}: {available_amount}")
+            available_amount = balance['free'].get(symbol, 0)
+            print(f"Solde disponible de {symbol}: {available_amount}")
 
             if available_amount < amount:
                 print("Solde insuffisant pour effectuer cette vente.")
                 return
 
-            # Vérifie le montant minimum requis
             market_info = self.exchange.markets[symbol]
             min_amount = market_info['limits']['amount']['min']
             if amount < min_amount:
@@ -206,15 +172,36 @@ class Wallet:
 
             # Crée l'ordre de vente
             order = await self.exchange.create_order(
-                symbol=symbol,
-                type='market',
-                side='sell',
-                amount=amount,
+                symbol = symbol,
+                type = 'market',
+                side = 'sell',
+                amount = amount,
             )
             print(order)
 
         except Exception as e:
-            print(f"Erreur lors de la vente de {coinCode} : {e}")
+            print(f"Erreur lors de la vente de {symbol} : {e}")
+
+     
+    async def sell_percentage(self, symbol, percentage): 
+        """Vend directement un pourcentage d'une crypto possédée"""
+        await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
+
+        try:
+            balance = await self.exchange.fetch_balance()
+            available_amount = balance['free'].get(symbol, 0)
+            amount = available_amount * (percentage/100)
+            
+            order = await self.exchange.create_order(
+                symbol = symbol,
+                type = 'market',
+                side = 'sell',
+                amount = amount,
+            )
+            print(order)
+
+        except Exception as e:
+            print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
 # WATCH WALLET INFORMATIONS
@@ -266,32 +253,29 @@ class Wallet:
         return symbols
     
     
-    async def getPrice(self, coinCode, currency):
+    async def getPrice(self, symbol):
         """Donne le prix instantané d'un symbole par rapport à une monnaie.
         
         Args:
-            coinCode: La crypto-monnaie dont on veut connaître le prix, par exemple 'BTC'.
-            currency: La devise par rapport à laquelle on veut connaître le prix, par exemple 'USDT' ou 'EUR'.
+            symbol :
             
         Returns:
             Le prix actuel de la paire de trading sous forme de float.
         """
         try:
-            await self.exchange.load_markets()
-            if currency == "USDT":
-                symbol = 'S' + coinCode + '/SUSDT:SUSDT' if self.sandbox_mode else coinCode + '/USDT:USDT'
-            elif currency == "EUR":
-                if self.sandbox_mode:
-                    print("No sandbox for EUR")
-                    return
-                symbol = coinCode + '/EUR'
-            else:
-                print("Wrong currency specified")
-                return
-
             ticker = await self.exchange.fetch_ticker(symbol)
             price = ticker['last']  # Récupère le prix de la dernière transaction sur la blockchain
-            print(f"Le prix actuel de {coinCode}/{currency} est : {price}")
             return price
         except Exception as e:
-            print(f"Erreur lors de la récupération du prix de {coinCode}/{currency} : {e}") 
+            print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
+
+
+    async def amount_equivalence(self, symbol, amount):
+        """Calcule le montant équivalent dans une crypto à une monnaie
+
+        Args:
+            symbol ('BTC/EUR'): Symbole de la paire de trading Crypto / monnaie d'échange
+            amount: montant de la monnaie d'échange à calculer
+        """
+        price = await self.getPrice(symbol)
+        return amount / price

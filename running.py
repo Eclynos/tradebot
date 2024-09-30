@@ -5,7 +5,7 @@ import asyncio
     
 async def main():
     k = Keys()
-    w = Wallet(k.access_key, k.secret_key, k.passphrase, False)
+    w = Wallet(k.access_key, k.secret_key, k.passphrase, True)
 
     if not ping_test():
         print("erreur")
@@ -15,32 +15,12 @@ async def main():
     
     w.market_mode('spot')
     
-    w.getPrice("BTC", "EUR")
+    # await w.buy('BTC/EUR', amount)
+    
+    price = await w.getPrice("BTC", "USD")
+    print(price)
 
     await w.disconnect()
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-import aiofiles
-async with aiofiles.open('symbolsID', 'w') as fichier:
-    for symbol in reversed(symbols):
-        await fichier.write(symbol + "\n")
-"""

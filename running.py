@@ -15,9 +15,9 @@ async def main():
     
     w.market_mode('spot')
     
-    await w.transactionHistory("BTC/EUR")
+    await w.walletInformations()
     
-    # await w.walletInformations()
+    #await w.sell_percentage("BTC/EUR", 100)
     
     await w.disconnect()
     
@@ -34,9 +34,9 @@ price = await w.getPrice("BTC/USDT")
 print(price)
 
 for i in range(10): # Si le résultat est négatif (< 20), c'est que le BTC est entrain de baisser et inversement
-    amount = await w.currency_equivalence("BTC/EUR", 20)
+    amount = await w.actual_currency_equivalence("BTC/EUR", 20)
     print(amount)
-    currency = await w.crypto_equivalence("BTC/EUR", amount)
+    currency = await w.actual_crypto_equivalence("BTC/EUR", amount)
     print(currency)
     time.sleep(1)
 
@@ -44,5 +44,5 @@ await w.walletInformations()
 
 await w.orderBook("BTC/EUR")
 
-#await w.place_order("BTC/EUR", 'buy', await w.currency_equivalence("BTC/EUR", 5), 59000)
+#await w.place_order("BTC/EUR", 'buy', await w.actual_currency_equivalence("BTC/EUR", 5), 59000)
 """

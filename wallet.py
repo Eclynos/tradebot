@@ -2,7 +2,7 @@ import ccxt.pro as ccxt
 import requests
 
 
-def ping_test(url="http://www.google.com", timeout=5):
+def ping_test(url="http://www.google.com", timeout=3):
     try:
         response = requests.get(url, timeout=timeout)
         return True if response.status_code == 200 else False
@@ -146,7 +146,11 @@ class Wallet:
                     side = 'buy',
                     amount = amount,
                 )
-            print(order)
+            
+            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
+            print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
+            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
+            
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
         
@@ -178,12 +182,16 @@ class Wallet:
                 amount = amount,
             )
             print(order)
+            
+            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
+            print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
+            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
-    async def sell_percentage(self, symbol, percentage): # pas testé
+    async def sell_percentage(self, symbol, percentage=100): # pas testé
         """Vend directement un pourcentage d'une crypto possédée"""
         await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
@@ -199,6 +207,10 @@ class Wallet:
                 amount = amount,
             )
             print(order)
+            
+            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
+            print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
+            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
@@ -239,7 +251,7 @@ class Wallet:
         trades = await self.exchange.fetch_my_trades(symbol)
         
         for trade in trades:
-            print(f"ID: {trade['id']}, {trade['side']}\nPrix: {trade['price']}, Quantité: {trade['amount']} = {await self.crypto_equivalence(symbol, trade['amount'])} €\nDate: {self.exchange.iso8601(trade['timestamp'])}\n")
+            print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}\nQuantity: {trade['amount']} = {await self.actual_crypto_equivalence(symbol, trade['amount'])} €\nDate: {self.exchange.iso8601(trade['timestamp'])}\n")
         
     
     async def walletInformations(self):
@@ -248,7 +260,7 @@ class Wallet:
         
         for element in balance["info"]:
             if element['coin'] != 'EUR':
-                print(f"{element['coin']}: {element['available']} = {await self.crypto_equivalence(element['coin'] + '/EUR', float(element['available']))} €")
+                print(f"{element['coin']}: {element['available']} = {await self.actual_crypto_equivalence(element['coin'] + '/EUR', float(element['available']))} €")
             else:
                 print(f"{element['coin']}: {element['available']} €")
         
@@ -294,8 +306,8 @@ class Wallet:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
 
 
-    async def currency_equivalence(self, symbol, amount):
-        """Calcule le montant équivalent d'une crypto à une monnaie
+    async def actual_currency_equivalence(self, symbol, amount):
+        """Calcule le montant équivalent d'une crypto à une monnaie en temps réel
 
         Args:
             symbol ('BTC/EUR'): Symbole de la paire de trading Crypto / monnaie d'échange
@@ -303,14 +315,24 @@ class Wallet:
         """
         price = await self.getPrice(symbol)
         return round(amount / price, 13)
+    
+    
+    def currency_equivalence(self, amount, price):
+        """Calcule le montant équivalent d'une crypto à une monnaie"""
+        return round(amount / price, 13)
 
 
-    async def crypto_equivalence(self, symbol, amount):
-        """Calcule le montant équivalent d'une monnaie à une crypto
+    async def actual_crypto_equivalence(self, symbol, amount):
+        """Calcule le montant équivalent d'une monnaie à une crypto en temps réel
 
         Args:
             symbol ('BTC/EUR'): Symbole de la paire de trading Crypto / monnaie d'échange
             amount: montant de la monnaie d'échange à calculer
         """
         price = await self.getPrice(symbol)
+        return amount * price
+    
+    
+    def crypto_equivalence(self, amount, price):
+        """Calcule le montant équivalent d'une monnaie à une crypto"""
         return amount * price

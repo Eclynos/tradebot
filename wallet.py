@@ -98,7 +98,7 @@ class Wallet:
 # ORDER MANAGING
 
 
-    async def place_order(self, symbol, BuyorSell, amount, price, currency):
+    async def place_order(self, symbol, BuyorSell, amount, price, currency): # pas testé
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
         await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
@@ -116,7 +116,7 @@ class Wallet:
             
         
         
-    async def cancel_order(self, symbol, order_id):
+    async def cancel_order(self, symbol, order_id): # pas testé
         """Tente de supprimer un ordre (!= vendre une position)"""
         try:
             response = await self.exchange.cancel_order(order_id, symbol)
@@ -126,7 +126,7 @@ class Wallet:
             print(e)
             
             
-    async def cancel_all_orders(self):
+    async def cancel_all_orders(self): # pas testé
         """Tente de supprimer tous les ordres (!= vendre toutes les positions)"""
         try:
             response = await self.exchange.cancel_all_orders()
@@ -183,7 +183,7 @@ class Wallet:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
-    async def sell_percentage(self, symbol, percentage): 
+    async def sell_percentage(self, symbol, percentage): # pas testé
         """Vend directement un pourcentage d'une crypto possédée"""
         await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
@@ -207,7 +207,7 @@ class Wallet:
 # WATCH WALLET INFORMATIONS
 
 
-    async def check_positions(self):
+    async def check_positions(self): # ne fonctionne pas encore
         """Vérifie les positions ouvertes sur le compte."""
         try:
             positions = await self.exchange.fetch_positions()
@@ -222,15 +222,15 @@ class Wallet:
             print(f"Erreur lors de la récupération des positions : {e}")
       
       
-    async def watchPositions(self, coinCode, currency):
+    async def watchPositions(self, symbol): # ne fonctionne pas encore
         """Regarde les positions actuelles pour une paire de trading"""
-        trades = await self.exchange.watch_positions_for_symbols(coinCode + '/EUR') # si l'argument est None, donne toutes les positions sur chaque symbole
+        trades = await self.exchange.watch_positions(symbol) # si symbol est None, donne toutes les positions sur chaque symbole
         return trades
     
         
-    async def transactionHistory(self, coinCode, currency):
+    async def transactionHistory(self, symbol): # ne fonctionne pas encore
         """Donne l'historique des trades sur une paire"""
-        trades = await self.exchange.fetch_my_trades(coinCode + '/' + currency)
+        trades = await self.exchange.fetch_my_trades(symbol)
         
         for trade in trades:
             print(f"Trade ID: {trade['id']}, Type: {trade['side']}, Prix: {trade['price']}, Quantité: {trade['amount']}, Date: {self.exchange.iso8601(trade['timestamp'])}")
@@ -240,6 +240,15 @@ class Wallet:
         """Donne l'order book des trades sur une paire"""
         orderbook = await self.exchange.watch_order_book_for_symbols(coinCode + '/USDT')
         print(orderbook['symbol'], orderbook['asks'][0], orderbook['bids'][0], orderbook["datetime"])
+        
+    
+    async def walletInformations(self):
+        """"""
+        balance = await self.exchange.fetch_balance()
+        
+        for element in balance["info"]:
+            print(f"{element['coin']}: {element['available']}")
+        
         
         
 # WATCH MARKET INFORMATIONS

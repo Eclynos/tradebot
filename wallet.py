@@ -27,9 +27,9 @@ class Wallet:
             'password': self.passphrase,
         })
         
-        balance = await self.exchange.fetch_balance() # Recupere les informations sur le wallet utilise
+        # balance = await self.exchange.fetch_balance() # Recupere les informations sur le wallet utilise
         self.exchange.verbose = False # pour le debug si True
-        print(f"Connected! Balance: {balance}")
+        print("Connected!")
         
         
     async def disconnect(self): # à faire à la fin de l'utilisation du compte, à la fin du code
@@ -182,7 +182,7 @@ class Wallet:
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
-     
+
     async def sell_percentage(self, symbol, percentage): 
         """Vend directement un pourcentage d'une crypto possédée"""
         await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
@@ -270,12 +270,23 @@ class Wallet:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
 
 
-    async def amount_equivalence(self, symbol, amount):
-        """Calcule le montant équivalent dans une crypto à une monnaie
+    async def currency_equivalence(self, symbol, amount):
+        """Calcule le montant équivalent d'une crypto à une monnaie
 
         Args:
             symbol ('BTC/EUR'): Symbole de la paire de trading Crypto / monnaie d'échange
             amount: montant de la monnaie d'échange à calculer
         """
         price = await self.getPrice(symbol)
-        return amount / price
+        return round(amount / price, 13)
+
+
+    async def crypto_equivalence(self, symbol, amount):
+        """Calcule le montant équivalent d'une monnaie à une crypto
+
+        Args:
+            symbol ('BTC/EUR'): Symbole de la paire de trading Crypto / monnaie d'échange
+            amount: montant de la monnaie d'échange à calculer
+        """
+        price = await self.getPrice(symbol)
+        return amount * price

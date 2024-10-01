@@ -1,6 +1,6 @@
 from wallet import Wallet, ping_test
 from api_keys import Keys
-import asyncio
+import asyncio, time
     
     
 async def main():
@@ -15,10 +15,15 @@ async def main():
     
     w.market_mode('spot')
     
-    # await w.buy('BTC/EUR', amount)
-    
-    price = await w.getPrice("BTC", "USD")
+    price = await w.getPrice("BTC/USDT")
     print(price)
+    
+    for i in range(10): # Si le résultat est négatif, c'est que le BTC est entrain de baisser
+        amount = await w.currency_equivalence("BTC/EUR", 20)
+        print(amount)
+        currency = await w.crypto_equivalence("BTC/EUR", amount)
+        print(currency)
+        time.sleep(1)
 
     await w.disconnect()
 

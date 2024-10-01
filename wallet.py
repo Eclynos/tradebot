@@ -17,6 +17,7 @@ class Wallet:
         self.passphrase = passphrase
         
         self.exchange = None
+        self.positions = []
         
         
     async def connect(self):
@@ -92,7 +93,6 @@ class Wallet:
             await self.exchange.set_position_mode(mode, symbol)
         else:
             print("Wrong position mode")
-    
 
 
 # ORDER MANAGING
@@ -249,6 +249,7 @@ class Wallet:
     async def transactionHistory(self, symbol):
         """Donne l'historique des trades sur une paire"""
         trades = await self.exchange.fetch_my_trades(symbol)
+        print(symbol + " History")
         
         for trade in trades:
             print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}\nQuantity: {trade['amount']} = {await self.actual_crypto_equivalence(symbol, trade['amount'])} €\nDate: {self.exchange.iso8601(trade['timestamp'])}\n")

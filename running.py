@@ -17,6 +17,8 @@ async def main():
     
     await w.walletInformations()
     
+    #await w.transactionHistory("BTC/EUR")
+    
     #await w.sell_percentage("BTC/EUR", 100)
     
     await w.disconnect()

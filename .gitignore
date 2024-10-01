@@ -4,3 +4,5 @@ cryptos.json
 api_keys.py
 Backtest-Tools-V2
 Backtest/Database
+file_manager.py
+terminal_save

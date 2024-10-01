@@ -1,6 +1,6 @@
 import requests
 import csv
-import time
+import threading
 import numpy
 
 class Tools:
@@ -11,15 +11,15 @@ class Tools:
 
         return allData
     
-    def fractureData(self, startDate, allData, blockSize)->list:
-        fracturedData = []
+    def fractureData(self, startDate, allData)->list:
+        fracturedData = [[]]
         fIndex = -1
 
         for i in range(len(allData)):
             prevFindex = fIndex
-            fIndex = ((int(allData[i]["date"])//1000)-startDate)//blockSize
+            fIndex = ((int(allData[i]["date"])//1000)-startDate)//86400
             if fIndex > 0:
-                for _ in range(fIndex - prevFindex+1):
+                for _ in range(fIndex - prevFindex):
                     fracturedData.append([])
                 fracturedData[fIndex].append(allData[i])
 
@@ -27,18 +27,28 @@ class Tools:
 
     def allTradesInTimeFrame(self, fracturedData, startDate, endDate, blockSize, buyingFunction):
         tradesList = []
+        affichage = 0
+        threadList = []
 
         for i in range(startDate, endDate + 1, blockSize):
-            a = fracturedData[(i-startDate)//blockSize-1] + fracturedData[(i-startDate)//blockSize]
+            a = fracturedData[(i-startDate)//86400-1] + fracturedData[(i-startDate)//86400] + fracturedData[(i-startDate)//86400+1]
 
             dataW = self.getCoinData(a, "7D", i)
             dataD = self.getCoinData(a, "1D", i)
 
-            worth = self.isWorthBuying(dataW, dataD, i, blockSize//2) # FONCTION A 
+            threadList.append(threading.Thread(target=buyingFunction, args=(dataW, dataD, i, blockSize//2, tradesList)))
+            affichage+=1
 
-            if worth[0]:
-                tradesList.append({"time" : i, "price" : worth[1]})
-        
+            if affichage!= 0 and affichage%100 == 0:
+                # print(threadList)
+                for j in range(100):
+                    threadList[j].start()
+                        
+                threadList = []
+
+                affichage = 0
+                print(100 * (i-startDate)/(endDate-startDate), "%")
+
         return tradesList
 
     def getCoinData(self, allData, timeFrame : str, currentTime) -> list:
@@ -148,7 +158,7 @@ class Tools:
         return X
 
 
-    def isWorthBuying(self, weeklyTotalCoinData, dailyTotalCoinData, currentTime, minFrame):
+    def isWorthBuying(self, weeklyTotalCoinData, dailyTotalCoinData, currentTime, minFrame, l):
         drops = self.minDepth(weeklyTotalCoinData, minFrame)
         if drops == []: 
             print("empty drops")
@@ -181,4 +191,5 @@ class Tools:
             #même test sur l'index d'avant juste pour être safe
             return (False, 0)
 
-        return (True, lastDrop["price"])
+        l.append({"time": currentTime, "price" : lastDrop["price"]})
+        return (True, 0)

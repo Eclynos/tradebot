@@ -11,13 +11,15 @@ def ping_test(url="http://www.google.com", timeout=3):
     
 
 class Wallet:
-    def __init__(self, access_key, secret_key, passphrase) -> None:
+    def __init__(self, access_key, secret_key, passphrase, sandbox_mode) -> None:
         self.access_key = access_key
         self.secret_key = secret_key
         self.passphrase = passphrase
         
+        self.sandbox_mode = sandbox_mode
         self.exchange = None
         self.positions = []
+        self.orders = []
         
         
     async def connect(self):
@@ -27,6 +29,9 @@ class Wallet:
             'secret': self.secret_key,
             'password': self.passphrase,
         })
+        
+        if self.sandbox_mode:
+            self.exchange.set_sandbox_mode(True)
         
         # balance = await self.exchange.fetch_balance() # Recupere les informations sur le wallet utilise
         self.exchange.verbose = False # pour le debug si True
@@ -100,7 +105,7 @@ class Wallet:
 
     async def place_order(self, symbol, BuyorSell, amount, price): # À MODIFIER
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
-        await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
+        # await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
         try:
             order = await self.exchange.create_order(
@@ -110,7 +115,9 @@ class Wallet:
                     amount = amount,
                     price = price,
                 )
-            print(order)
+            
+            self.save_and_print_position(order)
+            
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} : {e}")
             
@@ -136,8 +143,8 @@ class Wallet:
 
 
     async def buy(self, symbol, amount):
-        """Achète directement une crypto"""
-        await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
+        """Achète directement une quantité d'une crypto"""
+        # await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
         try:
             order = await self.exchange.create_order(
@@ -147,9 +154,23 @@ class Wallet:
                     amount = amount,
                 )
             
-            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
-            print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
-            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
+            self.save_and_print_position(order)
+            
+        except Exception as e:
+            print(f"Erreur lors de l'achat de {symbol} : {e}")
+
+
+    async def buy_with_cost(self, symbol, cost):
+        """Achète directement une quantité d'une crypto avec un coût en fiat"""
+        # await self.exchange.load_markets()
+        
+        try:
+            order = await self.exchange.create_market_buy_order_with_cost(
+                    symbol = symbol,
+                    cost = cost,
+                )
+            
+            self.save_and_print_position(order)
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
@@ -157,7 +178,7 @@ class Wallet:
     
     async def sell(self, symbol, amount): 
         """Vend directement un nombre d'une crypto"""
-        await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
+        # await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
         try:
             balance = await self.exchange.fetch_balance()
@@ -181,19 +202,46 @@ class Wallet:
                 side = 'sell',
                 amount = amount,
             )
-            print(order)
             
-            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
-            print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
-            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
+            self.save_and_print_position(order)
 
+        except Exception as e:
+            print(f"Erreur lors de la vente de {symbol} : {e}")
+
+
+    async def close_all_positions(self): # pas testée
+        """Vend toutes les positions existantes"""
+        # await self.exchange.load_markets()
+        
+        try:
+            order = await self.exchange.close_all_positions()
+            
+            self.save_and_print_position(order)
+            
+        except Exception as e:
+            print(f"Erreur lors de la fermeture de toutes les positions : {e}")
+        
+            
+            
+    async def sell_with_cost(self, symbol, cost):
+        """Vend directement une quantité d'une crypto avec un coût en fiat"""
+        # await self.exchange.load_markets()
+        
+        try:
+            order = await self.exchange.create_market_sell_order_with_cost(
+                    symbol = symbol,
+                    cost = cost,
+                )
+            
+            self.save_and_print_position(order)
+            
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
     async def sell_percentage(self, symbol, percentage=100): # pas testé
         """Vend directement un pourcentage d'une crypto possédée"""
-        await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
+        # await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
         try:
             balance = await self.exchange.fetch_balance()
@@ -206,14 +254,19 @@ class Wallet:
                 side = 'sell',
                 amount = amount,
             )
-            print(order)
             
-            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
-            print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
-            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
+            self.save_and_print_position(order)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
+            
+    def save_and_print_position(self, order):
+        """Sauvegarde la position dans la liste des positions et print les informations"""
+        print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
+        print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
+        print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
+        
+        self.positions.append(order)
 
 
 # WATCH WALLET INFORMATIONS
@@ -249,7 +302,7 @@ class Wallet:
     async def transactionHistory(self, symbol):
         """Donne l'historique des trades sur une paire"""
         trades = await self.exchange.fetch_my_trades(symbol)
-        print(symbol + " History")
+        print('\n' + symbol + " History")
         
         for trade in trades:
             print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}\nQuantity: {trade['amount']} = {await self.actual_crypto_equivalence(symbol, trade['amount'])} €\nDate: {self.exchange.iso8601(trade['timestamp'])}\n")

@@ -5,7 +5,7 @@ import asyncio, time
     
 async def main():
     k = Keys()
-    w = Wallet(k.access_key, k.secret_key, k.passphrase)
+    w = Wallet(k.access_key, k.secret_key, k.passphrase, False)
 
     if not ping_test():
         print("erreur")
@@ -13,11 +13,19 @@ async def main():
     
     await w.connect()
     
-    w.market_mode('spot')
+    #w.market_mode('spot')
     
-    await w.walletInformations()
+    #print(w.exchange.options["defaultType"])
     
-    #await w.transactionHistory("BTC/EUR")
+    #await w.walletInformations()
+    
+    #await w.buy_with_cost("BTC/EUR", 2)
+    
+    #await w.exchange.watch_positions("BTC/EUR")
+    positions = await w.exchange.watch_positions()
+    print(positions)
+    
+    #await w.transactionHistory("SBTC/SUSDT")
     
     #await w.sell_percentage("BTC/EUR", 100)
     

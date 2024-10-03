@@ -17,7 +17,8 @@ class Tools:
 
         for i in range(len(allData)):
             prevFindex = fIndex
-            fIndex = ((int(allData[i]["date"])//1000)-startDate)//86400
+            fIndex = (allData[i]["date"]-startDate)//604800
+            # print(fIndex)
             if fIndex > 0:
                 for _ in range(fIndex - prevFindex):
                     fracturedData.append([])
@@ -25,29 +26,33 @@ class Tools:
 
         return fracturedData    
 
-    def allTradesInTimeFrame(self, fracturedData, startDate, endDate, blockSize, buyingFunction):
+    def allTradesInTimeFrame(self, fracturedData, startDate, endDate, blockSize, buyingFunction, startDateOffset):
+        """Lance 100 threads de buyingFuction à la fois, met la fonction en situation de startDate à endDate, tous les blockSize secondes"""
         tradesList = []
         affichage = 0
         threadList = []
+        data = (fracturedData[0] 
+            + fracturedData[1])
+        previ = 0
+        for i in range(startDate+startDateOffset, endDate + 1, blockSize):
+            if previ != i:
+                data = (fracturedData[(i-startDate)//604800-1] 
+                    + fracturedData[(i-startDate)//604800])
 
-        for i in range(startDate, endDate + 1, blockSize):
-            a = fracturedData[(i-startDate)//86400-1] + fracturedData[(i-startDate)//86400] + fracturedData[(i-startDate)//86400+1]
-
-            dataW = self.getCoinData(a, "7D", i)
-            dataD = self.getCoinData(a, "1D", i)
-
-            threadList.append(threading.Thread(target=buyingFunction, args=(dataW, dataD, i, blockSize//2, tradesList)))
+            threadList.append(threading.Thread(target=buyingFunction, args=(self, data, i, 43200, tradesList)))
             affichage+=1
+            previ = i
 
             if affichage!= 0 and affichage%100 == 0:
-                # print(threadList)
                 for j in range(100):
                     threadList[j].start()
-                        
+                
                 threadList = []
 
                 affichage = 0
-                print(100 * (i-startDate)/(endDate-startDate), "%")
+                print(100 * (i-startDate - startDateOffset)/(endDate-startDate - startDateOffset), "%")
+
+            
 
         return tradesList
 
@@ -57,17 +62,26 @@ class Tools:
             print("Invalid Time Frame")
             return {}
 
-        
-        newData = []
-        for i in range(len(allData)):
-            if(currentTime - int(allData[i]["date"])//1000 > 0 and currentTime - int(allData[i]["date"])//1000 < (604800 if timeFrame == "7D" else 86400)):
-                newData.append(allData[i])
+        startFlag = -1
+        endFlag = -1
 
+        for i in range(len(allData)-1,-1,-1 ):
+            if(currentTime - allData[i]["date"] > 0 and endFlag == -1):
+                endFlag = i  
+                break
+
+        for i in range(endFlag-1, -1, -1):
+            if(currentTime - allData[i]["date"] > (604800 if timeFrame == "7D" else 86400) and startFlag == -1):
+                startFlag = i
+                break
+
+        newData = allData[startFlag:endFlag]
+        # print(len(newData))
         l = []
         for ligne in newData:
-            l.append({"key" : int(ligne["date"])//1000, "price" : float(ligne["close"]), "volume" : ligne["volume"]})
+            l.append({"key" : int(ligne["date"]), "price" : float(ligne["close"]), "volume" : ligne["volume"]})
 
-        l.sort(key= lambda item : int(item["key"])) #normalement pas nécessaire mais on sait jamais
+        # l.sort(key= lambda item : int(item["key"])) #normalement pas nécessaire mais on sait jamais
 
         return l
 
@@ -156,40 +170,3 @@ class Tools:
 
         X = numpy.linalg.solve(A,B)
         return X
-
-
-    def isWorthBuying(self, weeklyTotalCoinData, dailyTotalCoinData, currentTime, minFrame, l):
-        drops = self.minDepth(weeklyTotalCoinData, minFrame)
-        if drops == []: 
-            print("empty drops")
-            return (False, 1)
-        lastDrop = drops[-1]
-
-        minDropPourcentage = 0.05
-        releventTimeFrame=900
-        maxDescentPourcentage=0.02
-        maxFreefallPourcentage = 0.04
-
-
-        if currentTime-int(lastDrop["key"]) > releventTimeFrame: # drop trop vieux
-            return (False, 0)
-        if lastDrop["drop"] < minDropPourcentage: # drop pas assez important
-            return (False, 0)
-
-        dailyAvgPrice = self.average(dailyTotalCoinData)
-        weeklyAvgPrice = self.average(weeklyTotalCoinData)
-
-        if (weeklyAvgPrice - dailyAvgPrice) / weeklyAvgPrice > maxDescentPourcentage: # si la crypto descend trop en général (on peut considérer qu'elle s'effondre)
-            return (False, 0)
-
-
-        if (float(weeklyTotalCoinData[-2]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-2]["price"]) > maxFreefallPourcentage:
-            #si la crypto est en chute libre (en si elle descend à la verticale)
-            return (False, 0)
-
-        if (float(weeklyTotalCoinData[-3]["price"])-float(weeklyTotalCoinData[-1]["price"])) / float(weeklyTotalCoinData[-3]["price"]) > maxFreefallPourcentage:
-            #même test sur l'index d'avant juste pour être safe
-            return (False, 0)
-
-        l.append({"time": currentTime, "price" : lastDrop["price"]})
-        return (True, 0)

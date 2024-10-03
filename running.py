@@ -5,34 +5,54 @@ import asyncio, time
     
 async def main():
     k = Keys()
-    w = Wallet(k.access_key, k.secret_key, k.passphrase, True)
+    w = Wallet(k.access_key, k.secret_key, k.passphrase, False)
 
     if not ping_test():
         print("erreur")
         return;
-
+    
     await w.connect()
     
-    w.market_mode('spot')
+    #w.market_mode('spot')
     
-    """
-    price = await w.getPrice("BTC/USDT")
-    print(price)
-    
-    for i in range(10): # Si le résultat est négatif (< 20), c'est que le BTC est entrain de baisser et inversement
-        amount = await w.currency_equivalence("BTC/EUR", 20)
-        print(amount)
-        currency = await w.crypto_equivalence("BTC/EUR", amount)
-        print(currency)
-        time.sleep(1)
-    """
+    #print(w.exchange.options["defaultType"])
     
     #await w.walletInformations()
     
-    await w.watchPositions("BTC/EUR")
+    #await w.buy_with_cost("BTC/EUR", 2)
+    
+    #await w.exchange.watch_positions("BTC/EUR")
+    positions = await w.exchange.watch_positions()
+    print(positions)
+    
+    #await w.transactionHistory("SBTC/SUSDT")
+    
+    #await w.sell_percentage("BTC/EUR", 100)
     
     await w.disconnect()
     
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
+"""
+w.market_mode('spot')
+
+price = await w.getPrice("BTC/USDT")
+print(price)
+
+for i in range(10): # Si le résultat est négatif (< 20), c'est que le BTC est entrain de baisser et inversement
+    amount = await w.actual_currency_equivalence("BTC/EUR", 20)
+    print(amount)
+    currency = await w.actual_crypto_equivalence("BTC/EUR", amount)
+    print(currency)
+    time.sleep(1)
+
+await w.walletInformations()
+
+await w.orderBook("BTC/EUR")
+
+#await w.place_order("BTC/EUR", 'buy', await w.actual_currency_equivalence("BTC/EUR", 5), 59000)
+"""

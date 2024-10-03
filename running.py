@@ -19,7 +19,7 @@ async def main():
     
     #print(w.exchange.options["defaultType"])
     
-    await w.walletInformations()
+    #await w.walletInformations()
     
     """
     symbols = await w.getAllSymbols()

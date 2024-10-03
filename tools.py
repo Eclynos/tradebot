@@ -1,7 +1,4 @@
-import requests
-import json
-import time
-import numpy
+import requests, time, numpy, asyncio
 
 class Tools:
     def __init__(self, IDDico) -> None:
@@ -171,14 +168,47 @@ class Tools:
         
         return l
     
+
+    def time_frame_to_ms(self, time_frame):
+        """Calcule le bon nombre de ms pour une time_frame donnée"""
+        unit = time_frame[-1]
+        amount = int(time_frame[:-1])
+        if unit == 'm':
+            return amount * 60 * 1000
+        elif unit == 'h':
+            return amount * 60 * 60 * 1000
+        elif unit == 'd':
+            return amount * 24 * 60 * 60 * 1000
+        else:
+            print("Mauvais time_frame")
+
     
     async def fetch_candles(self, exchange, symbol, timeFrame, since):
         """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES
         https://www.bitget.com/api-doc/contract/market/Get-Candle-Data
         """
+
         candles = []
         timestamp = await exchange.fetch_time()
-        time_ago = timestamp - int(since * 1000)
+        time_ago = timestamp - since
+        current_since = time_ago
         
-        for i in range():
-            candles.append(await exchange.fetch_ohlcv(symbol, timeFrame, time_ago, 1000, params={"until"}))
+        while current_since < timestamp:
+            try:
+                ohclv = await exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
+            except Exception as e:
+                print(e)
+                break
+
+            if not ohclv:
+                break
+
+            candles.extend(ohclv)
+            last_timestamp = ohclv[-1][0]
+            current_since = last_timestamp + self.time_frame_to_ms(timeFrame)
+
+            if current_since >= timestamp:
+                break
+
+        print(len(candles))
+        return candles

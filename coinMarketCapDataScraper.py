@@ -1,6 +1,6 @@
-from tools import *
+from tools import Tools
 import threading
-import time
+import time, json
 
 def testWorth(key, t, l):
     isWorth = t.isWorthBuying(key, 50000)

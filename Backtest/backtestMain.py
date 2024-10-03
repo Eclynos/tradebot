@@ -3,42 +3,9 @@ from backtestTools import *
 def isWorthBuying(t, data, currentTime, minFrame, l):
         
         dataW = t.getCoinData(data, "7D", currentTime)
+
         
-        drops = t.minDepth(dataW, minFrame)
 
-        if drops == []: 
-            print("empty drops")
-            return (False, 1)
-        lastDrop = drops[-1]
-
-        minDropPourcentage = 0.05
-        releventTimeFrame=500
-        maxDescentPourcentage=0.02
-        maxFreefallPourcentage = 0.04
-
-
-        if currentTime-int(lastDrop["key"]) > releventTimeFrame: # drop trop vieux
-            return (False, 0)
-        if lastDrop["drop"] < minDropPourcentage: # drop pas assez important
-            return (False, 0)
-        
-        dataD = t.getCoinData(data, "1D", currentTime)
-        dailyAvgPrice = t.average(dataD)
-        weeklyAvgPrice = t.average(dataW)
-
-        if (weeklyAvgPrice - dailyAvgPrice) / weeklyAvgPrice > maxDescentPourcentage: # si la crypto descend trop en général (on peut considérer qu'elle s'effondre)
-            return (False, 0)
-
-
-        if (float(dataW[-2]["price"])-float(dataW[-1]["price"])) / float(dataW[-2]["price"]) > maxFreefallPourcentage:
-            #si la crypto est en chute libre (en si elle descend à la verticale)
-            return (False, 0)
-
-        if (float(dataW[-3]["price"])-float(dataW[-1]["price"])) / float(dataW[-3]["price"]) > maxFreefallPourcentage:
-            #même test sur l'index d'avant juste pour être safe
-            return (False, 0)
-
-        l.append({"time": currentTime, "price" : lastDrop["price"]})
         return (True, 0)
 
 def sellAllTrades(allData, tradesList, euroPerTrade, maxHoldSecond):

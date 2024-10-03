@@ -158,3 +158,15 @@ class Tools:
             return (False, 0)
         
         return (True, 0)
+
+    def movingAverage(self, dataList, MAsize):
+        numberOfData = len(dataList)
+        l = []
+        for i in range(numberOfData//MAsize):
+            avgPrice = 0
+            for j in range(MAsize):
+                avgPrice += dataList[numberOfData - 1 - (i*MAsize + j)]["price"]
+            
+            l.append(avgPrice / MAsize)
+        
+        return l

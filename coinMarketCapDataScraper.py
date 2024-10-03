@@ -38,14 +38,14 @@ def showWorthCoins(codeToIDDico):
 
 if __name__ == "__main__":
     codeToIDDico = {}
-    with open('./codeToID.json','r') as json_File :
+    with open('./data/codeToID.json','r') as json_File :
         codeToIDDico=json.load(json_File)
 
     t = Tools(codeToIDDico)
 
     data = t.getCoinData("ethereum", "7D")
-    print(t.nthDegreeRegression(data, 1))
-    print(t.nthDegreeRegression(data, 2))
+    print(t.movingAverage(data, 20))
+    # print(t.nthDegreeRegression(data, 2))
 
 
 

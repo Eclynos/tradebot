@@ -19,8 +19,9 @@ async def main():
     nb_hours = 1
     hours_ago = timestamp - int(nb_hours * 3600 * 1000)
     
-    candle_list = await w.exchange.fetch_ohlcv("BTC/EUR", '1h', hours_ago, 1000)
-    print(len(candle_list))
+    candles = await w.exchange.fetch_ohlcv("BTC/EUR", '1m', hours_ago, 1000, params = {"until":hours_ago + int(timestamp/2)})
+    print(len(candles))
+    print(candles[0])
     
     
     await w.disconnect()

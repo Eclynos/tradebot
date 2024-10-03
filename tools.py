@@ -170,3 +170,15 @@ class Tools:
             avgPrice += dataList[numberOfData - 1 - i]["price"]
         
         return l
+    
+    
+    async def fetch_candles(self, exchange, symbol, timeFrame, since):
+        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES
+        https://www.bitget.com/api-doc/contract/market/Get-Candle-Data
+        """
+        candles = []
+        timestamp = await exchange.fetch_time()
+        time_ago = timestamp - int(since * 1000)
+        
+        for i in range():
+            candles.append(await exchange.fetch_ohlcv(symbol, timeFrame, time_ago, 1000, params={"until"}))

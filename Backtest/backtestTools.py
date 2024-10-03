@@ -170,3 +170,15 @@ class Tools:
 
         X = numpy.linalg.solve(A,B)
         return X
+    
+    def movingAverage(self, dataList, MAsize):
+        numberOfData = len(dataList)
+        l = []
+        avgPrice = 0
+        for i in range(numberOfData):
+            if i >= MAsize:
+                l.append(avgPrice/MAsize)
+                avgPrice -= dataList[numberOfData - 1 - i + MAsize]["price"]
+            avgPrice += dataList[numberOfData - 1 - i]["price"]
+        
+        return l

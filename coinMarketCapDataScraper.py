@@ -44,7 +44,9 @@ if __name__ == "__main__":
     t = Tools(codeToIDDico)
 
     data = t.getCoinData("ethereum", "7D")
-    print(t.movingAverage(data, 20))
+    print(len(data))
+    MA = t.movingAverage(data, 100)
+    print(len(MA))
     # print(t.nthDegreeRegression(data, 2))
 
 

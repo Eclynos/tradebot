@@ -94,8 +94,10 @@ class Wallet:
             mode('one-way'): avoir qu'une seule position ouverte sur une paire de trading à un moment donné.
         """
         
-        if mode == 'hedge' or mode == 'one-way':
-            await self.exchange.set_position_mode(mode, symbol)
+        if mode == 'hedge':
+            await self.exchange.set_position_mode(True, symbol)
+        elif mode == "one-way":
+            await self.exchange.set_position_mode(False, symbol)
         else:
             print("Wrong position mode")
 

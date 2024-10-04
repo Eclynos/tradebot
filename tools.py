@@ -1,8 +1,9 @@
-import requests, time, numpy
+import requests, time, numpy, requests
 
 class Tools:
     def __init__(self, IDDico) -> None:
         self.codeToIDDico = IDDico
+
 
     def getCoinData(self, coinCode : str, timeFrame : str) -> list:
 
@@ -27,7 +28,8 @@ class Tools:
         l.sort(key= lambda item : int(item["key"])) #normalement pas nécessaire mais on sait jamais
 
         return l
-    
+
+
     def getMathLocalMins(self, baseList : list) -> list:
         """Determine les minimums locaux de la chart : valeur précédent > valeur actuelle < valeur suivante"""
         returnList = []
@@ -40,6 +42,7 @@ class Tools:
             except:
                 returnList.append({"key": baseList[k]["key"] , "price" : baseList[k]["price"] })
         return returnList 
+
 
     def getRealMins(self, baseList : list, minFrame : int) -> list:
         """Détermine les retracements à partir de la liste des minimums locaux"""
@@ -57,6 +60,7 @@ class Tools:
         
         return returnList
 
+
     def minDepth(self, baseDict, minFrame):
         """Détermine les vrais dip à partir de la liste des retracements"""
         totalMins = self.getMathLocalMins(baseDict)
@@ -72,6 +76,7 @@ class Tools:
             minList.append({"key" : x["key"], "price" : x["price"], "drop" : dropMax})
         return minList
 
+
     def average(self, dataList):
         total = 0
         numberOfEntries = len(dataList)
@@ -79,7 +84,8 @@ class Tools:
             total += float(dataList[i]["price"])
         
         return total/numberOfEntries
-    
+
+
     def nthDegreeRegression(self, dataList, degree):
         # Extrapolation des calculcs matriciels trouvés ici :
         # https://www.varsitytutors.com/hotmath/hotmath_help/topics/quadratic-regression
@@ -156,6 +162,7 @@ class Tools:
         
         return (True, 0)
 
+
     def movingAverage(self, dataList, MAsize):
         numberOfData = len(dataList)
         l = []
@@ -167,47 +174,11 @@ class Tools:
             avgPrice += dataList[numberOfData - 1 - i]["price"]
         
         return l
-    
 
-    def time_frame_to_ms(self, time_frame):
-        """Calcule le bon nombre de ms pour une time_frame donnée"""
-        unit = time_frame[-1]
-        amount = int(time_frame[:-1])
-        if unit == 'm':
-            return amount * 60 * 1000
-        elif unit == 'h':
-            return amount * 60 * 60 * 1000
-        elif unit == 'd':
-            return amount * 24 * 60 * 60 * 1000
-        else:
-            print("Mauvais time_frame")
 
-    
-    async def fetch_candles(self, exchange, symbol, timeFrame, since):
-        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES
-        https://www.bitget.com/api-doc/contract/market/Get-Candle-Data
-        """
-
-        candles = []
-        timestamp = await exchange.fetch_time()
-        time_ago = timestamp - int(since)
-        current_since = time_ago
-        
-        while current_since < timestamp:
-            try:
-                ohclv = await exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
-            except Exception as e:
-                print(e)
-                break
-
-            if not ohclv:
-                break
-
-            candles.extend(ohclv)
-            last_timestamp = ohclv[-1][0]
-            current_since = last_timestamp + self.time_frame_to_ms(timeFrame)
-
-            if current_since >= timestamp:
-                break
-        
-        return candles
+    def ping_test(url="http://www.google.com", timeout=3):
+        try:
+            response = requests.get(url, timeout=timeout)
+            return True if response.status_code == 200 else False
+        except (requests.ConnectionError, requests.Timeout):
+            return False

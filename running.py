@@ -1,4 +1,5 @@
-from wallet import Wallet, ping_test
+from wallet import Wallet
+from tools import ping_test
 from api_keys import Keys
 import asyncio, time
     

@@ -1,39 +1,25 @@
 import ccxt.pro as ccxt
-import requests
-
-
-def ping_test(url="http://www.google.com", timeout=3):
-    try:
-        response = requests.get(url, timeout=timeout)
-        return True if response.status_code == 200 else False
-    except (requests.ConnectionError, requests.Timeout):
-        return False
     
 
 class Wallet:
-    def __init__(self, access_key, secret_key, passphrase, sandbox_mode) -> None:
-        self.access_key = access_key
-        self.secret_key = secret_key
-        self.passphrase = passphrase
-        
+    def __init__(self, api_keys, sandbox_mode) -> None:
+        self.keys = api_keys
         self.sandbox_mode = sandbox_mode
         self.exchange = None
         self.positions = []
-        self.orders = []
         
         
     async def connect(self):
         """Connect account with api keys to python"""
         self.exchange = ccxt.bitget({ # etablie la connexion au compte
-            'apiKey': self.access_key,
-            'secret': self.secret_key,
-            'password': self.passphrase,
+            'apiKey': self.keys.access_key,
+            'secret': self.keys.secret_key,
+            'password': self.keys.passphrase,
         })
         
         if self.sandbox_mode:
             self.exchange.set_sandbox_mode(True)
         
-        # balance = await self.exchange.fetch_balance() # Recupere les informations sur le wallet utilise
         self.exchange.verbose = False # pour le debug si True
         print("Connected")
         
@@ -107,7 +93,6 @@ class Wallet:
 
     async def place_order(self, symbol, BuyorSell, amount, price): # À MODIFIER
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
-        # await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
         try:
             order = await self.exchange.create_order(
@@ -146,7 +131,6 @@ class Wallet:
 
     async def buy(self, symbol, amount):
         """Achète directement une quantité d'une crypto"""
-        # await self.exchange.load_markets() # met en cache toutes les informations sur les paires de trading disponibles avant d'effectuer des opérations de trading
         
         try:
             order = await self.exchange.create_order(
@@ -164,7 +148,6 @@ class Wallet:
 
     async def buy_with_cost(self, symbol, cost):
         """Achète directement une quantité d'une crypto avec un coût en fiat"""
-        # await self.exchange.load_markets()
         
         try:
             order = await self.exchange.create_market_buy_order_with_cost(
@@ -180,24 +163,8 @@ class Wallet:
     
     async def sell(self, symbol, amount): 
         """Vend directement un nombre d'une crypto"""
-        # await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
         try:
-            balance = await self.exchange.fetch_balance()
-            available_amount = balance['free'].get(symbol, 0)
-            print(f"Solde disponible de {symbol}: {available_amount}")
-
-            if available_amount < amount:
-                print("Solde insuffisant pour effectuer cette vente.")
-                return
-
-            market_info = self.exchange.markets[symbol]
-            min_amount = market_info['limits']['amount']['min']
-            if amount < min_amount:
-                print(f"Le montant est inférieur au montant minimum requis ({min_amount}).")
-                return
-
-            # Crée l'ordre de vente
             order = await self.exchange.create_order(
                 symbol = symbol,
                 type = 'market',
@@ -213,7 +180,6 @@ class Wallet:
 
     async def close_all_positions(self): # pas testée
         """Vend toutes les positions existantes"""
-        # await self.exchange.load_markets()
         
         try:
             order = await self.exchange.close_all_positions()
@@ -227,7 +193,6 @@ class Wallet:
             
     async def sell_with_cost(self, symbol, cost):
         """Vend directement une quantité d'une crypto avec un coût en fiat"""
-        # await self.exchange.load_markets()
         
         try:
             order = await self.exchange.create_market_sell_order_with_cost(
@@ -243,7 +208,6 @@ class Wallet:
 
     async def sell_percentage(self, symbol, percentage=100): # pas testé
         """Vend directement un pourcentage d'une crypto possédée"""
-        # await self.exchange.load_markets()  # Met en cache les informations sur les paires disponibles
 
         try:
             balance = await self.exchange.fetch_balance()
@@ -261,9 +225,11 @@ class Wallet:
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
-            
+
+
     def save_and_print_position(self, order):
         """Sauvegarde la position dans la liste des positions et print les informations"""
+        
         print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
         print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
         print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
@@ -299,8 +265,8 @@ class Wallet:
                 print("Nouvel ordre : ", order)
         except Exception as e:
             print(f"Erreur lors de la surveillance des ordres : {e}")
-    
-        
+
+
     async def transactionHistory(self, symbol):
         """Donne l'historique des trades sur une paire"""
         trades = await self.exchange.fetch_my_trades(symbol)
@@ -308,31 +274,8 @@ class Wallet:
         
         for trade in trades:
             print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}\nQuantity: {trade['amount']} = {await self.actual_crypto_equivalence(symbol, trade['amount'])} €\nDate: {self.exchange.iso8601(trade['timestamp'])}\n")
-        
-    
-    async def walletInformations(self):
-        """"""
-        balance = await self.exchange.fetch_balance()
-        
-        for element in balance["info"]:
-            if element['coin'] != 'EUR':
-                print(f"{element['coin']}: {element['available']} = {await self.actual_crypto_equivalence(element['coin'] + '/EUR', float(element['available']))} €")
-            else:
-                print(f"{element['coin']}: {element['available']} €")
-        
-        
-        
-# WATCH MARKET INFORMATIONS
 
-        
-    async def getAllSymbols(self):
-        """Récupère et affiche tous les paires de trading disponibles sur l'échange"""
-        await self.exchange.load_markets()
-        markets = self.exchange.markets
-        symbols = list(markets.keys())
-        return symbols
-    
-    
+
     async def orderBook(self, symbol):
         """Donne l'order book des trades sur une paire"""
         try:
@@ -343,8 +286,66 @@ class Wallet:
             print(f"Date: {orderbook['datetime']}")
         except Exception as e:
             print(f"Erreur lors de la récupération de l'order book de {symbol} : {e}")
-    
-    
+
+
+    async def walletInformations(self):
+        """Recupère les informations sur les positions dans un type de marché"""
+        
+        if self.exchange.options['defaultType'] == "spot":
+            balance = await self.exchange.fetch_balance()
+            print("Wallet informations in spot:")
+            for elt in balance["info"]:
+                if elt['coin'] != 'EUR':
+                    print(f"{elt['coin']}: {elt['available']} = {await self.actual_crypto_equivalence(elt['coin'] + '/EUR', float(elt['available']))} €")
+                else:
+                    print(f"{elt['coin']}: {elt['available']} €")
+        elif self.exchange.options['defaultType'] in ["future", "swap"]:
+            balance = await self.exchange.fetch_balance()
+            print(f"Wallet informations in {self.exchange.options['defaultType']}:")
+            for elt in balance["info"]:
+                print(f"{elt['marginCoin']}: {elt['available']}\naccountEquity: {elt['accountEquity']}\nusdtEquity: {elt['usdtEquity']}")       
+        else:
+            print("Wrong market mode for wallet informations")
+
+
+
+class MarketInformations:
+    def __init__(self, api_keys, tools) -> None:
+        self.keys = api_keys
+        self.tools = tools
+
+
+    async def connect(self):
+        self.exchange = ccxt.bitget({
+            'apiKey': self.keys.access_key,
+            'secret': self.keys.secret_key,
+            'password': self.keys.passphrase,
+        })
+        
+        if self.sandbox_mode:
+            self.exchange.set_sandbox_mode(True)
+        
+        self.exchange.verbose = False
+        print("Connected")
+        
+        
+    async def disconnect(self):
+        try:
+            await self.exchange.close()
+            print("Disconnected")
+        except Exception as e:
+            print("Failed disconnecting")
+            print(e)
+
+
+    async def getAllSymbols(self):
+        """Récupère et affiche tous les paires de trading disponibles sur l'échange"""
+        await self.exchange.load_markets()
+        markets = self.exchange.markets
+        symbols = list(markets.keys())
+        return symbols
+
+
     async def getPrice(self, symbol):
         """Donne le prix instantané d'un symbole par rapport à une monnaie.
         
@@ -371,11 +372,6 @@ class Wallet:
         """
         price = await self.getPrice(symbol)
         return round(amount / price, 13)
-    
-    
-    def currency_equivalence(self, amount, price):
-        """Calcule le montant équivalent d'une crypto à une monnaie"""
-        return round(amount / price, 13)
 
 
     async def actual_crypto_equivalence(self, symbol, amount):
@@ -389,6 +385,55 @@ class Wallet:
         return amount * price
     
     
+    def currency_equivalence(self, amount, price):
+        """Calcule le montant équivalent d'une crypto à une monnaie"""
+        return round(amount / price, 13)
+
+
     def crypto_equivalence(self, amount, price):
         """Calcule le montant équivalent d'une monnaie à une crypto"""
         return amount * price
+    
+    
+    def time_frame_to_ms(self, time_frame):
+        """Calcule le bon nombre de ms pour une time_frame donnée"""
+        unit = time_frame[-1]
+        amount = int(time_frame[:-1])
+        if unit == 'm':
+            return amount * 60 * 1000
+        elif unit == 'h':
+            return amount * 60 * 60 * 1000
+        elif unit == 'd':
+            return amount * 24 * 60 * 60 * 1000
+        else:
+            print("Mauvais time_frame")
+
+   
+    async def fetch_candles(self, symbol, timeFrame, since):
+        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES
+        https://www.bitget.com/api-doc/contract/market/Get-Candle-Data
+        """
+
+        candles = []
+        timestamp = await self.exchange.fetch_time()
+        time_ago = timestamp - int(since)
+        current_since = time_ago
+        
+        while current_since < timestamp:
+            try:
+                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
+            except Exception as e:
+                print(e)
+                break
+
+            if not ohclv:
+                break
+
+            candles.extend(ohclv)
+            last_timestamp = ohclv[-1][0]
+            current_since = last_timestamp + self.tools.time_frame_to_ms(timeFrame)
+
+            if current_since >= timestamp:
+                break
+        
+        return candles

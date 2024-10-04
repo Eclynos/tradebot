@@ -1,4 +1,5 @@
-from wallet import Wallet, ping_test
+from wallet import Wallet
+from tools import ping_test
 from api_keys import Keys
 import asyncio, time
     
@@ -13,19 +14,7 @@ async def main():
     
     await w.connect()
     
-    #w.market_mode('future')
-    
-    #await w.position_mode("one-way", "SBTC/SUSD:SUSDC")
-    
-    #print(w.exchange.options["defaultType"])
-    
     await w.walletInformations()
-    
-    """
-    symbols = await w.getAllSymbols()
-    for symbol in symbols:
-        print(symbol)
-    """
     
     #await w.buy("SBTC/SUSD:SUSDC", 0.002)
     
@@ -33,7 +22,7 @@ async def main():
     #positions = await w.exchange.fetch_positions()
     #print(positions)
     
-    #await w.transactionHistory("SBTC/SUSDT")
+    #await w.transactionHistory("BTC/EUR")
     
     #await w.sell_percentage("BTC/EUR", 100)
     

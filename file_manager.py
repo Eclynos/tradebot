@@ -1,30 +1,29 @@
 from wallet import Wallet, ping_test
+from tools import Tools
 from api_keys import Keys
-import asyncio, time
+import asyncio, json, time
     
     
 async def main():
     k = Keys()
+    codeToIDDico = {}
+    with open('./data/codeToID.json','r') as json_File:
+        codeToIDDico=json.load(json_File)
+
+    t = Tools(codeToIDDico)
     w = Wallet(k.access_key, k.secret_key, k.passphrase, False)
 
-    if not ping_test():
-        print("erreur")
-        return;
+    start_time = time.time()
     
     await w.connect()
     
     w.market_mode('spot')
-    
-    timestamp = await w.exchange.fetch_time()
-    nb_hours = 1
-    hours_ago = timestamp - int(nb_hours * 3600 * 1000)
-    
-    candle_list = await w.exchange.fetch_ohlcv("BTC/EUR", '1h', hours_ago, 1000)
-    print(len(candle_list))
-    
+
+    await t.fetch_candles(w.exchange, "SOL/EUR", "30m", 1209600000) # deux semaines
     
     await w.disconnect()
 
+    print(time.time() - start_time)
 
     
 if __name__ == "__main__":

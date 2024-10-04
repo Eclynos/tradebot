@@ -19,7 +19,7 @@ async def main():
     
     w.market_mode('spot')
 
-    await t.fetch_candles(w.exchange, "BTC/EUR", "15m", 1209600000)
+    await t.fetch_candles(w.exchange, "SOL/EUR", "30m", 1209600000) # deux semaines
     
     await w.disconnect()
 

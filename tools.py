@@ -1,4 +1,4 @@
-import requests, time, numpy, asyncio
+import requests, time, numpy
 
 class Tools:
     def __init__(self, IDDico) -> None:
@@ -190,7 +190,7 @@ class Tools:
 
         candles = []
         timestamp = await exchange.fetch_time()
-        time_ago = timestamp - since
+        time_ago = timestamp - int(since)
         current_since = time_ago
         
         while current_since < timestamp:
@@ -209,6 +209,5 @@ class Tools:
 
             if current_since >= timestamp:
                 break
-
-        print(len(candles))
+        
         return candles

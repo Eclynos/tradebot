@@ -311,14 +311,23 @@ class Wallet:
         
     
     async def walletInformations(self):
-        """"""
-        balance = await self.exchange.fetch_balance()
+        """Recupère les informations sur les positions dans un type de marché"""
         
-        for element in balance["info"]:
-            if element['coin'] != 'EUR':
-                print(f"{element['coin']}: {element['available']} = {await self.actual_crypto_equivalence(element['coin'] + '/EUR', float(element['available']))} €")
-            else:
-                print(f"{element['coin']}: {element['available']} €")
+        if self.exchange.options['defaultType'] == "spot":
+            balance = await self.exchange.fetch_balance()
+            print("Wallet informations in spot:")
+            for elt in balance["info"]:
+                if elt['coin'] != 'EUR':
+                    print(f"{elt['coin']}: {elt['available']} = {await self.actual_crypto_equivalence(elt['coin'] + '/EUR', float(elt['available']))} €")
+                else:
+                    print(f"{elt['coin']}: {elt['available']} €")
+        elif self.exchange.options['defaultType'] in ["future", "swap"]:
+            balance = await self.exchange.fetch_balance()
+            print(f"Wallet informations in {self.exchange.options['defaultType']}:")
+            for elt in balance["info"]:
+                print(f"{elt['marginCoin']}: {elt['available']}\naccountEquity: {elt['accountEquity']}\nusdtEquity: {elt['usdtEquity']}")       
+        else:
+            print("Wrong market mode for wallet informations")
         
         
         

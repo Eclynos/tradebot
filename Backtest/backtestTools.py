@@ -12,34 +12,34 @@ class Tools:
         return allData
     
     def fractureData(self, startDate, allData)->list:
+        print(allData[-1]["date"])
         fracturedData = [[]]
         fIndex = -1
 
         for i in range(len(allData)):
             prevFindex = fIndex
             fIndex = (allData[i]["date"]-startDate)//604800
-            # print(fIndex)
+
             if fIndex > 0:
                 for _ in range(fIndex - prevFindex):
                     fracturedData.append([])
                 fracturedData[fIndex].append(allData[i])
 
-        return fracturedData    
+        print(len(fracturedData))
+        return fracturedData
 
     def allTradesInTimeFrame(self, fracturedData, startDate, endDate, blockSize, buyingFunction, startDateOffset):
         """Lance 100 threads de buyingFuction à la fois, met la fonction en situation de startDate à endDate, tous les blockSize secondes"""
         tradesList = []
         affichage = 0
         threadList = []
-        data = (fracturedData[0] 
-            + fracturedData[1])
+        data = fracturedData[0] + fracturedData[1] + fracturedData[2]
         previ = 0
         for i in range(startDate+startDateOffset, endDate + 1, blockSize):
             if previ != i:
-                data = (fracturedData[(i-startDate)//604800-1] 
-                    + fracturedData[(i-startDate)//604800])
+                data = fracturedData[(i-startDate)//604800-1] + fracturedData[(i-startDate)//604800-0]
 
-            threadList.append(threading.Thread(target=buyingFunction, args=(self, data, i, 43200, tradesList)))
+            threadList.append(threading.Thread(target=buyingFunction, args=(self, data, i, tradesList)))
             affichage+=1
             previ = i
 
@@ -50,9 +50,8 @@ class Tools:
                 threadList = []
 
                 affichage = 0
-                print(100 * (i-startDate - startDateOffset)/(endDate-startDate - startDateOffset), "%")
+                print("buying progress :", 100 * (i-startDate - startDateOffset)/(endDate-startDate - startDateOffset), "%")
 
-            
 
         return tradesList
 

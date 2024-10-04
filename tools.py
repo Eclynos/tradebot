@@ -170,3 +170,5 @@ class Tools:
             avgPrice += dataList[numberOfData - 1 - i]["price"]
         
         return l
+    
+    

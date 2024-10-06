@@ -46,7 +46,7 @@ class Tools:
             print("Mauvais time_frame")
 
 
-    def ping_test(url="http://www.google.com", timeout=3):
+    def ping_test(self, url="https://www.google.com", timeout=3):
         try:
             response = requests.get(url, timeout=timeout)
             return True if response.status_code == 200 else False

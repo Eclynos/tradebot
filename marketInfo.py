@@ -5,9 +5,12 @@ from tools import Tools
 class MarketInformations:
     def __init__(self) -> None:
         self.account = Account('info_keys')
-        self.account.connect()
-        self.exchange = self.account.exchange
         self.tools = Tools()
+
+
+    async def init(self):
+        await self.account.connect()
+        self.exchange = self.account.exchange
 
 
     async def getAllSymbols(self):

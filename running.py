@@ -1,32 +1,37 @@
 from wallet import Wallet
-from tools import ping_test
-from api_keys import Keys
-import asyncio, time
+from marketInfo import MarketInformations
+from tools import Tools
+import asyncio, time, requests
     
     
 async def main():
-    k = Keys()
-    w = Wallet(k.access_key, k.secret_key, k.passphrase, False)
+    t = Tools()
+    mi = MarketInformations()
+    w = Wallet("keys", False, mi)
 
-    if not ping_test():
+    """
+    if not t.ping_test():
         print("erreur")
         return;
+    """
+
+    await w.init()
+    await mi.init()
+
+    #await w.walletInformations()
+
+    await w.transactionHistory("BTC/EUR")
+
+    #await w.sell_percentage("BTC/USDT", 25)
+
+    #print(await mi.getPrice("BTC/USDT"))
+
+    #candles = await mi.fetch_candles("BTC/EUR", "1h", 1209600000)
+    #print(len(candles))
+
     
-    await w.connect()
-    
-    await w.walletInformations()
-    
-    #await w.buy("SBTC/SUSD:SUSDC", 0.002)
-    
-    #await w.exchange.watch_positions("BTC/EUR")
-    #positions = await w.exchange.fetch_positions()
-    #print(positions)
-    
-    #await w.transactionHistory("BTC/EUR")
-    
-    #await w.sell_percentage("BTC/EUR", 100)
-    
-    await w.disconnect()
+    await w.account.disconnect()
+    await mi.account.disconnect()
     
 
 if __name__ == "__main__":
@@ -35,21 +40,15 @@ if __name__ == "__main__":
 
 
 """
-w.market_mode('spot')
-
-price = await w.getPrice("BTC/USDT")
-print(price)
-
-for i in range(10): # Si le résultat est négatif (< 20), c'est que le BTC est entrain de baisser et inversement
-    amount = await w.actual_currency_equivalence("BTC/EUR", 20)
-    print(amount)
-    currency = await w.actual_crypto_equivalence("BTC/EUR", amount)
-    print(currency)
-    time.sleep(1)
-
-await w.walletInformations()
-
-await w.orderBook("BTC/EUR")
-
-#await w.place_order("BTC/EUR", 'buy', await w.actual_currency_equivalence("BTC/EUR", 5), 59000)
+while True:
+    ask=exchange.fetch_order_book(sym)
+    pr=ask['asks'][0][0]
+    if exchange.fetch_positions()==[]:
+        break
+    elif exchange.fetch_positions()[0]['info']['unrealisedRoePcnt']*-100>=sl:
+        exchange.create_order(sym, 'limit', 'sell', amount, pr)
+    elif exchange.fetch_positions()[0]['info']['unrealisedRoePcnt']*100>=tp:
+        exchange.create_order(sym, 'limit', 'sell', amount, pr)
+    sleep(1)
+https://stackoverflow.com/questions/70568934/create-contract-order-with-take-profit-and-stop-loss-with-ccxt
 """

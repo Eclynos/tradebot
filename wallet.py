@@ -1,16 +1,21 @@
 import ccxt.pro as ccxt
 from account import Account
+from marketInfo import MarketInformations
 
 class Wallet:
-    def __init__(self, key_file, sandbox_mode) -> None:
+    def __init__(self, key_file, sandbox_mode, mi):
         self.account = Account(key_file)
-        self.account.connect()
+        self.sandbox_mode = sandbox_mode
+        self.positions = []
+        self.mi = mi
+
+
+    async def init(self):
+        await self.account.connect()
         self.exchange = self.account.exchange
 
-        if sandbox_mode:
+        if self.sandbox_mode:
             self.exchange.set_sandbox_mode(True)
-
-        self.positions = []
 
 
 # SETTING OPTIONS
@@ -108,7 +113,7 @@ class Wallet:
             print(e)
 
 
-    async def buy(self, symbol, amount):
+    async def buy(self, symbol, amount): # tested
         """Achète directement une quantité d'une crypto"""
         
         try:
@@ -125,7 +130,7 @@ class Wallet:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
 
 
-    async def buy_with_cost(self, symbol, cost):
+    async def buy_with_cost(self, symbol, cost): # not tested
         """Achète directement une quantité d'une crypto avec un coût en fiat"""
         
         try:
@@ -140,7 +145,7 @@ class Wallet:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
         
     
-    async def sell(self, symbol, amount): 
+    async def sell(self, symbol, amount): # tested
         """Vend directement un nombre d'une crypto"""
 
         try:
@@ -157,7 +162,7 @@ class Wallet:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
-    async def close_all_positions(self): # pas testée
+    async def close_all_positions(self): # not tested
         """Vend toutes les positions existantes"""
         
         try:
@@ -170,7 +175,7 @@ class Wallet:
         
             
             
-    async def sell_with_cost(self, symbol, cost):
+    async def sell_with_cost(self, symbol, cost): # not tested
         """Vend directement une quantité d'une crypto avec un coût en fiat"""
         
         try:
@@ -185,13 +190,19 @@ class Wallet:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
-    async def sell_percentage(self, symbol, percentage=100): # pas testé
+    async def sell_percentage(self, symbol, percentage=100): # tested
         """Vend directement un pourcentage d'une crypto possédée"""
 
         try:
+            base_currency = symbol.split('/')[0]
             balance = await self.exchange.fetch_balance()
-            available_amount = balance['free'].get(symbol, 0)
-            amount = available_amount * (percentage/100)
+            
+            if base_currency not in balance['free']:
+                print(f"Pas de {base_currency}")
+                return
+
+            available_amount = balance['free'].get(base_currency, 0)
+            amount = available_amount * (percentage / 100)
             
             order = await self.exchange.create_order(
                 symbol = symbol,
@@ -199,18 +210,19 @@ class Wallet:
                 side = 'sell',
                 amount = amount,
             )
-            
+
             self.save_and_print_position(order)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
+
     def save_and_print_position(self, order):
         """Sauvegarde la position dans la liste des positions et print les informations"""
         
         print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
-        print(f"Quantity: {order['filled']} = {self.crypto_equivalence(order['filled'], order['average'])} €")
+        print(f"Quantity: {order['filled']} = {self.mi.crypto_equivalence(order['filled'], order['average'])} €")
         print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
         
         self.positions.append(order)
@@ -252,7 +264,13 @@ class Wallet:
         print('\n' + symbol + " History")
         
         for trade in trades:
-            print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}\nQuantity: {trade['amount']} = {await self.actual_crypto_equivalence(symbol, trade['amount'])} €\nDate: {self.exchange.iso8601(trade['timestamp'])}\n")
+            print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}")
+            print(f"Quantity: {trade['amount']} = {await self.mi.actual_crypto_equivalence(symbol, trade['amount'])} €")
+            if trade['fee']['currency'] != 'EUR':
+                print(f"Fees: {trade['fee']['cost']} {trade['fee']['currency']} = {await self.mi.actual_crypto_equivalence(trade['fee']['currency']+'/EUR', trade['fee']['cost'])} €")
+            else:
+                print(f"Fees: {trade['fee']['cost']} {trade['fee']['currency']}")
+            print(f"Date: {self.exchange.iso8601(trade['timestamp'])}\n")
 
 
     async def orderBook(self, symbol):
@@ -275,7 +293,7 @@ class Wallet:
             print("Wallet informations in spot:")
             for elt in balance["info"]:
                 if elt['coin'] != 'EUR':
-                    print(f"{elt['coin']}: {elt['available']} = {await self.actual_crypto_equivalence(elt['coin'] + '/EUR', float(elt['available']))} €")
+                    print(f"{elt['coin']}: {elt['available']} = {await self.mi.actual_crypto_equivalence(elt['coin'] + '/EUR', float(elt['available']))} €")
                 else:
                     print(f"{elt['coin']}: {elt['available']} €")
         elif self.exchange.options['defaultType'] in ["future", "swap"]:

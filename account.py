@@ -12,9 +12,9 @@ class Account:
     async def connect(self):
         """Connect account with api keys to python"""
         self.exchange = ccxt.bitget({ # etablie la connexion au compte
-            'apiKey': self.keys.access_key,
-            'secret': self.keys.secret_key,
-            'password': self.keys.passphrase,
+            'apiKey': self.access_key,
+            'secret': self.secret_key,
+            'password': self.passphrase,
         })
         
         self.exchange.verbose = False # pour le debug si True

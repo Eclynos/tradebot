@@ -1,4 +1,4 @@
-import requests, json
+import requests, json, csv
 
 class Tools:
     def __init__(self) -> None:
@@ -6,7 +6,12 @@ class Tools:
         with open('./data/codeToID.json','r') as json_File:
             self.codeToIDDico = json.load(json_File)
 
-    
+    def readFile(self, coinCode) -> list:
+        with open(f"./Database/{coinCode}-USDT.csv", 'r') as file_csv:
+            allData = csv.DictReader(file_csv)
+            allData = list(allData)
+
+        return allData
 
     def time_frame_to_s(self, time_frame):
         """Calcule le bon nombre de s pour une time_frame donnée"""

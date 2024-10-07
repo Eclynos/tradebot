@@ -5,3 +5,4 @@ Backtest-Tools-V2
 Backtest/Database
 code_save
 keys
+data/*.csv

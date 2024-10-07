@@ -103,3 +103,24 @@ class DataAnalysis:
             avgPrice += dataList[numberOfData - 1 - i]["price"]
         
         return l
+    
+    def allGoldenCrosses(self, data, shortMATime, longMATime, noCrossTime):
+        if(len(data) <= longMATime + noCrossTime):
+            print("longueur de data trop petite")
+            return False
+        
+        longMA = self.dA.movingAverage(data, longMATime)
+        shortMA = self.dA.movingAverage(data, shortMATime)
+        l = []
+
+        for i in range(noCrossTime, longMATime, len(data)):
+            hasCrossedBefore = False
+            for j in range(i-noCrossTime, i):
+                if shortMA[j] >= longMA[j]:
+                    hasCrossedBefore = True
+                    break
+
+            if not hasCrossedBefore and shortMA[i] > longMA[i]:
+                l.append({"time" : data[i]["date"], "force" : (shortMA[i]/longMA[i]) / (shortMA[i-1]/longMA[i-1])})
+        
+        return l

@@ -1,8 +1,16 @@
-import requests, json
+import requests, json, csv
 
 class Tools:
     def __init__(self) -> None:
         pass
+    
+    
+    def readFile(self, coinCode) -> list:
+        with open(f"./Database/{coinCode}-USDT.csv", 'r') as file_csv:
+            allData = csv.DictReader(file_csv)
+            allData = list(allData)
+
+        return allData
     
 
     def time_frame_to_s(self, time_frame):

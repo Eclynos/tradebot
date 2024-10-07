@@ -7,7 +7,7 @@ class Tools:
             self.codeToIDDico = json.load(json_File)
 
     def readFile(self, coinCode) -> list:
-        with open(f"./Database/{coinCode}-USDT.csv", 'r') as file_csv:
+        with open(f"./data/{coinCode}-USDT.csv", 'r') as file_csv:
             allData = csv.DictReader(file_csv)
             allData = list(allData)
 

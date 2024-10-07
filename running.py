@@ -9,25 +9,29 @@ async def main():
     mi = MarketInformations()
     w = Wallet("keys", False, mi)
 
-    """
+
     if not t.ping_test():
         print("erreur")
         return;
-    """
+
 
     await w.init()
     await mi.init()
 
-    #await w.walletInformations()
+    await w.walletInformations()
+    
+    #await w.transactionHistory("BTC/USDT")
+    
+    if not t.ping_test():
+        print("erreur")
+        return;
 
-    await w.transactionHistory("BTC/EUR")
-
-    #await w.sell_percentage("BTC/USDT", 25)
-
-    #print(await mi.getPrice("BTC/USDT"))
-
-    #candles = await mi.fetch_candles("BTC/EUR", "1h", 1209600000)
-    #print(len(candles))
+    await w.buy("BTC/USDT", 2)
+    #await w.sell("BTC/USDT", amount)
+    
+    #print(w.positions)
+    
+    await w.walletInformations()
 
     
     await w.account.disconnect()

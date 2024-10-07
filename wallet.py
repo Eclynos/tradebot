@@ -18,6 +18,7 @@ class Wallet:
             self.exchange.set_sandbox_mode(True)
 
 
+
 # SETTING OPTIONS
 
 
@@ -223,7 +224,7 @@ class Wallet:
         
         print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
         print(f"Quantity: {order['filled']} = {self.mi.crypto_equivalence(order['filled'], order['average'])} €")
-        print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}\nFee rate: {order['fee']['rate']}")
+        print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}")
         
         self.positions.append(order)
 

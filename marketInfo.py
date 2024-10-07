@@ -2,6 +2,7 @@ import ccxt.pro as ccxt
 from account import Account
 from tools import Tools
 
+
 class MarketInformations:
     def __init__(self) -> None:
         self.account = Account('info_keys')
@@ -71,9 +72,7 @@ class MarketInformations:
 
    
     async def fetch_candles(self, symbol, timeFrame, since):
-        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES
-        https://www.bitget.com/api-doc/contract/market/Get-Candle-Data
-        """
+        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES"""
 
         candles = []
         timestamp = await self.exchange.fetch_time()

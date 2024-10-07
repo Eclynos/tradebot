@@ -2,10 +2,7 @@ import requests, json
 
 class Tools:
     def __init__(self) -> None:
-        self.codeToIDDico = {}
-        with open('./data/codeToID.json','r') as json_File:
-            self.codeToIDDico = json.load(json_File)
-
+        pass
     
 
     def time_frame_to_s(self, time_frame):
@@ -25,7 +22,7 @@ class Tools:
     def time_frame_to_ms(self, time_frame):
         """Calcule le bon nombre de ms pour une time_frame donnée"""
         secAmount = self.time_frame_to_s(time_frame)
-        if secAmount==None:
+        if secAmount == None:
             return None
         else:
             return secAmount * 1000

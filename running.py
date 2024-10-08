@@ -17,8 +17,8 @@ async def main():
 
     await w.init()
     await mi.init()
-
-    await w.walletInformations()
+    
+    await w.transactionHistory("BTC/USDT")
     
     await w.account.disconnect()
     await mi.account.disconnect()

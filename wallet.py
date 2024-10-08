@@ -250,8 +250,8 @@ class Wallet:
 
     async def transactionHistory(self, symbol):
         """Donne l'historique des trades sur une paire"""
-        trades = await self.exchange.fetch_my_trades(symbol)
-        print('\n' + symbol + " History")
+        trades = await self.exchange.fetch_my_trades(symbol, limit=1)
+        print('\n' + symbol + " History : " + str(len(trades)))
         
         for trade in trades:
             print(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}")

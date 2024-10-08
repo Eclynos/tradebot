@@ -105,22 +105,45 @@ class DataAnalysis:
         return l
     
     def allGoldenCrosses(self, data, shortMATime, longMATime, noCrossTime):
-        if(len(data) <= longMATime + noCrossTime):
+        n = len(data)
+        if(n <= longMATime + noCrossTime):
             print("longueur de data trop petite")
-            return False
+            return []
         
-        longMA = self.dA.movingAverage(data, longMATime)
-        shortMA = self.dA.movingAverage(data, shortMATime)
+        longMA = self.movingAverage(data, longMATime)
+        shortMA = self.movingAverage(data, shortMATime)
         l = []
 
-        for i in range(noCrossTime, longMATime, len(data)):
+        for i in range(noCrossTime+longMATime, n):
             hasCrossedBefore = False
             for j in range(i-noCrossTime, i):
-                if shortMA[j] >= longMA[j]:
+                if shortMA[n-(j+1)] >= longMA[n-(j+1)]:
                     hasCrossedBefore = True
                     break
 
-            if not hasCrossedBefore and shortMA[i] > longMA[i]:
-                l.append({"time" : data[i]["date"], "force" : (shortMA[i]/longMA[i]) / (shortMA[i-1]/longMA[i-1])})
+            if not hasCrossedBefore and shortMA[n-(i+1)] > longMA[n-(i+1)]:
+                l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]/longMA[n-(i+1)]) / (shortMA[n-i]/longMA[n-i]), "index":i})
+        
+        return l
+    
+    def allDeathCrosses(self, data, shortMATime, longMATime, noCrossTime):
+        n = len(data)
+        if(n <= longMATime + noCrossTime):
+            print("longueur de data trop petite")
+            return []
+        
+        longMA = self.movingAverage(data, longMATime)
+        shortMA = self.movingAverage(data, shortMATime)
+        l = []
+
+        for i in range(noCrossTime+longMATime, n):
+            hasCrossedBefore = False
+            for j in range(i-noCrossTime, i):
+                if shortMA[n-(j+1)] <= longMA[n-(j+1)]:
+                    hasCrossedBefore = True
+                    break
+
+            if not hasCrossedBefore and shortMA[n-(i+1)] < longMA[n-(i+1)]:
+                l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]/longMA[n-(i+1)]) / (shortMA[n-i]/longMA[n-i]), "index":i})
         
         return l

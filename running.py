@@ -20,20 +20,6 @@ async def main():
 
     await w.walletInformations()
     
-    #await w.transactionHistory("BTC/USDT")
-    
-    if not t.ping_test():
-        print("erreur")
-        return;
-
-    await w.buy("BTC/USDT", 2)
-    #await w.sell("BTC/USDT", amount)
-    
-    #print(w.positions)
-    
-    await w.walletInformations()
-
-    
     await w.account.disconnect()
     await mi.account.disconnect()
     

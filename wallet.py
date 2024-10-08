@@ -88,7 +88,7 @@ class Wallet:
                     price = price,
                 )
             
-            self.save_and_print_position(order)
+            self.save_and_print_position(order, True)
             
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} : {e}")
@@ -125,13 +125,13 @@ class Wallet:
                     amount = amount,
                 )
             
-            self.save_and_print_position(order)
+            self.save_and_print_position(order, True)
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
 
 
-    async def buy_with_cost(self, symbol, cost): # not tested
+    async def buy_with_cost(self, symbol, cost):
         """Achète directement une quantité d'une crypto avec un coût en fiat"""
         
         try:
@@ -140,7 +140,7 @@ class Wallet:
                     cost = cost,
                 )
             
-            self.save_and_print_position(order)
+            self.save_and_print_position(order, False)
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
@@ -157,7 +157,7 @@ class Wallet:
                 amount = amount,
             )
             
-            self.save_and_print_position(order)
+            self.save_and_print_position(order, False)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
@@ -169,26 +169,10 @@ class Wallet:
         try:
             order = await self.exchange.close_all_positions()
             
-            self.save_and_print_position(order)
+            self.save_and_print_position(order, False)
             
         except Exception as e:
             print(f"Erreur lors de la fermeture de toutes les positions : {e}")
-        
-            
-            
-    async def sell_with_cost(self, symbol, cost): # not tested
-        """Vend directement une quantité d'une crypto avec un coût en fiat"""
-        
-        try:
-            order = await self.exchange.create_market_sell_order_with_cost(
-                    symbol = symbol,
-                    cost = cost,
-                )
-            
-            self.save_and_print_position(order)
-            
-        except Exception as e:
-            print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
     async def sell_percentage(self, symbol, percentage=100): # tested
@@ -211,20 +195,25 @@ class Wallet:
                 side = 'sell',
                 amount = amount,
             )
+            
+            print(order)
 
-            self.save_and_print_position(order)
+            self.save_and_print_position(order, False)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
 
-    def save_and_print_position(self, order):
+    def save_and_print_position(self, order, complex):
         """Sauvegarde la position dans la liste des positions et print les informations"""
         
-        print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
-        print(f"Quantity: {order['filled']} = {self.mi.crypto_equivalence(order['filled'], order['average'])} €")
-        print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}")
+        if complex:
+            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
+            print(f"Quantity: {order['filled']} = {self.mi.crypto_equivalence(order['filled'], order['average'])} €")
+            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}")
+        else:
+            print(f"ID : {order["id"]}")
         
         self.positions.append(order)
 

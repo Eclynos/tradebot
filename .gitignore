@@ -6,3 +6,4 @@ Backtest/Database
 code_save
 keys
 data/*.csv
+wallet_transactions

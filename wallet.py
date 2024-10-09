@@ -3,9 +3,10 @@ from account import Account
 from marketInfo import MarketInformations
 
 class Wallet:
-    def __init__(self, key_file, sandbox_mode, mi):
+    def __init__(self, key_file, sandbox_mode, mi, transaction_file):
         self.account = Account(key_file)
         self.sandbox_mode = sandbox_mode
+        self.transaction_file = transaction_file
         self.positions = []
         self.mi = mi
 
@@ -76,7 +77,7 @@ class Wallet:
 # ORDER MANAGING
 
 
-    async def place_order(self, symbol, BuyorSell, amount, price): # À MODIFIER
+    async def place_order(self, symbol, BuyorSell, amount, price, SL, TP):
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
         
         try:
@@ -86,13 +87,19 @@ class Wallet:
                     side = BuyorSell,
                     amount = amount,
                     price = price,
+                    params = {
+                        
+                    }
                 )
             
-            self.save_and_print_position(order, True)
+            await self.save_and_print_position(symbol, 1)
             
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} : {e}")
-            
+
+
+    async def change_order(self, ID, amount, price, SL, TP):
+        pass
         
         
     async def cancel_order(self, symbol, order_id): # pas testé
@@ -114,7 +121,7 @@ class Wallet:
             print(e)
 
 
-    async def buy(self, symbol, amount): # tested
+    async def buy(self, symbol, amount, maxCost):
         """Achète directement une quantité d'une crypto"""
         
         try:
@@ -123,24 +130,10 @@ class Wallet:
                     type = 'market',
                     side = 'buy',
                     amount = amount,
+                    params = {"cost" : maxCost}
                 )
             
-            self.save_and_print_position(order, True)
-            
-        except Exception as e:
-            print(f"Erreur lors de l'achat de {symbol} : {e}")
-
-
-    async def buy_with_cost(self, symbol, cost):
-        """Achète directement une quantité d'une crypto avec un coût en fiat"""
-        
-        try:
-            order = await self.exchange.create_market_buy_order_with_cost(
-                    symbol = symbol,
-                    cost = cost,
-                )
-            
-            self.save_and_print_position(order, False)
+            await self.save_and_print_position(symbol, 1)
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} : {e}")
@@ -157,7 +150,7 @@ class Wallet:
                 amount = amount,
             )
             
-            self.save_and_print_position(order, False)
+            await self.save_and_print_position(symbol, 1)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
@@ -168,8 +161,6 @@ class Wallet:
         
         try:
             order = await self.exchange.close_all_positions()
-            
-            self.save_and_print_position(order, False)
             
         except Exception as e:
             print(f"Erreur lors de la fermeture de toutes les positions : {e}")
@@ -198,24 +189,27 @@ class Wallet:
             
             print(order)
 
-            self.save_and_print_position(order, False)
+            await self.save_and_print_position(symbol, 1)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} : {e}")
 
 
 
-    def save_and_print_position(self, order, complex):
+    async def save_and_print_positions(self, symbol, nb):
         """Sauvegarde la position dans la liste des positions et print les informations"""
+        trades = await self.exchange.fetch_my_trades(symbol, limit=nb)
         
-        if complex:
-            print(f"ID: {order["id"]}, {order["side"]}\nPrice: {order['average']}")
-            print(f"Quantity: {order['filled']} = {self.mi.crypto_equivalence(order['filled'], order['average'])} €")
-            print(f"Cost: {order['cost']}\nFees: {order['fee']['cost']} {order['fee']['currency']}")
-        else:
-            print(f"ID : {order["id"]}")
+        with open(self.transaction_file, "a") as f:
+            for trade in trades:
+                f.write(f"{symbol}  {self.exchange.iso8601(trade['timestamp'])}\n")
+                f.write(f"ID: {trade["id"]}, {trade["side"]}\nPrice: {trade['price']}")
+                f.write(f"\nQuantity: {trade['amount']} = {self.mi.crypto_equivalence(trade['amount'], trade['price'])} €")
+                f.write(f"\nCost: {trade['cost']} Fees: {trade['fee']['cost']} {trade['fee']['currency']}\n\n")
+            
         
-        self.positions.append(order)
+        
+    
 
 
 # WATCH WALLET INFORMATIONS

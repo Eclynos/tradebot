@@ -7,7 +7,7 @@ import asyncio, time, requests
 async def main():
     t = Tools()
     mi = MarketInformations()
-    w = Wallet("keys", False, mi)
+    w = Wallet("keys", False, mi, "wallet_transactions")
 
 
     if not t.ping_test():
@@ -17,8 +17,8 @@ async def main():
 
     await w.init()
     await mi.init()
+
     
-    await w.transactionHistory("BTC/USDT")
     
     await w.account.disconnect()
     await mi.account.disconnect()

@@ -7,7 +7,7 @@ import asyncio, time, requests
 async def main():
     t = Tools()
     mi = MarketInformations()
-    w = Wallet("keys", False, mi, "wallet_transactions")
+    w = Wallet("keys", False, mi)
 
 
     if not t.ping_test():
@@ -18,7 +18,7 @@ async def main():
     await w.init()
     await mi.init()
 
-    
+    await w.transactionHistory("BTC/USDT")
     
     await w.account.disconnect()
     await mi.account.disconnect()
@@ -29,16 +29,14 @@ if __name__ == "__main__":
 
 
 
+
+
+
+
+
+
 """
-while True:
-    ask=exchange.fetch_order_book(sym)
-    pr=ask['asks'][0][0]
-    if exchange.fetch_positions()==[]:
-        break
-    elif exchange.fetch_positions()[0]['info']['unrealisedRoePcnt']*-100>=sl:
-        exchange.create_order(sym, 'limit', 'sell', amount, pr)
-    elif exchange.fetch_positions()[0]['info']['unrealisedRoePcnt']*100>=tp:
-        exchange.create_order(sym, 'limit', 'sell', amount, pr)
-    sleep(1)
+Continuer à améliorer gestion des ordres
+
 https://stackoverflow.com/questions/70568934/create-contract-order-with-take-profit-and-stop-loss-with-ccxt
 """

@@ -35,6 +35,7 @@ class Wallet:
         
         if mode in ['spot', 'swap', 'future', 'margin']:
             self.exchange.options['defaultType'] = mode
+            self.exchange.options['type'] = mode
         else:
             print("Wrong market mode")
         
@@ -89,13 +90,14 @@ class Wallet:
                 },
                 'takeProfit' : {
                     'triggerPrice': TPprice
-                }
+                },
+                'type': self.exchange.options['defaultType']
             }
         
         try:
             order = await self.exchange.create_order(
                 symbol = symbol,
-                type = 'limit',
+                type = 'stop',
                 side = BuyorSell,
                 amount = amount,
                 price = price,
@@ -162,7 +164,7 @@ class Wallet:
                     params = {"cost" : maxCost}
                 )
             # faire fonc pour le cas où l'order est rejected
-            await self.save_and_print_position(symbol, 1)
+            await self.save_and_print_positions(symbol, 1)
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} :\n{e}")
@@ -179,7 +181,7 @@ class Wallet:
                 amount = amount,
             )
             
-            await self.save_and_print_position(symbol, 1)
+            await self.save_and_print_positions(symbol, 1)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
@@ -218,7 +220,7 @@ class Wallet:
             
             print(order)
 
-            await self.save_and_print_position(symbol, 1)
+            await self.save_and_print_positions(symbol, 1)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
@@ -306,10 +308,12 @@ class Wallet:
             balance = await self.exchange.fetch_balance()
             print("Wallet informations in spot:")
             for elt in balance["info"]:
-                if elt['coin'] != 'EUR':
-                    print(f"{elt['coin']}: {elt['available']} = {await self.mi.actual_crypto_equivalence(elt['coin'] + '/EUR', float(elt['available']))} €")
-                else:
+                if elt['coin'] == 'EUR':
                     print(f"{elt['coin']}: {elt['available']} €")
+                elif elt['coin'] != 'USDT':
+                    print(f"{elt['coin']}: {elt['available']} = {await self.mi.actual_crypto_equivalence(elt['coin'] + '/USDT', float(elt['available']))} USDT")
+                else:
+                    print(f"{elt['coin']}: {elt['available']} = {await self.mi.actual_crypto_equivalence('USDT/EUR', float(elt['available']))} €")
         elif self.exchange.options['defaultType'] in ["future", "swap"]:
             balance = await self.exchange.fetch_balance()
             print(f"Wallet informations in {self.exchange.options['defaultType']}:")

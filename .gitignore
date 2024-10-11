@@ -6,3 +6,5 @@ Backtest/Database
 keys
 data/*.csv
 trade_logs
+candles
+candles_manager.py

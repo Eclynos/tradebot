@@ -3,7 +3,12 @@ __pycache__/tools.cpython-311.pyc
 cryptos.json
 Backtest-Tools-V2
 Backtest/Database
-code_save
 keys
 data/*.csv
+<<<<<<< HEAD
 *.jpg
+=======
+trade_logs
+candles
+candles_manager.py
+>>>>>>> 2b4ab9cac3792d1aee18bfb2274c70ef9eadeaf6

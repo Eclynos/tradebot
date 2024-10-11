@@ -39,6 +39,18 @@ class MarketInformations:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
 
 
+    async def orderBook(self, symbol):
+        """Donne l'order book des trades sur une paire"""
+        try:
+            orderbook = await self.exchange.watch_order_book(symbol)
+            print(f"Order Book for {symbol}:")
+            print(f"Asks: {orderbook['asks'][0]}")
+            print(f"Bids: {orderbook['bids'][0]}")
+            print(f"Date: {orderbook['datetime']}")
+        except Exception as e:
+            print(f"Erreur lors de la récupération de l'order book de {symbol} : {e}")
+
+
     async def actual_currency_equivalence(self, symbol, amount):
         """Calcule le montant équivalent d'une crypto à une monnaie en temps réel
 

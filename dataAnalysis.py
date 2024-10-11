@@ -1,4 +1,5 @@
 import numpy
+import matplotlib.pyplot as plt
 
 class DataAnalysis:
     def getMathLocalMins(self, baseList : list) -> list:
@@ -63,7 +64,7 @@ class DataAnalysis:
 
         numberOfEntries = len(dataList)
 
-        minX = int(dataList[0]["key"])
+        minX = int(dataList[0]["date"])
         
         A = []
         for _ in range(degree +1):
@@ -74,7 +75,7 @@ class DataAnalysis:
         for i in range(numberOfEntries):
             for l in range(degree + 1):
                 for c in range(l, degree + 1):
-                    A[l][c] += (int(dataList[i]["key"])-minX)**(2 * degree - l - c)
+                    A[l][c] += (int(dataList[i]["date"])-minX)**(2 * degree - l - c)
         
         for l in range(degree + 1):
             for c in range(l):
@@ -86,7 +87,7 @@ class DataAnalysis:
 
         for i in range(numberOfEntries):
             for l in range(degree+1):
-                B[l] += (int(dataList[i]["key"]) - minX)**(degree - l) * float(dataList[i]["price"])
+                B[l] += (int(dataList[i]["date"]) - minX)**(degree - l) * float(dataList[i]["price"])
 
         X = numpy.linalg.solve(A,B)
         return X
@@ -147,3 +148,16 @@ class DataAnalysis:
                 l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]/longMA[n-(i+1)]) / (shortMA[n-i]/longMA[n-i]), "index":i})
         
         return l
+    
+    def savePlot(self, data, coinCode, trades):
+        plt.figure(figsize=(500,100), dpi=80)
+        plt.xticks(range(data[0]["date"], data[-1]["date"], 30000))
+        plt.yticks([0.001*i for i in range(1000)])
+        plt.plot([data[i]["date"] for i in range(len(data))], [data[i]["price"] for i in range(len(data))])
+        plt.scatter([trades[0][i][0] for i in range(len(trades[0]))], [trades[0][i][2] for i in range(len(trades[0]))],  color="black", s=1000, marker="x")
+        plt.scatter([trades[0][i][1] for i in range(len(trades[0]))], [trades[0][i][3] for i in range(len(trades[0]))],  color="black", s=1000, marker="x")
+        for i in range(len(trades[0])):
+            plt.plot([trades[0][i][0], trades[0][i][1]], [trades[0][i][2], trades[0][i][3]], color=("green" if trades[0][i][2] < trades[0][i][3] else "red"), lw=3)
+        plt.grid()
+        plt.savefig(f"{coinCode}.jpg")
+

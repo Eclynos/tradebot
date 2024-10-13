@@ -1,7 +1,8 @@
 from wallet import Wallet
 from marketInfo import MarketInformations
+from decimal import Decimal
 from tools import Tools
-import asyncio, time, requests
+import asyncio, time
     
     
 async def main():
@@ -22,18 +23,26 @@ async def main():
         print("erreur")
         return;
     
+    
+    #await w.sell("HNT/USDT", await mi.actual_currency_equivalence("HNT/USDT", 2))
+    
     w.market_mode('spot')
-    
-    #await w.sell("SOL/USDT", await mi.actual_currency_equivalence("SOL/USDT", 2))
-    
     await w.walletInformations()
+    w.market_mode('swap')
     
-    #price = await mi.getPrice("HNT/USDT") * 1.03
+    price = await mi.getPrice("HNT/USDT") * 1.03
+    amount = await mi.actual_currency_equivalence("HNT/USDT", 2)
     
-    #await w.place_order("HNT/USDT", 'buy', await mi.actual_currency_equivalence("HNT/USDT", 2), price, price * 0.98, price * 1.02)
-
-    #await w.walletInformations()
+    SL = price * 0.98; TP = price * 1.02
     
+    await w.place_order("HNT/USDT", 'buy', amount, price, SL, TP)
+    
+    time.sleep(7)
+    
+    await w.cancel_all_orders("HNT/USDT")
+    
+    w.market_mode('spot')
+    await w.walletInformations()
     
     await w.account.disconnect()
     await mi.account.disconnect()
@@ -51,6 +60,7 @@ if __name__ == "__main__":
 
 
 """
+create_limit_buy_order
 Continuer à améliorer gestion des ordres
 Trouver un moyen de tracer la courbe des derniers temps en récupérant les dernières bougies
 

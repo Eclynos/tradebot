@@ -1,6 +1,5 @@
 import ccxt.pro as ccxt
 from account import Account
-from marketInfo import MarketInformations
 
 class Wallet:
     def __init__(self, key_file, sandbox_mode, mi):
@@ -81,34 +80,39 @@ class Wallet:
     async def place_order(self, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None):
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix
         https://github.com/ccxt/ccxt/blob/master/examples/py/create-order-position-with-takeprofit-stoploss.py"""
+        await self.exchange.load_markets()
         
         params = {}
         if self.exchange.options['defaultType'] != "spot":
             params = {
                 'stopLoss': {
-                    'triggerPrice': SLprice
+                    'triggerPrice': SLprice,
+                    'price': SLprice * 0.999
                 },
                 'takeProfit' : {
-                    'triggerPrice': TPprice
+                    'triggerPrice': TPprice,
+                    'price': TPprice * 1.001
                 },
-                'type': self.exchange.options['defaultType']
+                'type': self.exchange.options['defaultType'],
+                'hedged': True
             }
-        
         try:
-            order = await self.exchange.create_order(
+            order = await self.exchange.create_stop_limit_order(
                 symbol = symbol,
-                type = 'stop',
-                side = BuyorSell,
                 amount = amount,
+                side = 'buy',
+                stopPrice = price,
                 price = price,
                 params = params
             )
-            
+           
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
+            
+        return order
 
 
-    async def change_order(self, id, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None): # À tester
+    async def change_order(self, id, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None): # marche pas encore
         """Permet de changer les paramètres d'un ordre pas encore exécuté"""
         
         try:
@@ -121,10 +125,12 @@ class Wallet:
                 price = price,
                 params = {
                     'stopLoss': {
-                        'triggerPrice': SLprice
+                        'triggerPrice': SLprice,
+                        'price': SLprice * 0.999
                     },
                     'takeProfit' : {
-                        'triggerPrice': TPprice
+                        'triggerPrice': TPprice,
+                        'price': TPprice * 1.001
                     }
                 }
             )
@@ -133,21 +139,19 @@ class Wallet:
             print(f"Erreur lors de l'édition de l'ordre de {symbol} :\n{e}")
         
         
-    async def cancel_order(self, symbol, order_id): # pas testé
+    async def cancel_order(self, symbol, order_id): # testé
         """Tente de supprimer un ordre (!= vendre une position)"""
         try:
             response = await self.exchange.cancel_order(order_id, symbol)
-            print(response)
         except Exception as e:
             print("Order cancelling failed")
             print(e)
             
             
-    async def cancel_all_orders(self, symbol): # pas testé
+    async def cancel_all_orders(self, symbol): # testé
         """Tente de supprimer tous les ordres (!= vendre toutes les positions)"""
         try:
             response = await self.exchange.cancel_all_orders(symbol)
-            print(response)
         except Exception as e:
             print(e)
 
@@ -233,7 +237,7 @@ class Wallet:
         with open(self.transaction_file, "a") as f:
             for trade in trades:
                 f.write(f"{symbol}  {self.exchange.iso8601(trade['timestamp'])}\n")
-                f.write(f"ID: {trade["id"]}, {trade["side"]}\nPrice: {trade['price']}")
+                f.write(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}")
                 f.write(f"\nQuantity: {trade['amount']} = {self.mi.crypto_equivalence(trade['amount'], trade['price'])} €")
                 f.write(f"\nCost: {trade['cost']} Fees: {trade['fee']['cost']} {trade['fee']['currency']}\n\n")
 

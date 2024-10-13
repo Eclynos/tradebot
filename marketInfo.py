@@ -75,7 +75,7 @@ class MarketInformations:
     
     def currency_equivalence(self, amount, price):
         """Calcule le montant équivalent d'une crypto à une monnaie"""
-        return round(amount / price, 13)
+        return round(amount / price, 9)
 
 
     def crypto_equivalence(self, amount, price):

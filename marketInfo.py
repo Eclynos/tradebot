@@ -20,21 +20,22 @@ class MarketInformations:
         markets = self.exchange.markets
         symbols = list(markets.keys())
         return symbols
+    
+
+    async def getBidPrice(self, symbol):
+        try:
+            ticker = await self.exchange.fetch_ticker(symbol)
+            return ticker['bid']
+            
+        except Exception as e:
+            print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
 
 
     async def getPrice(self, symbol):
-        """Donne le prix instantané d'un symbole par rapport à une monnaie.
-        
-        Args:
-            symbol ('BTC/EUR'): le symbole de la paire de trading
-            
-        Returns:
-            Le prix actuel de la paire de trading sous forme de float.
-        """
+        """Donne le prix instantané d'un symbole par rapport à une monnaie."""
         try:
             ticker = await self.exchange.fetch_ticker(symbol)
-            price = ticker['last']  # Récupère le prix de la dernière transaction sur la blockchain
-            return price
+            return ticker['last']
         except Exception as e:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
 
@@ -81,6 +82,12 @@ class MarketInformations:
     def crypto_equivalence(self, amount, price):
         """Calcule le montant équivalent d'une monnaie à une crypto"""
         return amount * price
+    
+
+    async def fee(self, symbol):
+        """Renvoie les prix de fees supposés donnés par bitget pour le type de market actuel sur un symbole"""
+        fee = await self.exchange.fetch_trading_fee(symbol)
+        print(f"{fee['symbol']} fee, maker: {fee['maker']} taker: {fee['taker']}")
 
    
     async def fetch_candles(self, symbol, timeFrame, since):

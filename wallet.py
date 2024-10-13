@@ -78,33 +78,26 @@ class Wallet:
 
 
     async def place_order(self, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None):
-        """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix
-        https://github.com/ccxt/ccxt/blob/master/examples/py/create-order-position-with-takeprofit-stoploss.py"""
-        await self.exchange.load_markets()
+        """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
+
+        order = None
+
+        if self.exchange.options['defaultType'] == "spot":
+            print("mauvais type d'échange")
+            raise ValueError(self.exchange.options['defaultType'])
         
-        params = {}
-        if self.exchange.options['defaultType'] != "spot":
-            params = {
-                'stopLoss': {
-                    'triggerPrice': SLprice,
-                    'price': SLprice * 0.999
-                },
-                'takeProfit' : {
-                    'triggerPrice': TPprice,
-                    'price': TPprice * 1.001
-                },
-                'type': self.exchange.options['defaultType'],
-                'hedged': True
-            }
+        params = {
+            'stopLoss': {
+                'triggerPrice': SLprice
+            },
+            'takeProfit' : {
+                'triggerPrice': TPprice
+            },
+            'type': self.exchange.options['defaultType']
+        }
+
         try:
-            order = await self.exchange.create_stop_limit_order(
-                symbol = symbol,
-                amount = amount,
-                side = 'buy',
-                stopPrice = price,
-                price = price,
-                params = params
-            )
+            order = await self.exchange.create_order(symbol, 'limit', BuyorSell, amount, price * 0.999, params)
            
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
@@ -139,16 +132,20 @@ class Wallet:
             print(f"Erreur lors de l'édition de l'ordre de {symbol} :\n{e}")
         
         
-    async def cancel_order(self, symbol, order_id): # testé
+    async def cancel_order(self, symbol, order_id):
         """Tente de supprimer un ordre (!= vendre une position)"""
         try:
             response = await self.exchange.cancel_order(order_id, symbol)
+            if response == None:
+                print(f"Error deleting {order_id} order")
+            else:
+                print(f"{symbol} : {order_id} as been cancelled")
         except Exception as e:
             print("Order cancelling failed")
             print(e)
             
             
-    async def cancel_all_orders(self, symbol): # testé
+    async def cancel_all_orders(self, symbol):
         """Tente de supprimer tous les ordres (!= vendre toutes les positions)"""
         try:
             response = await self.exchange.cancel_all_orders(symbol)
@@ -174,34 +171,20 @@ class Wallet:
             print(f"Erreur lors de l'achat de {symbol} :\n{e}")
         
     
-    async def sell(self, symbol, amount): # tested
+    async def sell(self, symbol, amount):
         """Vend directement un nombre d'une crypto"""
 
         try:
-            order = await self.exchange.create_order(
-                symbol = symbol,
-                type = 'market',
-                side = 'sell',
-                amount = amount,
-            )
+            order = await self.exchange.create_order(symbol, 'market', 'sell', amount)
             
             await self.save_and_print_positions(symbol, 1)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
+        return order
 
 
-    async def close_all_positions(self): # not tested
-        """Vend toutes les positions existantes"""
-        
-        try:
-            order = await self.exchange.close_all_positions()
-            
-        except Exception as e:
-            print(f"Erreur lors de la fermeture de toutes les positions :\n{e}")
-
-
-    async def sell_percentage(self, symbol, percentage=100): # tested
+    async def sell_percentage(self, symbol, percentage=100):
         """Vend directement un pourcentage d'une crypto possédée"""
 
         try:
@@ -215,19 +198,23 @@ class Wallet:
             available_amount = balance['free'].get(base_currency, 0)
             amount = available_amount * (percentage / 100)
             
-            order = await self.exchange.create_order(
-                symbol = symbol,
-                type = 'market',
-                side = 'sell',
-                amount = amount,
-            )
-            
-            print(order)
+            order = await self.exchange.create_order(symbol, 'market', 'sell', amount)
 
             await self.save_and_print_positions(symbol, 1)
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
+        return order
+
+
+    async def close_all_positions(self): # not tested
+        """Vend toutes les positions existantes"""
+        
+        try:
+            order = await self.exchange.close_all_positions()
+            
+        except Exception as e:
+            print(f"Erreur lors de la fermeture de toutes les positions :\n{e}")
 
 
     async def save_and_print_positions(self, symbol, nb=None):

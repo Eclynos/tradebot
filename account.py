@@ -15,6 +15,7 @@ class Account:
             'apiKey': self.access_key,
             'secret': self.secret_key,
             'password': self.passphrase,
+            'enableRateLimit': True
         })
         
         self.exchange.verbose = False # pour le debug si True

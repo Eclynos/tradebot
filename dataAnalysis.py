@@ -164,22 +164,8 @@ class DataAnalysis:
                 minimum = d["price"]
         return minimum
 
-
-    def noiseFilter(self, data, size):
-        filteredList = copy.deepcopy(data)
-        for i in range(len(data)):
-            if i >= size:
-                filteredPrice = 0
-                for j in range(-size, 0, 1):
-                    filteredPrice += 2*j * data[i + 1 - j] 
-                
-                filteredPrice = filteredPrice / (1 - 2**(-size))
-                filteredList[i]["price"] = filteredPrice
-        
-        return filteredList
-
     def visualisation(self, coinCode, *args):
-        plt.figure(figsize=(500,100), dpi=40)
+        plt.figure(figsize=(500,100), dpi=80)
         plt.xticks(range(args[0][0]["date"], args[0][-1]["date"], (args[0][-1]["date"] - args[0][0]["date"]) // 500))
         plt.yticks(range(int(self.minPrice(args[0])), int(self.maxPrice(args[0])), int(self.maxPrice(args[0]) - self.minPrice(args[0])) // 100))
         for i in range(0, len(args), 2):

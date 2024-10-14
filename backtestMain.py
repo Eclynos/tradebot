@@ -34,5 +34,6 @@ if __name__ == "__main__":
     totalTradeTime = usableData[endIndex-1]["date"] - usableData[startIndex]["date"]
     print(totalTradeTime, "sec. =", totalTradeTime / 60, "min. =", totalTradeTime / 3600, "h. =", totalTradeTime / 86400, "jours =", totalTradeTime / 604800, "sem. =", totalTradeTime / (365.25 * 86400), "ans")
 
-    da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", sell[0], "buy-sell")
+    # da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", sell[0], "buy-sell")
+    da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", da.noiseFilter(usableData[startIndex:endIndex], 50), "curve")
 

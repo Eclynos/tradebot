@@ -115,11 +115,15 @@ class Wallet:
         """Tente de supprimer tous les ordres (!= vendre toutes les positions)"""
         try:
             response = await self.exchange.cancel_all_orders(symbol)
+            if response == None:
+                print(f"Error deleting {symbol} order")
+            else:
+                print(f"All {symbol} orders as been cancelled")
         except Exception as e:
             print(e)
 
 
-    async def buy(self, symbol, amount, maxCost):
+    async def buy(self, symbol, amount, cost=None):
         """Achète directement une quantité d'une crypto"""
         
         try:
@@ -128,7 +132,7 @@ class Wallet:
                     type = 'market',
                     side = 'buy',
                     amount = amount,
-                    params = {"cost" : maxCost}
+                    params = {"cost" : cost} if cost != None else None
                 )
             # faire fonc pour le cas où l'order est rejected
             await self.save_and_print_positions(symbol, 1)
@@ -183,7 +187,8 @@ class Wallet:
         try:
             balance = await self.exchange.fetch_balance()
             for coin in balance['total'].keys():
-                self.exchange.create_market_sell_order(coin + "/USDT",balance['total'][coin])
+                if coin != "EUR" and coin != "USDT" and await self.mi.actual_crypto_equivalence(coin + "/USDT", balance['total'][coin]) > 0.15:
+                    await self.exchange.create_market_sell_order(coin + "/USDT", balance['total'][coin])
             
         except Exception as e:
             print(f"Erreur lors de la vente de tous les actifs:\n{e}")

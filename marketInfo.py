@@ -100,7 +100,8 @@ class MarketInformations:
 
    
     async def fetch_candles(self, symbol, timeFrame, since):
-        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES"""
+        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en ms
+        renvoie [timestamp, open, high, low, close, volume]"""
 
         candles = []
         timestamp = await self.exchange.fetch_time()

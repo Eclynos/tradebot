@@ -9,33 +9,36 @@ async def main():
     mi = MarketInformations()
     w = Wallet("keys", False, mi)
 
+    """
     if not t.ping_test():
         print("erreur")
         return;
+    """
 
     await w.init()
     await mi.init()
 
-    w.market_mode('swap')
-
-    symbol = "BTC/USDT"
-    price = await mi.getBidPrice(symbol)
-    price *= 0.96
-    amount = await mi.actual_currency_equivalence(symbol, 2)
-    
-    price = round(price, 5)
-    
-    order = await w.limitOrder(symbol, 'buy', amount, price)
-    print(order['id'])
-    
-    time.sleep(15)
-    
-    await w.cancel_all_orders("BTC/USDT")
-    
-    time.sleep(5)
-    
-    w.market_mode('spot')
     await w.walletInformations()
+
+    symbol = "SOL/USDT"
+    amount = await mi.actual_currency_equivalence(symbol, 3.5)
+    #print(amount)
+    
+    order = await w.sell_all()
+    print(order)
+
+    
+    await w.walletInformations()
+    #time.sleep(13)
+
+    #order = await w.buy(symbol, amount, 3.5)
+    #print(order)
+    
+    #await w.cancel_all_orders("BTC/USDT")
+    
+    #time.sleep(3)
+
+    #await w.walletInformations()
     
     await w.account.disconnect()
     await mi.account.disconnect()
@@ -50,43 +53,12 @@ if __name__ == "__main__":
 
 
 
-
-
 """
-create_limit_buy_order
 Continuer à améliorer gestion des ordres
 Trouver un moyen de tracer la courbe des derniers temps en récupérant les dernières bougies
+Gérer les contrats futures pour diminuer les frais de transactions
 
-
-async def place_order(self, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None):
-        await self.exchange.load_markets()
-
-        if self.exchange.options['defaultType'] == "spot":
-            print("mauvais type d'échange")
-            raise ValueError(self.exchange.options['defaultType'])
-        
-        params = {
-            'stopLoss': {
-                'triggerPrice': SLprice,
-                'price': SLprice * 0.999
-            },
-            'takeProfit' : {
-                'triggerPrice': TPprice,
-                'price': TPprice * 0.999
-            },
-            'type': self.exchange.options['defaultType'],
-            'hedged': True
-        }
-
-        print(symbol, 'limit', BuyorSell, amount, price, params)
-
-        try:
-            order = await self.exchange.create_order(symbol, 'limit', BuyorSell, amount, price, params)
-           
-        except Exception as e:
-            print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
-            
-        return order
-
-https://stackoverflow.com/questions/70568934/create-contract-order-with-take-profit-and-stop-loss-with-ccxt
+faire une class de gestion de toutes les class pour faciliter les actions
+ex: m.buy() fait acheter tous les wallets
+on pourra facilement modifier les paramètres pour modifier la crypto, les montants etc
 """

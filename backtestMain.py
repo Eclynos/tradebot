@@ -21,7 +21,7 @@ if __name__ == "__main__":
     startIndex = 6 * len(usableData) // 10
     endIndex = 7 * len(usableData) // 10
     for i in range(startIndex, endIndex):
-        if (s.buyingEvaluation(usableData[i-90:i+1], usableData[i]["date"]) 
+        if (s.buyingEvaluation(usableData[i-30:i+1], usableData[i]["date"]) 
             and (len(tradeList) == 0 or usableData[i]["date"] > tradeList[-1]["date"] + t.time_frame_to_s("30m"))):
             tradeList.append(usableData[i])
         
@@ -34,5 +34,5 @@ if __name__ == "__main__":
     totalTradeTime = usableData[endIndex-1]["date"] - usableData[startIndex]["date"]
     print(totalTradeTime, "sec. =", totalTradeTime / 60, "min. =", totalTradeTime / 3600, "h. =", totalTradeTime / 86400, "jours =", totalTradeTime / 604800, "sem. =", totalTradeTime / (365.25 * 86400), "ans")
 
-    da.savePlot(usableData[startIndex: endIndex], coinCode, sell)
+    da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", sell[0], "buy-sell")
 

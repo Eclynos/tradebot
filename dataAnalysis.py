@@ -1,5 +1,6 @@
 import numpy
 import matplotlib.pyplot as plt
+import copy
 
 class DataAnalysis:
     def getMathLocalMins(self, baseList : list) -> list:
@@ -149,15 +150,49 @@ class DataAnalysis:
         
         return l
     
-    def savePlot(self, data, coinCode, trades):
-        plt.figure(figsize=(500,100), dpi=80)
-        plt.xticks(range(data[0]["date"], data[-1]["date"], 30000))
-        plt.yticks([0.001*i for i in range(1000)])
-        plt.plot([data[i]["date"] for i in range(len(data))], [data[i]["price"] for i in range(len(data))])
-        plt.scatter([trades[0][i][0] for i in range(len(trades[0]))], [trades[0][i][2] for i in range(len(trades[0]))],  color="black", s=1000, marker="x")
-        plt.scatter([trades[0][i][1] for i in range(len(trades[0]))], [trades[0][i][3] for i in range(len(trades[0]))],  color="black", s=1000, marker="x")
-        for i in range(len(trades[0])):
-            plt.plot([trades[0][i][0], trades[0][i][1]], [trades[0][i][2], trades[0][i][3]], color=("green" if trades[0][i][2] < trades[0][i][3] else "red"), lw=3)
+    def maxPrice(self, data):
+        maximum = 0
+        for d in data:
+            if d["price"] > maximum:
+                maximum = d["price"]
+        return maximum
+    
+    def minPrice(self, data):
+        minimum = data[0]["price"]
+        for d in data:
+            if d["price"] < minimum:
+                minimum = d["price"]
+        return minimum
+
+
+    def noiseFilter(self, data, size):
+        filteredList = copy.deepcopy(data)
+        for i in range(len(data)):
+            if i >= size:
+                filteredPrice = 0
+                for j in range(-size, 0, 1):
+                    filteredPrice += 2*j * data[i + 1 - j] 
+                
+                filteredPrice = filteredPrice / (1 - 2**(-size))
+                filteredList[i]["price"] = filteredPrice
+        
+        return filteredList
+
+    def visualisation(self, coinCode, *args):
+        plt.figure(figsize=(500,100), dpi=40)
+        plt.xticks(range(args[0][0]["date"], args[0][-1]["date"], (args[0][-1]["date"] - args[0][0]["date"]) // 500))
+        plt.yticks(range(int(self.minPrice(args[0])), int(self.maxPrice(args[0])), int(self.maxPrice(args[0]) - self.minPrice(args[0])) // 100))
+        for i in range(0, len(args), 2):
+            if args[i+1] == "curve":
+                plt.plot([args[i][j]["date"] for j in range(len(args[i]))], [args[i][j]["price"] for j in range(len(args[i]))])
+            elif args[i+1] == "buy-sell":
+                plt.scatter([args[i][j][0] for j in range(len(args[i]))], [args[i][j][2] for j in range(len(args[i]))],  color="black", s=1000, marker="x")
+                plt.scatter([args[i][j][1] for j in range(len(args[i]))], [args[i][j][3] for j in range(len(args[i]))],  color="black", s=1000, marker="x")
+                for j in range(len(args[i])):
+                    plt.plot([args[i][j][0], args[i][j][1]], [args[i][j][2], args[i][j][3]], color=("green" if args[i][j][2] < args[i][j][3] else "red"), lw=3)
         plt.grid()
         plt.savefig(f"{coinCode}.jpg")
+            
+
+
 

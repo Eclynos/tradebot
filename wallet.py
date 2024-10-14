@@ -175,13 +175,25 @@ class Wallet:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
         
         return order
+    
+    
+    async def sell_all(self):
+        """Vend directement tout le capital en USDT -> fonction de sécurité"""
+        
+        try:
+            balance = await self.exchange.fetch_balance()
+            for coin in balance['total'].keys():
+                self.exchange.create_market_sell_order(coin + "/USDT",balance['total'][coin])
+            
+        except Exception as e:
+            print(f"Erreur lors de la vente de tous les actifs:\n{e}")
 
 
-    async def close_all_positions(self): # not tested
+    async def close_all_positions(self):
         """Vend toutes les positions existantes"""
         
         try:
-            order = await self.exchange.close_all_positions()
+            await self.exchange.close_all_positions()
             
         except Exception as e:
             print(f"Erreur lors de la fermeture de toutes les positions :\n{e}")

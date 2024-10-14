@@ -17,18 +17,22 @@ async def main():
     await w[0].init()
     await mi.init()
     
+    nb = 0
+    
     while run:
-        candles = mi.fetch_candles("BTC/USDT", "1m", t.time_frame_to_ms("2m"))
+        candles =  await mi.fetch_candles("BTC/USDT", "1m", t.time_frame_to_ms("2m"))
         for candle in candles:
-            print(candle)
-        print("\n")
+            print(candle[0] + "\n" + candle[1])
+        nb += 1
+        time.sleep(1)
+        if nb > 2:
+            run = False
         
     if not run:
         for wallet in w:
-            await wallet.close_all_positions()
+            await wallet.check_positions()
             
-    
-    
+    await w[0].sell_all()
     
     await w[0].account.disconnect()
     await mi.account.disconnect()

@@ -9,7 +9,7 @@ if __name__ == "__main__":
     s = Strategy()
     da = DataAnalysis()
     t = Tools()
-    coinCode = "BTC"
+    coinCode = "DOGE"
 
     allData = t.readFile(coinCode) # Il faut avoir téléchargé le fichier avec Backtest-Tools-V2 au préalable et le placer dans ./data/
 
@@ -29,11 +29,19 @@ if __name__ == "__main__":
             print("buying progress :", 100*i/len(usableData), "%")
 
 
-    sell = s.sellingEvaluation(usableData, tradeList)
-    print("profit % :", 100*sell[1], "\t % of positive trades", 100*sell[2], "\t number of trades :", sell[3])
-    totalTradeTime = usableData[endIndex-1]["date"] - usableData[startIndex]["date"]
-    print(totalTradeTime, "sec. =", totalTradeTime / 60, "min. =", totalTradeTime / 3600, "h. =", totalTradeTime / 86400, "jours =", totalTradeTime / 604800, "sem. =", totalTradeTime / (365.25 * 86400), "ans")
+    # sell = s.sellingEvaluation(usableData, tradeList)
+    # print("profit % :", 100*sell[1], "\t % of positive trades", 100*sell[2], "\t number of trades :", sell[3])
+    # totalTradeTime = usableData[endIndex-1]["date"] - usableData[startIndex]["date"]
+    # print(totalTradeTime, "sec. =", totalTradeTime / 60, "min. =", totalTradeTime / 3600, "h. =", totalTradeTime / 86400, "jours =", totalTradeTime / 604800, "sem. =", totalTradeTime / (365.25 * 86400), "ans")
 
     # da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", sell[0], "buy-sell")
-    da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", da.noiseFilter(usableData[startIndex:endIndex], 50), "curve")
+
+    ma = da.simpleMovingAverage(usableData[startIndex:endIndex], 120)
+    sd = da.standardDeviation(usableData[startIndex:endIndex], ma, 120)
+    bb1 = [{"date" : ma[i]["date"], "price" : ma[i]["price"] + 2 * sd[i]["price"]} for i in range(len(ma))]
+    bb2 = [{"date" : ma[i]["date"], "price" : ma[i]["price"] - 2 * sd[i]["price"]} for i in range(len(ma))]
+    minP = da.minPrice(usableData[startIndex:endIndex])
+    diff = [{"date" : bb1[i]["date"], "price" : minP*0.99 + bb1[i]["price"]-bb2[i]["price"]} for i in range(len(bb1))]
+
+    da.visualisation(coinCode, usableData[startIndex:endIndex], "curve", bb1, "curve", bb2, "curve", ma, "curve", diff, "curve")
 

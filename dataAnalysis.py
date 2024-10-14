@@ -93,38 +93,47 @@ class DataAnalysis:
         X = numpy.linalg.solve(A,B)
         return X
 
-
-    def movingAverage(self, dataList, MAsize):
+    def simpleMovingAverage(self, dataList, MAsize):
+        ma = []
         numberOfData = len(dataList)
-        l = []
         avgPrice = 0
         for i in range(numberOfData):
             if i >= MAsize:
-                l.append(avgPrice/MAsize)
-                avgPrice -= dataList[numberOfData - 1 - i + MAsize]["price"]
-            avgPrice += dataList[numberOfData - 1 - i]["price"]
-        
-        return l
+                ma.append({"date" : dataList[i]["date"], "price" : avgPrice/MAsize})
+                avgPrice -= dataList[i-MAsize]["price"]
+            avgPrice += dataList[i]["price"]
+        return ma
     
+    def standardDeviation(self, data, MA, popSize):
+        sd = copy.deepcopy(MA)
+        for i in range(len(MA)):
+            seum = 0
+            for j in range(popSize):
+                seum += (data[i+j]["price"] - MA[i]["price"])**2
+            
+            sd[i]["price"] = (seum / popSize)**0.5
+        
+        return sd
+
     def allGoldenCrosses(self, data, shortMATime, longMATime, noCrossTime):
         n = len(data)
         if(n <= longMATime + noCrossTime):
             print("longueur de data trop petite")
             return []
         
-        longMA = self.movingAverage(data, longMATime)
-        shortMA = self.movingAverage(data, shortMATime)
+        longMA = self.simpleMovingAverage(data, longMATime)
+        shortMA = self.simpleMovingAverage(data, shortMATime)
         l = []
 
         for i in range(noCrossTime+longMATime, n):
             hasCrossedBefore = False
             for j in range(i-noCrossTime, i):
-                if shortMA[n-(j+1)] >= longMA[n-(j+1)]:
+                if shortMA[n-(j+1)]["price"] >= longMA[n-(j+1)]["price"]:
                     hasCrossedBefore = True
                     break
 
-            if not hasCrossedBefore and shortMA[n-(i+1)] > longMA[n-(i+1)]:
-                l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]/longMA[n-(i+1)]) / (shortMA[n-i]/longMA[n-i]), "index":i})
+            if not hasCrossedBefore and shortMA[n-(i+1)]["price"] > longMA[n-(i+1)]["price"]:
+                l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]["price"]/longMA[n-(i+1)]["price"]) / (shortMA[n-i]["price"]/longMA[n-i]["price"]), "index":i})
         
         return l
     
@@ -134,19 +143,19 @@ class DataAnalysis:
             print("longueur de data trop petite")
             return []
         
-        longMA = self.movingAverage(data, longMATime)
-        shortMA = self.movingAverage(data, shortMATime)
+        longMA = self.simpleMovingAverage(data, longMATime)
+        shortMA = self.simpleMovingAverage(data, shortMATime)
         l = []
 
         for i in range(noCrossTime+longMATime, n):
             hasCrossedBefore = False
             for j in range(i-noCrossTime, i):
-                if shortMA[n-(j+1)] <= longMA[n-(j+1)]:
+                if shortMA[n-(j+1)]["price"] <= longMA[n-(j+1)]["price"]:
                     hasCrossedBefore = True
                     break
 
-            if not hasCrossedBefore and shortMA[n-(i+1)] < longMA[n-(i+1)]:
-                l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]/longMA[n-(i+1)]) / (shortMA[n-i]/longMA[n-i]), "index":i})
+            if not hasCrossedBefore and shortMA[n-(i+1)]["price"] < longMA[n-(i+1)]["price"]:
+                l.append({"date" : data[i]["date"], "force" : (shortMA[n-(i+1)]["price"]/longMA[n-(i+1)]["price"]) / (shortMA[n-i]["price"]/longMA[n-i]["price"]), "index":i})
         
         return l
     
@@ -167,7 +176,7 @@ class DataAnalysis:
     def visualisation(self, coinCode, *args):
         plt.figure(figsize=(500,100), dpi=80)
         plt.xticks(range(args[0][0]["date"], args[0][-1]["date"], (args[0][-1]["date"] - args[0][0]["date"]) // 500))
-        plt.yticks(range(int(self.minPrice(args[0])), int(self.maxPrice(args[0])), int(self.maxPrice(args[0]) - self.minPrice(args[0])) // 100))
+        # plt.yticks(range(self.minPrice(args[0]), self.maxPrice(args[0]), int(self.maxPrice(args[0]) - self.minPrice(args[0])) // 100))
         for i in range(0, len(args), 2):
             if args[i+1] == "curve":
                 plt.plot([args[i][j]["date"] for j in range(len(args[i]))], [args[i][j]["price"] for j in range(len(args[i]))])

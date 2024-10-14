@@ -1,4 +1,4 @@
-import ccxt.pro as ccxt
+import time
 from account import Account
 
 class Wallet:
@@ -77,62 +77,28 @@ class Wallet:
 # ORDER MANAGING
 
 
-    async def place_order(self, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None):
+    async def limitOrder(self, symbol, BuyorSell, amount, price):
         """Place un ordre d'acheter ou vendre lorsque la crypto atteint un certain prix"""
 
         order = None
-
-        if self.exchange.options['defaultType'] == "spot":
-            print("mauvais type d'échange")
-            raise ValueError(self.exchange.options['defaultType'])
+        order_id = str(time.time() * 1000)
         
         params = {
-            'stopLoss': {
-                'triggerPrice': SLprice
-            },
-            'takeProfit' : {
-                'triggerPrice': TPprice
-            },
-            'type': self.exchange.options['defaultType']
+                "newClientOrderId" : "{}_limit_{}".format(order_id, BuyorSell),
+                "timeInForceValue": 'normal',
+                'type': self.exchange.options['defaultType']
         }
 
         try:
-            order = await self.exchange.create_order(symbol, 'limit', BuyorSell, amount, price * 0.999, params)
+            order = await self.exchange.create_order(symbol, 'limit', BuyorSell, amount, price)
            
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
             
         return order
-
-
-    async def change_order(self, id, symbol, BuyorSell, amount, price, SLprice=None, TPprice=None): # marche pas encore
-        """Permet de changer les paramètres d'un ordre pas encore exécuté"""
-        
-        try:
-            order = await self.exchange.edit_order(
-                id = id,
-                symbol = symbol,
-                type = 'limit',
-                side = BuyorSell,
-                amount = amount,
-                price = price,
-                params = {
-                    'stopLoss': {
-                        'triggerPrice': SLprice,
-                        'price': SLprice * 0.999
-                    },
-                    'takeProfit' : {
-                        'triggerPrice': TPprice,
-                        'price': TPprice * 1.001
-                    }
-                }
-            )
-            
-        except Exception as e:
-            print(f"Erreur lors de l'édition de l'ordre de {symbol} :\n{e}")
         
         
-    async def cancel_order(self, symbol, order_id):
+    async def cancelOrder(self, symbol, order_id):
         """Tente de supprimer un ordre (!= vendre une position)"""
         try:
             response = await self.exchange.cancel_order(order_id, symbol)
@@ -145,7 +111,7 @@ class Wallet:
             print(e)
             
             
-    async def cancel_all_orders(self, symbol):
+    async def cancelAllOrders(self, symbol):
         """Tente de supprimer tous les ordres (!= vendre toutes les positions)"""
         try:
             response = await self.exchange.cancel_all_orders(symbol)
@@ -169,6 +135,8 @@ class Wallet:
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} :\n{e}")
+            
+        return order
         
     
     async def sell(self, symbol, amount):
@@ -181,6 +149,7 @@ class Wallet:
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
+        
         return order
 
 
@@ -204,6 +173,7 @@ class Wallet:
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
+        
         return order
 
 

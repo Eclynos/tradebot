@@ -29,6 +29,15 @@ class MarketInformations:
             
         except Exception as e:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
+            
+            
+    async def getAskPrice(self, symbol):
+        try:
+            ticker = await self.exchange.fetch_ticker(symbol)
+            return ticker['ask']
+            
+        except Exception as e:
+            print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
 
 
     async def getPrice(self, symbol):

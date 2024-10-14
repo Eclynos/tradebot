@@ -9,11 +9,9 @@ async def main():
     mi = MarketInformations()
     w = Wallet("keys", False, mi)
 
-    """
     if not t.ping_test():
         print("erreur")
         return;
-    """
 
     await w.init()
     await mi.init()
@@ -22,17 +20,19 @@ async def main():
 
     symbol = "BTC/USDT"
     price = await mi.getBidPrice(symbol)
-    price *= 0.98
+    price *= 0.96
     amount = await mi.actual_currency_equivalence(symbol, 2)
     
-    SL = price * 0.99; TP = price * 1.01
+    price = round(price, 5)
     
-    order = await w.place_order(symbol, 'buy', amount, price, SL, TP)
-    print(order)
+    order = await w.limitOrder(symbol, 'buy', amount, price)
+    print(order['id'])
     
-    time.sleep(7)
+    time.sleep(15)
     
     await w.cancel_all_orders("BTC/USDT")
+    
+    time.sleep(5)
     
     w.market_mode('spot')
     await w.walletInformations()

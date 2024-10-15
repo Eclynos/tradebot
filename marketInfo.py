@@ -69,7 +69,7 @@ class MarketInformations:
             amount: montant de la monnaie d'échange à calculer
         """
         price = await self.getPrice(symbol)
-        return round(amount / price, 13)
+        return round(amount / price, 12)
 
 
     async def actual_crypto_equivalence(self, symbol, amount):

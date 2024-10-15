@@ -96,6 +96,39 @@ class Wallet:
             print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
             
         return order
+
+    
+    async def shortOrder(self, symbol, amount):
+        """Tente d'établir un short"""
+        
+        self.exchange.options['defaultType'] = 'future'
+        await self.exchange.set_position_mode(False, symbol)
+        
+        params = {
+            'hedged' : False,
+            'cost': 2
+        }
+
+        try:
+            order = await self.exchange.create_market_buy_order(symbol, amount, params)
+            
+            time.sleep(2)
+            order_status = await self.exchange.fetch_order(order['id'], symbol)
+            print(f"Long position opened: {order_status}")
+            
+            time.sleep(3)
+            
+            close_order = await self.exchange.create_market_sell_order(symbol, amount)
+            
+            time.sleep(2)
+            order_status = await self.exchange.fetch_order(close_order['id'], symbol)
+            print(f"Long position closed: {order_status}")
+            
+           
+        except Exception as e:
+            print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
+            
+        return order
         
         
     async def cancelOrder(self, symbol, order_id):
@@ -123,18 +156,15 @@ class Wallet:
             print(e)
 
 
-    async def buy(self, symbol, amount, cost=None):
+    async def buy(self, symbol, amount, cost):
         """Achète directement une quantité d'une crypto"""
         
         try:
-            order = await self.exchange.create_order(
-                    symbol = symbol,
-                    type = 'market',
-                    side = 'buy',
-                    amount = amount,
-                    params = {"cost" : cost} if cost != None else None
-                )
-            # faire fonc pour le cas où l'order est rejected
+            order = await self.exchange.create_market_buy_order(
+                symbol,
+                amount,
+                params = {'cost': cost}
+            )
             await self.save_and_print_positions(symbol, 1)
             
         except Exception as e:

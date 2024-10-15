@@ -2,34 +2,26 @@ from wallet import Wallet
 from marketInfo import MarketInformations
 from tools import Tools
 import asyncio, time
-    
-    
+
+
 async def main():
     t = Tools()
-    mi = MarketInformations()
-    w = Wallet("keys_nathael", False, mi)
+    mi = MarketInformations(t)
+    #w = Wallet("keys_nathael", False, mi)
     
     if not t.ping_test():
         print("erreur")
         return;
-    
 
-    await w.init()
+
+    #await w.init()
     await mi.init()
-    
-    """
-    await w.walletInformations()
-    
-    symbol = "BTC/USDT"
-    amount = await mi.actual_currency_equivalence(symbol, 2)
-    await w.shortOrder(symbol, amount)
-    """
-    
-    await w.sell_all()
-    
-    await w.account.disconnect()
+
+    await mi.visualisation("BTC/USDT", "1m", t.time_frame_to_ms("1h")) # 1 heure
+
+    #await w.account.disconnect()
     await mi.account.disconnect()
-    
+
 
 if __name__ == "__main__":
     asyncio.run(main())

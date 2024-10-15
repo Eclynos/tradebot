@@ -7,7 +7,7 @@ import time
 class Executer:
     def __init__(self, symbol) -> None:
         t = Tools()
-        self.mi = MarketInformations()
+        self.mi = MarketInformations(t)
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         self.amounts = {'BTC/USDT': [0],
                         'SOL/USDT' : [0]}

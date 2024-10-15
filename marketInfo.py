@@ -1,12 +1,12 @@
-import ccxt.pro as ccxt
+import matplotlib.pyplot as plt
 from account import Account
 from tools import Tools
 
 
 class MarketInformations:
-    def __init__(self) -> None:
+    def __init__(self, tools) -> None:
         self.account = Account('info_keys')
-        self.tools = Tools()
+        self.tools = tools
 
 
     async def init(self):
@@ -126,3 +126,14 @@ class MarketInformations:
                 break
         
         return candles
+    
+    
+    async def visualisation(self, symbol, timeFrame, since):
+        """Affiche les bougies d'une timeFrame depuis un temps donné""" #pour l'instant une courbe
+        
+        c = await self.fetch_candles(symbol, timeFrame, since)
+        
+        plt.figure(figsize=(500,100), dpi=40)
+        
+        plt.grid()
+        #plt.savefig(f"{symbol}.jpg")

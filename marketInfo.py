@@ -1,12 +1,12 @@
-import ccxt.pro as ccxt
+import matplotlib.pyplot as plt
 from account import Account
 from tools import Tools
 
 
 class MarketInformations:
-    def __init__(self) -> None:
+    def __init__(self, tools) -> None:
         self.account = Account('info_keys')
-        self.tools = Tools()
+        self.tools = tools
 
 
     async def init(self):
@@ -26,6 +26,15 @@ class MarketInformations:
         try:
             ticker = await self.exchange.fetch_ticker(symbol)
             return ticker['bid']
+            
+        except Exception as e:
+            print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
+            
+            
+    async def getAskPrice(self, symbol):
+        try:
+            ticker = await self.exchange.fetch_ticker(symbol)
+            return ticker['ask']
             
         except Exception as e:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")
@@ -60,7 +69,7 @@ class MarketInformations:
             amount: montant de la monnaie d'échange à calculer
         """
         price = await self.getPrice(symbol)
-        return round(amount / price, 13)
+        return round(amount / price, 12)
 
 
     async def actual_crypto_equivalence(self, symbol, amount):
@@ -91,7 +100,8 @@ class MarketInformations:
 
    
     async def fetch_candles(self, symbol, timeFrame, since):
-        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en SECONDES"""
+        """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en ms
+        renvoie [timestamp, open, high, low, close, volume]"""
 
         candles = []
         timestamp = await self.exchange.fetch_time()
@@ -116,3 +126,14 @@ class MarketInformations:
                 break
         
         return candles
+    
+    
+    async def visualisation(self, symbol, timeFrame, since):
+        """Affiche les bougies d'une timeFrame depuis un temps donné""" #pour l'instant une courbe
+        
+        c = await self.fetch_candles(symbol, timeFrame, since)
+        
+        plt.figure(figsize=(500,100), dpi=40)
+        
+        plt.grid()
+        #plt.savefig(f"{symbol}.jpg")

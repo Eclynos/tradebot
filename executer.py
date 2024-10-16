@@ -26,6 +26,11 @@ class Executer:
         await self.mi.account.disconnect()
         for w in self.wallets:
             await w.account.disconnect()
+            
+            
+    def market_mode(self, mode):
+        for w in self.wallets:
+            w.market_mode(mode)
 
 
     async def buy(self):

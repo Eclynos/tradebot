@@ -201,7 +201,7 @@ class Wallet:
             available_amount = balance['free'].get(base_currency, 0)
             amount = available_amount * (percentage / 100)
             
-            order = await self.exchange.create_order(symbol, 'market', 'sell', amount)
+            order = await self.exchange.create_order(symbol, 'market', 'sell', amount, params={'reduceOnly':True})
 
             await self.save_and_print_positions(symbol, 1)
 

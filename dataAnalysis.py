@@ -50,22 +50,22 @@ class DataAnalysis:
         return minList
 
 
-    def average(self, dataList):
+    def average(self, data):
         total = 0
-        numberOfEntries = len(dataList)
+        numberOfEntries = len(data)
         for i in range(numberOfEntries):
-            total += float(dataList[i]["price"])
+            total += float(data[i]["price"])
         
         return total/numberOfEntries
 
 
-    def nthDegreeRegression(self, dataList, degree):
+    def nthDegreeRegression(self, data, degree):
         # Extrapolation des calculcs matriciels trouvés ici :
         # https://www.varsitytutors.com/hotmath/hotmath_help/topics/quadratic-regression
 
-        numberOfEntries = len(dataList)
+        numberOfEntries = len(data)
 
-        minX = int(dataList[0]["date"])
+        minX = int(data[0]["date"])
         
         A = []
         for _ in range(degree +1):
@@ -76,7 +76,7 @@ class DataAnalysis:
         for i in range(numberOfEntries):
             for l in range(degree + 1):
                 for c in range(l, degree + 1):
-                    A[l][c] += (int(dataList[i]["date"])-minX)**(2 * degree - l - c)
+                    A[l][c] += (int(data[i]["date"])-minX)**(2 * degree - l - c)
         
         for l in range(degree + 1):
             for c in range(l):
@@ -88,21 +88,36 @@ class DataAnalysis:
 
         for i in range(numberOfEntries):
             for l in range(degree+1):
-                B[l] += (int(dataList[i]["date"]) - minX)**(degree - l) * float(dataList[i]["price"])
+                B[l] += (int(data[i]["date"]) - minX)**(degree - l) * float(data[i]["price"])
 
         X = numpy.linalg.solve(A,B)
         return X
 
-    def simpleMovingAverage(self, dataList, MAsize):
+    def simpleMovingAverage(self, data, MAsize):
         ma = []
-        numberOfData = len(dataList)
         avgPrice = 0
-        for i in range(numberOfData):
+        for i in range(len(data)):
             if i >= MAsize:
-                ma.append({"date" : dataList[i]["date"], "price" : avgPrice/MAsize})
-                avgPrice -= dataList[i-MAsize]["price"]
-            avgPrice += dataList[i]["price"]
+                ma.append({"date" : data[i]["date"], "price" : avgPrice/MAsize})
+                avgPrice -= data[i-MAsize]["price"]
+            avgPrice += data[i]["price"]
         return ma
+    
+    def exponentialMovingAverage(self, data, MAsize, powerMultiplier=0.95):
+        ma = []
+        normalisationFactor = 0
+        for i in range(MAsize):
+            normalisationFactor += powerMultiplier**i 
+
+        avgPrice = 0
+        for i in range(len(data)):
+            if i >= MAsize:
+                ma.append({"date" : data[i]["date"], "price" : avgPrice/normalisationFactor})
+                avgPrice -= powerMultiplier**(MAsize-1) * data[i-MAsize]["price"]
+            avgPrice *= powerMultiplier
+            avgPrice += data[i]["price"]
+        return ma
+
     
     def standardDeviation(self, data, MA, popSize):
         sd = copy.deepcopy(MA)
@@ -111,9 +126,28 @@ class DataAnalysis:
             for j in range(popSize):
                 seum += (data[i+j]["price"] - MA[i]["price"])**2
             
-            sd[i]["price"] = (seum / popSize)**0.5
+            sd[i]["price"] = (seum / (popSize-1))**0.5
         
         return sd
+    
+    def trend(self, data):
+        """renvoie :\n
+            1 -> trend haussière\n
+            -1 -> trend baissière\n
+            0 -> trend sideways
+        """
+        milieu = len(data)//2
+        hh1 = self.maxPrice(data[milieu:])
+        hh2 = self.maxPrice(data[:milieu])
+        ll1 = self.minPrice(data[milieu:])
+        ll2 = self.minPrice(data[:milieu])
+
+        if hh2 > hh1 and ll2 > ll1:
+            return 1
+        elif hh2 < hh1 and ll2 < ll1:
+            return -1
+        else:
+            return 0
 
     def allGoldenCrosses(self, data, shortMATime, longMATime, noCrossTime):
         n = len(data)
@@ -172,6 +206,9 @@ class DataAnalysis:
             if d["price"] < minimum:
                 minimum = d["price"]
         return minimum
+    
+    def bollinger(self, ma, sd, standardDevFactor):
+        return [{"date" : ma[i]["date"], "price" : ma[i]["price"] + standardDevFactor * sd[i]["price"]} for i in range(len(ma))]
 
     def visualisation(self, coinCode, *args):
         plt.figure(figsize=(500,100), dpi=80)
@@ -186,7 +223,7 @@ class DataAnalysis:
                 for j in range(len(args[i])):
                     plt.plot([args[i][j][0], args[i][j][1]], [args[i][j][2], args[i][j][3]], color=("green" if args[i][j][2] < args[i][j][3] else "red"), lw=3)
         plt.grid()
-        plt.savefig(f"{coinCode}.jpg")
+        plt.savefig(f"backtest-images/{coinCode}.jpg")
             
 
 

@@ -5,7 +5,7 @@ Backtest-Tools-V2
 Backtest/Database
 keys
 data/*.csv
-*.jpg
 trade_logs
 candles
 candles_manager.py
+backtest-images/*

@@ -31,8 +31,6 @@ if __name__ == "__main__":
 
 
 
-
-
 """
 Trouver le moyen de faire des shorts -> ou au moins de faire des futures
 Trouver un moyen de tracer la courbe des derniers temps en récupérant les dernières bougies

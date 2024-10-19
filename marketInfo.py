@@ -132,8 +132,21 @@ class MarketInformations:
         """Affiche les bougies d'une timeFrame depuis un temps donné""" #pour l'instant une courbe
         
         c = await self.fetch_candles(symbol, timeFrame, since)
+        #plt.figure(figsize=(500,100), dpi=40)
+        x = []
+        y = []
         
-        plt.figure(figsize=(500,100), dpi=40)
+        for candle in c:
+            x.append(candle[0])
+            y.append(candle[4])
         
+        plt.plot(x, y, 'rs-', label='symbol')
+        
+        plt.title(f"{symbol} curve visualisation")
+        
+        plt.xlabel('Time')
+        plt.ylabel('Price')
+        plt.legend()
         plt.grid()
+        plt.show()
         #plt.savefig(f"{symbol}.jpg")

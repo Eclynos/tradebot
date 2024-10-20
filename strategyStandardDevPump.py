@@ -31,12 +31,22 @@ class Strategy:
         eurosPerTrade = 1
         numberOfPositive = 0
         profit = 0
+
+        ma = self.dA.exponentialMovingAverage(data, self.movingAverageSize)
+        # bb = self.dA.bollinger(ma, self.sd, 1)
+
         for i in range(numberOfTrades):
             for j in range(len(data)):
                 if (j-self.weightedAvgSize > 0 and
                     data[j]["date"] > tradeList[0]["date"] and
                     self.sd[j]["price"] < self.sdWeightedAvg[j-self.weightedAvgSize]["price"]
-                    and self.sd[j-1]["price"] > self.sdWeightedAvg[j-self.weightedAvgSize-1]["price"]):
+                    and self.sd[j-1]["price"] > self.sdWeightedAvg[j-self.weightedAvgSize-1]["price"]
+                    
+                    # or 
+
+                    # data[j]["date"] > tradeList[0]["date"] and
+                    # data[j]["price"] < bb[j-self.movingAverageSize]["price"]
+                    ):
 
                     sellIndex = j
                     break

@@ -9,7 +9,7 @@ if __name__ == "__main__":
     s = Strategy()
     da = DataAnalysis()
     t = Tools()
-    coinCode = "LINK"
+    coinCode = "ETH"
 
     allData = t.readFile(coinCode) # Il faut avoir téléchargé le fichier avec Backtest-Tools-V2 au préalable et le placer dans ./data/
 
@@ -44,8 +44,8 @@ if __name__ == "__main__":
     sd = da.expoStandardDeviation(usableData[startIndex:endIndex], ma, 100)
 
     mp = da.minPrice(usableData[startIndex:endIndex])
-    bb2 = da.bollinger(ma, sd, 2)
-    bbm2 = da.bollinger(ma, sd, -2)
+    bb2 = da.bollinger(ma, sd, 1)
+    bbm2 = da.bollinger(ma, sd, 1.5)
     showsd = [{"date":sd [i]["date"], "price": mp + sd[i]["price"]} for i in range(len(sd))]
     avgsd = da.simpleWeightedAverage(sd, 1000)
     showavgsd = [{"date":avgsd[i]["date"], "price" : mp + avgsd[i]["price"]} for i in range(len(avgsd))]

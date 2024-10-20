@@ -92,7 +92,24 @@ class DataAnalysis:
 
         X = numpy.linalg.solve(A,B)
         return X
-
+    
+    def simpleWeightedAverage(self, data, MASize):
+        avg = []
+        denom = 0
+        total = 0
+        for i in range(len(data) - MASize):
+            if i==0:
+                for j in range(MASize+1):
+                    total += data[j]["price"]**3
+                    denom += data[j]["price"]**2
+            else :
+                total += data[i+MASize]["price"]**3 - data[i-1]["price"]**3
+                denom += data[i+MASize]["price"]**2 - data[i-1]["price"]**2
+            
+            avg.append({"date" : data[i+MASize]["date"], "price":total/denom})
+        
+        return avg
+    
     def simpleMovingAverage(self, data, MAsize):
         ma = []
         avgPrice = 0
@@ -102,7 +119,7 @@ class DataAnalysis:
                 avgPrice -= data[i-MAsize]["price"]
             avgPrice += data[i]["price"]
         return ma
-    
+
     def exponentialMovingAverage(self, data, MAsize, powerMultiplier=0.95):
         ma = []
         normalisationFactor = 0
@@ -117,7 +134,6 @@ class DataAnalysis:
             avgPrice *= powerMultiplier
             avgPrice += data[i]["price"]
         return ma
-
     
     def standardDeviation(self, data, MA, popSize):
         sd = copy.deepcopy(MA)
@@ -130,17 +146,32 @@ class DataAnalysis:
         
         return sd
     
+    def expoStandardDeviation(self, data, MA, popSize, powerMultiplier=0.95):
+        sd = copy.deepcopy(MA)
+        normalisationFactor = 0
+        for i in range(popSize):
+            normalisationFactor += powerMultiplier**i 
+
+        for i in range(len(MA)):
+            seum = 0
+            for j in range(popSize):
+                seum += powerMultiplier**(popSize-j-1) * (data[i+j]["price"] - MA[i]["price"])**2  
+    
+            sd[i]["price"] = (seum/normalisationFactor)**0.5
+
+        return sd
+    
     def trend(self, data):
         """renvoie :\n
             1 -> trend haussière\n
             -1 -> trend baissière\n
             0 -> trend sideways
         """
-        milieu = len(data)//2
-        hh1 = self.maxPrice(data[milieu:])
-        hh2 = self.maxPrice(data[:milieu])
-        ll1 = self.minPrice(data[milieu:])
-        ll2 = self.minPrice(data[:milieu])
+        milieu = 1*len(data)//2
+        hh1 = self.maxPrice(data[:milieu])
+        hh2 = self.maxPrice(data[milieu:])
+        ll1 = self.minPrice(data[:milieu])
+        ll2 = self.minPrice(data[milieu:])
 
         if hh2 > hh1 and ll2 > ll1:
             return 1
@@ -206,6 +237,9 @@ class DataAnalysis:
             if d["price"] < minimum:
                 minimum = d["price"]
         return minimum
+    
+    def median(self, data, percentage=0.5):
+        return sorted(data, key= lambda e: e["price"])[int(len(data)*percentage)]["price"]
     
     def bollinger(self, ma, sd, standardDevFactor):
         return [{"date" : ma[i]["date"], "price" : ma[i]["price"] + standardDevFactor * sd[i]["price"]} for i in range(len(ma))]

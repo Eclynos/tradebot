@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+import pandas as pd
+import mplfinance as mpf
 from account import Account
 from tools import Tools
 
@@ -128,8 +130,8 @@ class MarketInformations:
         return candles
     
     
-    async def visualisation(self, symbol, timeFrame, since):
-        """Affiche les bougies d'une timeFrame depuis un temps donné""" #pour l'instant une courbe
+    async def curve_visualisation(self, symbol, timeFrame, since):
+        """Affiche la courbe d'une timeFrame depuis un temps donné"""
         
         c = await self.fetch_candles(symbol, timeFrame, since)
         #plt.figure(figsize=(500,100), dpi=40)
@@ -140,7 +142,7 @@ class MarketInformations:
             x.append(candle[0])
             y.append(candle[4])
         
-        plt.plot(x, y, 'rs-', label='symbol')
+        plt.plot(x, y, 'rs-', label=symbol)
         
         plt.title(f"{symbol} curve visualisation")
         
@@ -150,3 +152,39 @@ class MarketInformations:
         plt.grid()
         plt.show()
         #plt.savefig(f"{symbol}.jpg")
+
+
+    async def candlestick_visualisation(self, symbol, timeFrame, since):
+            """Affiche les bougies d'une timeFrame depuis un temps donné"""
+            
+            candles = await self.fetch_candles(symbol, timeFrame, since)
+
+            df = pd.DataFrame(candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+            df['Date'] = pd.to_datetime(df['Timestamp'], unit='ms')
+            df['Date'] = df['Date'] + pd.Timedelta(hours=2)
+            df.set_index('Date', inplace=True)
+            df.drop(columns='Timestamp', inplace=True)
+
+
+            last_price = df['Close'].iloc[-1]
+            apdict = mpf.make_addplot([last_price]*len(df), color='red', linestyle='--', secondary_y=False)
+
+            fig, axlist = mpf.plot(df,
+                                   type='candle',
+                                   style='charles',
+                                   volume=True,
+                                   title=symbol,
+                                   addplot=apdict,
+                                   ylabel='Prix',
+                                   returnfig=True
+            )                      
+            ax = axlist[0]
+
+            ax.annotate(f'{last_price}', 
+                        xy=(1, last_price), 
+                        xycoords=('axes fraction', 'data'), 
+                        xytext=(10, 0), textcoords='offset points',
+                        color='red', fontsize=12, 
+                        verticalalignment='center')
+
+            plt.show()

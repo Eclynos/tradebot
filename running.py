@@ -15,6 +15,7 @@ async def main():
 
 
     #await w.init()
+    #w.market_mode("future")
     await mi.init()
 
     await mi.visualisation("BTC/USDT", "1m", t.time_frame_to_ms("1h")) # 1 heure
@@ -30,10 +31,10 @@ if __name__ == "__main__":
 
 
 
-
-
 """
-Trouver le moyen de faire des shorts
+Trouver le moyen de faire des shorts -> ou au moins de faire des futures
 Trouver un moyen de tracer la courbe des derniers temps en récupérant les dernières bougies
+lier les stratégies pour pouvoir les tester (sur la courbe + rendement) sur les dernières bougies récupérées
 Gérer les contrats futures pour diminuer les frais de transactions
+https://stackoverflow.com/questions/70568934/create-contract-order-with-take-profit-and-stop-loss-with-ccxt
 """

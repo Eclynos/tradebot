@@ -117,7 +117,10 @@ class DataAnalysis:
             avgPrice *= powerMultiplier
             avgPrice += data[i]["price"]
         return ma
-
+    
+    def simpleWeightedAverage(self, data, MASize, percentage=0.9):
+        for i in range(len(data) - MASize):
+            pass
     
     def standardDeviation(self, data, MA, popSize):
         sd = copy.deepcopy(MA)
@@ -130,17 +133,32 @@ class DataAnalysis:
         
         return sd
     
+    def expoStandardDeviation(self, data, MA, popSize, powerMultiplier=0.95):
+        sd = copy.deepcopy(MA)
+        normalisationFactor = 0
+        for i in range(popSize):
+            normalisationFactor += powerMultiplier**i 
+
+        for i in range(len(MA)):
+            seum = 0
+            for j in range(popSize):
+                seum += powerMultiplier**(popSize-j-1) * (data[i+j]["price"] - MA[i]["price"])**2  
+    
+            sd[i]["price"] = (seum/normalisationFactor)**0.5
+
+        return sd
+    
     def trend(self, data):
         """renvoie :\n
             1 -> trend haussière\n
             -1 -> trend baissière\n
             0 -> trend sideways
         """
-        milieu = len(data)//2
-        hh1 = self.maxPrice(data[milieu:])
-        hh2 = self.maxPrice(data[:milieu])
-        ll1 = self.minPrice(data[milieu:])
-        ll2 = self.minPrice(data[:milieu])
+        milieu = 1*len(data)//2
+        hh1 = self.maxPrice(data[:milieu])
+        hh2 = self.maxPrice(data[milieu:])
+        ll1 = self.minPrice(data[:milieu])
+        ll2 = self.minPrice(data[milieu:])
 
         if hh2 > hh1 and ll2 > ll1:
             return 1
@@ -206,6 +224,9 @@ class DataAnalysis:
             if d["price"] < minimum:
                 minimum = d["price"]
         return minimum
+    
+    def median(self, data, percentage=0.5):
+        return sorted(data, key= lambda e: e["price"])[int(len(data)*percentage)]["price"]
     
     def bollinger(self, ma, sd, standardDevFactor):
         return [{"date" : ma[i]["date"], "price" : ma[i]["price"] + standardDevFactor * sd[i]["price"]} for i in range(len(ma))]

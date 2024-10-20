@@ -9,7 +9,7 @@ if __name__ == "__main__":
     s = Strategy()
     da = DataAnalysis()
     t = Tools()
-    coinCode = "BTC"
+    coinCode = "LINK"
 
     allData = t.readFile(coinCode) # Il faut avoir téléchargé le fichier avec Backtest-Tools-V2 au préalable et le placer dans ./data/
 

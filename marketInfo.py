@@ -1,14 +1,16 @@
 import matplotlib.pyplot as plt
-import pandas as pd
+import pandas as pd, asyncio
 import mplfinance as mpf
+from matplotlib.animation import FuncAnimation
 from account import Account
-from tools import Tools
 
 
 class MarketInformations:
     def __init__(self, tools) -> None:
-        self.account = Account('info_keys')
+        self.account = Account("info_keys")
         self.tools = tools
+        self.axlist = None
+        self.running = True
 
 
     async def init(self):
@@ -134,7 +136,6 @@ class MarketInformations:
         """Affiche la courbe d'une timeFrame depuis un temps donné"""
         
         c = await self.fetch_candles(symbol, timeFrame, since)
-        #plt.figure(figsize=(500,100), dpi=40)
         x = []
         y = []
         
@@ -142,7 +143,7 @@ class MarketInformations:
             x.append(candle[0])
             y.append(candle[4])
         
-        plt.plot(x, y, 'rs-', label=symbol)
+        plt.plot(x, y, 'r--', label=symbol)
         
         plt.title(f"{symbol} curve visualisation")
         
@@ -151,7 +152,6 @@ class MarketInformations:
         plt.legend()
         plt.grid()
         plt.show()
-        #plt.savefig(f"{symbol}.jpg")
 
 
     async def candlestick_visualisation(self, symbol, timeFrame, since):
@@ -165,26 +165,84 @@ class MarketInformations:
             df.set_index('Date', inplace=True)
             df.drop(columns='Timestamp', inplace=True)
 
-
             last_price = df['Close'].iloc[-1]
-            apdict = mpf.make_addplot([last_price]*len(df), color='red', linestyle='--', secondary_y=False)
 
             fig, axlist = mpf.plot(df,
                                    type='candle',
                                    style='charles',
                                    volume=True,
                                    title=symbol,
-                                   addplot=apdict,
                                    ylabel='Prix',
                                    returnfig=True
             )                      
             ax = axlist[0]
 
+            ax.axhline(last_price, color='red', linestyle='--', linewidth=0.5)
+
             ax.annotate(f'{last_price}', 
-                        xy=(1, last_price), 
+                        xy=(0, last_price), 
                         xycoords=('axes fraction', 'data'), 
                         xytext=(10, 0), textcoords='offset points',
                         color='red', fontsize=12, 
                         verticalalignment='center')
 
             plt.show()
+
+
+    async def fetch_and_update(self, symbol, timeFrame, since):
+        """Récupère les bougies et met à jour les données"""
+        
+        candles = await self.fetch_candles(symbol, timeFrame, since)
+        
+        self.df = pd.DataFrame(candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+        self.df['Date'] = pd.to_datetime(self.df['Timestamp'], unit='ms')
+        self.df['Date'] = self.df['Date'] + pd.Timedelta(hours=2)
+        self.df.set_index('Date', inplace=True)
+        self.df.drop(columns='Timestamp', inplace=True)
+
+
+    def handle_close(self, event):
+        """Gestionnaire d'événement pour arrêter la boucle lorsque la fenêtre est fermée"""
+        self.running = False
+
+
+    def update_chart(self, frame, symbol, timeFrame, since):
+        """Met à jour le graphique"""
+
+        if self.df is not None:
+            last_price = self.df['Close'].iloc[-1]
+            self.axlist[0].clear()
+
+            mpf.plot(self.df, type='candle', style='charles', ax=self.axlist[0], volume=self.axlist[2])
+
+            self.axlist[0].axhline(last_price, color='red', linestyle='--', linewidth=0.5)
+            self.axlist[0].annotate(f'{last_price:.2f}', xy=(0, last_price), xycoords=('axes fraction', 'data'),
+                                    xytext=(10, 0), textcoords='offset points', color='red', fontsize=12, verticalalignment='center')
+
+
+    async def chart_visualisation(self, symbol, timeFrame, since):
+        """Montre en temps réel le graphique d'un symbole"""
+
+        await self.fetch_and_update(symbol, timeFrame, since)
+
+        last_price = self.df['Close'].iloc[-1]
+        fig, self.axlist = mpf.plot(self.df, type='candle', style='charles', volume=True, title=symbol,
+                                    ylabel='Prix', returnfig=True)
+        
+        fig.canvas.mpl_connect('close_event', self.handle_close)
+
+        self.axlist[0].axhline(last_price, color='red', linestyle='--', linewidth=0.5)
+        self.axlist[0].annotate(f'{last_price}', 
+                                xy=(0, last_price), 
+                                xycoords=('axes fraction', 'data'), 
+                                xytext=(10, 0), textcoords='offset points',
+                                color='red', fontsize=12, 
+                                verticalalignment='center')
+
+        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000)
+
+        while self.running:
+            await self.fetch_and_update(symbol, timeFrame, since)
+            plt.pause(1)
+
+        plt.close()

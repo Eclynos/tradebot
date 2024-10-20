@@ -12,6 +12,17 @@ class MarketInformations:
         self.axlist = None
         self.running = True
 
+        self.custom_style = mpf.make_mpf_style(
+        base_mpf_style='charles',
+        marketcolors=mpf.make_marketcolors(
+            up='#1f77b4',
+            down='#d62728',
+            wick={'up': '#1f77b4', 'down': '#d62728'},
+            edge={'up': '#1f77b4', 'down': '#d62728'},
+            volume={'up': '#1f77b4', 'down': '#d62728'}
+        )
+        )
+
 
     async def init(self):
         await self.account.connect()
@@ -211,13 +222,15 @@ class MarketInformations:
 
         if self.df is not None:
             last_price = self.df['Close'].iloc[-1]
+            last_open = self.df['Open'].iloc[-1]
+            line_color = '#1f77b4' if last_price > last_open else '#d62728'
             self.axlist[0].clear()
 
-            mpf.plot(self.df, type='candle', style='charles', ax=self.axlist[0], volume=self.axlist[2])
+            mpf.plot(self.df, type='candle', style=self.custom_style, ax=self.axlist[0], volume=self.axlist[2])
 
-            self.axlist[0].axhline(last_price, color='red', linestyle='--', linewidth=0.5)
+            self.axlist[0].axhline(last_price, color=line_color, linestyle='--', linewidth=0.5)
             self.axlist[0].annotate(f'{last_price:.2f}', xy=(0, last_price), xycoords=('axes fraction', 'data'),
-                                    xytext=(10, 0), textcoords='offset points', color='red', fontsize=12, verticalalignment='center')
+                                    xytext=(10, 0), textcoords='offset points', color=line_color, fontsize=12, verticalalignment='center')
 
 
     async def chart_visualisation(self, symbol, timeFrame, since):
@@ -226,17 +239,26 @@ class MarketInformations:
         await self.fetch_and_update(symbol, timeFrame, since)
 
         last_price = self.df['Close'].iloc[-1]
-        fig, self.axlist = mpf.plot(self.df, type='candle', style='charles', volume=True, title=symbol,
-                                    ylabel='Prix', returnfig=True)
+        last_open = self.df['Open'].iloc[-1]
+        line_color = '#1f77b4' if last_price > last_open else '#d62728'
+
+        fig, self.axlist = mpf.plot(self.df,
+                                    type='candle',
+                                    style=self.custom_style,
+                                    volume=True,
+                                    title=symbol,
+                                    ylabel='Prix',
+                                    returnfig=True)
         
+        fig.canvas.manager.set_window_title(f'{symbol} - Graphique en Temps Réel')
         fig.canvas.mpl_connect('close_event', self.handle_close)
 
-        self.axlist[0].axhline(last_price, color='red', linestyle='--', linewidth=0.5)
+        self.axlist[0].axhline(last_price, color=line_color, linestyle='--', linewidth=0.5)
         self.axlist[0].annotate(f'{last_price}', 
                                 xy=(0, last_price), 
                                 xycoords=('axes fraction', 'data'), 
                                 xytext=(10, 0), textcoords='offset points',
-                                color='red', fontsize=12, 
+                                color=line_color, fontsize=12, 
                                 verticalalignment='center')
 
         A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000)

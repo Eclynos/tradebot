@@ -54,7 +54,10 @@ class Wallet:
 
     async def leverage(self, factor, symbol):
         """Défini le taux d'effet de levier à utiliser"""
-        await self.exchange.set_leverage(factor, symbol)
+        try:
+            await self.exchange.set_leverage(factor, symbol)
+        except Exception as e:
+            print(f"Error setting leverage:\n{e}")
 
 
     async def position_mode(self, mode, symbol):
@@ -98,11 +101,12 @@ class Wallet:
         return order
 
     
-    async def shortOrder(self, symbol, amount):
+    async def OpenShortPosition(self, symbol, amount, leverage):  # working on it
         """Tente d'établir un short"""
         
         self.exchange.options['defaultType'] = 'future'
         await self.exchange.set_position_mode(False, symbol)
+        await self.leverage(leverage, symbol)
         
         params = {
             'hedged' : False,
@@ -129,6 +133,10 @@ class Wallet:
             print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
             
         return order
+    
+
+    async def CloseShortPosition(self):
+        pass
         
         
     async def cancelOrder(self, symbol, order_id):

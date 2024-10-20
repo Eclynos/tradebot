@@ -19,7 +19,7 @@ async def main():
     #w.market_mode("future")
     await mi.init()
 
-    await mi.candlestick_visualisation("BTC/USDT", "5m", t.time_frame_to_ms("5h"))
+    await mi.curve_visualisation("BTC/USDT", "5m", t.time_frame_to_ms("5h"))
 
     #await w.account.disconnect()
     await mi.account.disconnect()

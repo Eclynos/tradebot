@@ -92,7 +92,24 @@ class DataAnalysis:
 
         X = numpy.linalg.solve(A,B)
         return X
-
+    
+    def simpleWeightedAverage(self, data, MASize):
+        avg = []
+        denom = 0
+        total = 0
+        for i in range(len(data) - MASize):
+            if i==0:
+                for j in range(MASize+1):
+                    total += data[j]["price"]**3
+                    denom += data[j]["price"]**2
+            else :
+                total += data[i+MASize]["price"]**3 - data[i-1]["price"]**3
+                denom += data[i+MASize]["price"]**2 - data[i-1]["price"]**2
+            
+            avg.append({"date" : data[i+MASize]["date"], "price":total/denom})
+        
+        return avg
+    
     def simpleMovingAverage(self, data, MAsize):
         ma = []
         avgPrice = 0
@@ -102,7 +119,7 @@ class DataAnalysis:
                 avgPrice -= data[i-MAsize]["price"]
             avgPrice += data[i]["price"]
         return ma
-    
+
     def exponentialMovingAverage(self, data, MAsize, powerMultiplier=0.95):
         ma = []
         normalisationFactor = 0
@@ -117,10 +134,6 @@ class DataAnalysis:
             avgPrice *= powerMultiplier
             avgPrice += data[i]["price"]
         return ma
-    
-    def simpleWeightedAverage(self, data, MASize, percentage=0.9):
-        for i in range(len(data) - MASize):
-            pass
     
     def standardDeviation(self, data, MA, popSize):
         sd = copy.deepcopy(MA)

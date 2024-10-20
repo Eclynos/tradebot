@@ -10,7 +10,7 @@ class Strategy:
         movingAverageSize = len(data)-1
         maxLatestGCTimeAgo = "5m"
         trend = self.dA.trend(data)
-        if data[-1]["price"] > self.dA.minPrice(data[-5:]) and trend==-1:
+        if data[-1]["price"] > self.dA.minPrice(data[-5:]) or trend==-1:
             return False
         ma = self.dA.exponentialMovingAverage(data, movingAverageSize)
         sd = self.dA.expoStandardDeviation(data, ma, movingAverageSize)

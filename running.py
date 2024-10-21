@@ -18,7 +18,7 @@ async def main():
     #w.market_mode("future")
     await mi.init()
 
-    await mi.chart_visualisation("BTC/USDT", "1m", t.time_frame_to_ms("1h"), 2)
+    await mi.chart_visualisation("BTC/USDT", "1m", t.time_frame_to_ms("1h"), 1)
 
     #await w.account.disconnect()
     await mi.account.disconnect()

@@ -233,11 +233,12 @@ class MarketInformations:
                                     xytext=(10, 0), textcoords='offset points', color=line_color, fontsize=12, verticalalignment='center')
 
 
-    async def chart_visualisation(self, symbol, timeFrame, since):
+    async def chart_visualisation(self, symbol, timeFrame, since, refresh_rate):
         """Montre en temps réel le graphique d'un symbole"""
 
         await self.fetch_and_update(symbol, timeFrame, since)
 
+        refresh_rate = int(refresh_rate)
         last_price = self.df['Close'].iloc[-1]
         last_open = self.df['Open'].iloc[-1]
         line_color = '#1f77b4' if last_price > last_open else '#d62728'
@@ -261,10 +262,10 @@ class MarketInformations:
                                 color=line_color, fontsize=12, 
                                 verticalalignment='center')
 
-        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000)
+        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000 * refresh_rate)
 
         while self.running:
             await self.fetch_and_update(symbol, timeFrame, since)
-            plt.pause(1)
+            plt.pause(refresh_rate)
 
         plt.close()

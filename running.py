@@ -8,17 +8,17 @@ async def main():
     mi = MarketInformations(t)
     #w = Wallet("keys_nathael", False, mi)
     
-    """
     if not t.ping_test():
         print("erreur")
         return;
-    """
 
     #await w.init()
     #w.market_mode("future")
     await mi.init()
 
     await mi.chart_visualisation("BTC/USDT", "1m", t.time_frame_to_ms("1h"), 2)
+    #await mi.candlestick_visualisation("BTC/USDT", "15m", t.time_frame_to_ms("14h"))
+    
 
     #await w.account.disconnect()
     await mi.account.disconnect()

@@ -11,6 +11,12 @@ async def main():
     time.sleep(6)
     
     await e.sell()
+
+    e.symbol = "EURT/USDT"
+
+    time.sleep(3)
+
+    await e.buy()
     
     await e.end()
     

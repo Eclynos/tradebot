@@ -1,7 +1,6 @@
 from wallet import Wallet
 from marketInfo import MarketInformations
 from tools import Tools
-import time
 
 
 class Executer:
@@ -10,7 +9,9 @@ class Executer:
         self.mi = MarketInformations(t)
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         self.amounts = {'BTC/USDT': [0],
-                        'SOL/USDT' : [0]}
+                        'SOL/USDT' : [0],
+                        'ETH/USDT' : [0],
+                        'HNT/USDT' : [0]}
         self.costs = [2] # in USDT
 
         self.symbol = symbol
@@ -26,8 +27,8 @@ class Executer:
         await self.mi.account.disconnect()
         for w in self.wallets:
             await w.account.disconnect()
-            
-            
+
+
     def market_mode(self, mode):
         for w in self.wallets:
             w.market_mode(mode)

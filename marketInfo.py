@@ -114,7 +114,7 @@ class MarketInformations:
         print(f"{fee['symbol']} fee, maker: {fee['maker']} taker: {fee['taker']}")
 
    
-    async def fetch_candles(self, symbol, timeFrame, since):
+    async def fetch_candles(self, symbol, timeFrame, since, limit=None):
         """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en ms
         renvoie [timestamp, open, high, low, close, volume]"""
 
@@ -125,10 +125,15 @@ class MarketInformations:
         
         while current_since < timestamp:
             try:
-                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
+                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000 if limit == None else limit)
             except Exception as e:
                 print(e)
                 break
+            
+            if limit != None:
+                limit -= 1000
+                if limit < 0:
+                    break
 
             if not ohclv:
                 break
@@ -280,7 +285,10 @@ class MarketInformations:
         A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000 * refresh_rate)
 
         while self.running:
-            await self.fetch_and_update(symbol, timeFrame)
+            try:
+                await self.fetch_and_update(symbol, timeFrame)
+            except Exception as e:
+                print(e)
             plt.pause(refresh_rate)
 
         plt.close()

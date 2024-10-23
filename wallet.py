@@ -94,49 +94,10 @@ class Wallet:
 
         try:
             order = await self.exchange.create_order(symbol, 'limit', BuyorSell, amount, price)
-           
         except Exception as e:
             print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
             
         return order
-
-    
-    async def OpenShortPosition(self, symbol, amount, leverage):  # working on it
-        """Tente d'établir un short"""
-        
-        self.exchange.options['defaultType'] = 'future'
-        await self.exchange.set_position_mode(False, symbol)
-        await self.leverage(leverage, symbol)
-        
-        params = {
-            'hedged' : False,
-            'cost': 2
-        }
-
-        try:
-            order = await self.exchange.create_market_buy_order(symbol, amount, params)
-            
-            time.sleep(2)
-            order_status = await self.exchange.fetch_order(order['id'], symbol)
-            print(f"Long position opened: {order_status}")
-            
-            time.sleep(3)
-            
-            close_order = await self.exchange.create_market_sell_order(symbol, amount)
-            
-            time.sleep(2)
-            order_status = await self.exchange.fetch_order(close_order['id'], symbol)
-            print(f"Long position closed: {order_status}")
-            
-           
-        except Exception as e:
-            print(f"Erreur lors du placement de l'ordre de {symbol} :\n{e}")
-            
-        return order
-    
-
-    async def CloseShortPosition(self):
-        pass
         
         
     async def cancelOrder(self, symbol, order_id):
@@ -175,10 +136,10 @@ class Wallet:
             )
             await self.save_and_print_positions(symbol, 1)
             
+            return order
+            
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} :\n{e}")
-            
-        return order
         
     
     async def sell(self, symbol, amount):
@@ -188,11 +149,11 @@ class Wallet:
             order = await self.exchange.create_order(symbol, 'market', 'sell', amount)
             
             await self.save_and_print_positions(symbol, 1)
+            
+            return order
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
-        
-        return order
 
 
     async def sell_percentage(self, symbol, percentage=100):
@@ -203,8 +164,7 @@ class Wallet:
             balance = await self.exchange.fetch_balance()
             
             if base_currency not in balance['free']:
-                print(f"Pas de {base_currency}")
-                return
+                raise ValueError(f"Pas de {base_currency}")
 
             available_amount = balance['free'].get(base_currency, 0)
             amount = available_amount * (percentage / 100)
@@ -212,11 +172,11 @@ class Wallet:
             order = await self.exchange.create_order(symbol, 'market', 'sell', amount, params={'reduceOnly':True})
 
             await self.save_and_print_positions(symbol, 1)
+            
+            return order
 
         except Exception as e:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
-        
-        return order
     
     
     async def sell_all(self):
@@ -230,6 +190,56 @@ class Wallet:
             
         except Exception as e:
             print(f"Erreur lors de la vente de tous les actifs:\n{e}")
+
+
+    async def open_swap(self, symbol, amount, direction):
+        """
+        Open a futures position.
+        
+        Args:
+            symbol: The futures pair to trade (e.g., BTC/USDT).
+            amount: The amount to buy or sell.
+            leverage: The leverage to apply (e.g., 5x).
+            direction: 'buy' for long position, 'sell' for short position.
+        """
+
+        try:
+            order = await self.exchange.create_order(
+                symbol=symbol,
+                type='market',
+                side=direction,
+                amount=amount,
+                params={'type': 'swap'}
+            )
+            
+            return order
+            
+        except Exception as e:
+            print(f"Error opening futures position: {e}")
+
+
+    async def close_swap(self, symbol, amount, direction):
+        """
+        Close a futures position.
+
+        Args:
+            symbol: The futures pair to trade (e.g., BTC/USDT).
+            amount: The amount to buy or sell.
+            direction: 'buy' to close a short position, 'sell' to close a long position.
+        """
+        try:
+            order = await self.exchange.create_order(
+                symbol=symbol,
+                type='market',
+                side=direction,
+                amount=amount,
+                params={'type': 'swap'}
+            )
+            
+            return order
+            
+        except Exception as e:
+            print(f"Error closing futures position: {e}")
 
 
     async def close_all_positions(self):

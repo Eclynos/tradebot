@@ -93,18 +93,18 @@ class DataAnalysis:
         X = numpy.linalg.solve(A,B)
         return X
     
-    def simpleWeightedAverage(self, data, MASize):
+    def simpleWeightedAverage(self, data, MASize, weight=2):
         avg = []
         denom = 0
         total = 0
         for i in range(len(data) - MASize):
             if i==0:
                 for j in range(MASize+1):
-                    total += data[j]["price"]**3
-                    denom += data[j]["price"]**2
+                    total += data[j]["price"]**(weight+1)
+                    denom += data[j]["price"]**weight
             else :
-                total += data[i+MASize]["price"]**3 - data[i-1]["price"]**3
-                denom += data[i+MASize]["price"]**2 - data[i-1]["price"]**2
+                total += data[i+MASize]["price"]**(weight+1) - data[i-1]["price"]**(weight+1)
+                denom += data[i+MASize]["price"]**weight - data[i-1]["price"]**weight
             
             avg.append({"date" : data[i+MASize]["date"], "price":total/denom})
         
@@ -147,7 +147,7 @@ class DataAnalysis:
         return sd
     
     def expoStandardDeviation(self, data, MA, popSize, powerMultiplier=0.95):
-        sd = copy.deepcopy(MA)
+        sd = []
         normalisationFactor = 0
         for i in range(popSize):
             normalisationFactor += powerMultiplier**i 
@@ -157,17 +157,17 @@ class DataAnalysis:
             for j in range(popSize):
                 seum += powerMultiplier**(popSize-j-1) * (data[i+j]["price"] - MA[i]["price"])**2  
     
-            sd[i]["price"] = (seum/normalisationFactor)**0.5
+            sd.append({"date" : MA[i]["date"], "price" : (seum/normalisationFactor)**0.5})
 
         return sd
     
-    def trend(self, data):
+    def trend(self, data, cutoff = 1/2):
         """renvoie :\n
             1 -> trend haussière\n
             -1 -> trend baissière\n
             0 -> trend sideways
         """
-        milieu = 1*len(data)//2
+        milieu = int(len(data)*cutoff)
         hh1 = self.maxPrice(data[:milieu])
         hh2 = self.maxPrice(data[milieu:])
         ll1 = self.minPrice(data[:milieu])

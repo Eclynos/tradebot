@@ -23,6 +23,12 @@ class Tools:
             return amount * 60 * 60
         elif unit == 'd':
             return amount * 24 * 60 * 60
+        elif unit == 'w':
+            return amount * 7 * 24 * 60 * 60
+        elif unit == 'M':
+            return int(amount * 30.5 * 24 * 60 * 60)
+        elif unit == 'y':
+            return int(amount * 365.25 * 24 * 60 * 60)
         else:
             print("Mauvais time_frame")
 

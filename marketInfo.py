@@ -114,7 +114,7 @@ class MarketInformations:
         print(f"{fee['symbol']} fee, maker: {fee['maker']} taker: {fee['taker']}")
 
    
-    async def fetch_candles(self, symbol, timeFrame, since):
+    async def fetch_candles(self, symbol, timeFrame, since, limit=None):
         """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en ms
         renvoie [timestamp, open, high, low, close, volume]"""
 
@@ -125,10 +125,15 @@ class MarketInformations:
         
         while current_since < timestamp:
             try:
-                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
+                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000 if limit == None else limit)
             except Exception as e:
                 print(e)
                 break
+            
+            if limit != None:
+                limit -= 1000
+                if limit < 0:
+                    break
 
             if not ohclv:
                 break
@@ -200,12 +205,21 @@ class MarketInformations:
             plt.show()
 
 
-    async def fetch_and_update(self, symbol, timeFrame, since):
+    async def fetch_and_update(self, symbol, timeFrame):
         """Récupère les bougies et met à jour les données"""
+
+        new = await self.exchange.fetch_ohlcv(symbol,
+                                              timeFrame,
+                                              await self.exchange.fetch_time() - self.tools.time_frame_to_ms(str(2 * int(timeFrame[:-1])) + timeFrame[-1]),
+                                              2)
+
+        if new[0][0] != self.candles[-2][0]:
+            self.candles[-1] = new[0]
+            self.candles.append(new[1])
+        else:
+            self.candles[-1] = new[1]
         
-        candles = await self.fetch_candles(symbol, timeFrame, since)
-        
-        self.df = pd.DataFrame(candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+        self.df = pd.DataFrame(self.candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
         self.df['Date'] = pd.to_datetime(self.df['Timestamp'], unit='ms')
         self.df['Date'] = self.df['Date'] + pd.Timedelta(hours=2)
         self.df.set_index('Date', inplace=True)
@@ -233,11 +247,18 @@ class MarketInformations:
                                     xytext=(10, 0), textcoords='offset points', color=line_color, fontsize=12, verticalalignment='center')
 
 
-    async def chart_visualisation(self, symbol, timeFrame, since):
+    async def chart_visualisation(self, symbol, timeFrame, since, refresh_rate):
         """Montre en temps réel le graphique d'un symbole"""
 
-        await self.fetch_and_update(symbol, timeFrame, since)
+        self.candles = await self.fetch_candles(symbol, timeFrame, since)
+        
+        self.df = pd.DataFrame(self.candles, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+        self.df['Date'] = pd.to_datetime(self.df['Timestamp'], unit='ms')
+        self.df['Date'] = self.df['Date'] + pd.Timedelta(hours=2)
+        self.df.set_index('Date', inplace=True)
+        self.df.drop(columns='Timestamp', inplace=True)
 
+        refresh_rate = int(refresh_rate)
         last_price = self.df['Close'].iloc[-1]
         last_open = self.df['Open'].iloc[-1]
         line_color = '#1f77b4' if last_price > last_open else '#d62728'
@@ -255,16 +276,19 @@ class MarketInformations:
 
         self.axlist[0].axhline(last_price, color=line_color, linestyle='--', linewidth=0.5)
         self.axlist[0].annotate(f'{last_price}', 
-                                xy=(0, last_price), 
-                                xycoords=('axes fraction', 'data'), 
+                                xy=(0, last_price),
+                                xycoords=('axes fraction', 'data'),
                                 xytext=(10, 0), textcoords='offset points',
-                                color=line_color, fontsize=12, 
+                                color=line_color, fontsize=12,
                                 verticalalignment='center')
 
-        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000)
+        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000 * refresh_rate)
 
         while self.running:
-            await self.fetch_and_update(symbol, timeFrame, since)
-            plt.pause(1)
+            try:
+                await self.fetch_and_update(symbol, timeFrame)
+            except Exception as e:
+                print(e)
+            plt.pause(refresh_rate)
 
         plt.close()

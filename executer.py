@@ -8,18 +8,26 @@ class Executer:
         t = Tools()
         self.mi = MarketInformations(t)
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
-        self.amounts = {'BTC/USDT': [0],
-                        'SOL/USDT' : [0],
-                        'ETH/USDT' : [0],
-                        'HNT/USDT' : [0]}
-        self.costs = [3] # in USDT
+        
+        self.costs = [3] # cost to spend at each trade in USDT
 
         self.symbols = ['BTC/USDT',
                         'SOL/USDT',
                         'ETH/USDT',
                         'HNT/USDT']
         
-        self.factor_list = [1]
+        self.factors = [1] # preset leverage factor
+        
+        self.infos = []
+        
+        for i in range(len(self.wallets)):
+            dico = {}
+            dico['cost'] = self.costs[i]
+            dico['factor'] = self.factors[i]
+            dico['amounts'] = {}
+            for symbol in self.symbols:
+                dico['amounts'][symbol] = 0
+            self.infos.extend(dico)
 
 
     async def start(self):
@@ -50,14 +58,14 @@ class Executer:
                 try:
                     order = await w.buy(
                     symbol,
-                    self.amounts[symbol][i],
-                    self.costs[i]
+                    self.infos[i]['amounts'][symbol],
+                    self.infos[i]['cost']
                     )
                 except Exception as e:
                     print(f"Le wallet {i} n'a pas réussi à acheter\n{e}")
                 
                 if order != None:
-                    print(f"Achat de {self.amounts[symbol][i]} {symbol}")
+                    print(f"Achat de {self.infos[i]['amounts'][symbol]} {symbol}")
                     break
 
 

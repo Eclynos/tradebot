@@ -18,7 +18,7 @@ class Account:
             'enableRateLimit': True
         })
         
-        self.exchange.verbose = False # pour le debug si True
+        self.exchange.verbose = True # pour le debug si True
         print("Connected")
         
         

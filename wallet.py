@@ -194,27 +194,43 @@ class Wallet:
 
     async def open_swap(self, symbol, amount, direction):
         """
-        Open a futures position.
+        Open a futures position ensuring minimum trade requirements.
         
         Args:
             symbol: The futures pair to trade
             amount: The amount to buy or sell
             direction: 'buy' for long position, 'sell' for short position
         """
-
         try:
+
             order = await self.exchange.create_order(
                 symbol=symbol,
                 type='market',
                 side=direction,
-                amount=amount,
+                amount=2,
                 params={'type': 'swap'}
             )
-            
             return order
-            
+
         except Exception as e:
-            print(f"Error opening futures position: {e}")
+            if 'less than the minimum amount' in str(e):
+                print("Retrying with minimum amount of 1 USDT in base currency terms.")
+                min_amount = 1 / await self.mi.getPrice(symbol)
+                try:
+                    order = await self.exchange.create_order(
+                        symbol=symbol,
+                        type='market',
+                        side=direction,
+                        amount=2,
+                        params={'type': 'swap'}
+                    )
+                    return order
+                except Exception as retry_exception:
+                    print(f"Failed to open position after retry: {retry_exception}")
+            else:
+                print(f"Error opening swap position: {e}")
+
+
 
 
     async def close_swap(self, symbol, amount, direction):
@@ -222,9 +238,9 @@ class Wallet:
         Close a futures position.
 
         Args:
-            symbol: The futures pair to trade (e.g., BTC/USDT).
-            amount: The amount to buy or sell.
-            direction: 'buy' to close a short position, 'sell' to close a long position.
+            symbol: The futures pair to trade
+            amount: The amount to buy or sell
+            direction: 'buy' to close a short position, 'sell' to close a long position
         """
         try:
             order = await self.exchange.create_order(
@@ -238,7 +254,7 @@ class Wallet:
             return order
             
         except Exception as e:
-            print(f"Error closing futures position: {e}")
+            print(f"Error closing swap position: {e}")
 
 
     async def close_all_positions(self):

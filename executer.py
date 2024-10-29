@@ -133,8 +133,12 @@ class Executer:
         price = await self.mi.getPrice(symbol)
         for i in range(len(self.wallets)):
             self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
-        print(self.infos[i]['amounts'][symbol])
+            if self.infos[i]['amounts'][symbol] * price < 1:
+                print(f"Adjusted amount for {symbol} to meet the 1 USDT minimum.")
+                self.infos[i]['amounts'][symbol] = 1 / price
+        print("{:.9f}".format(self.infos[i]['amounts'][symbol]))
         print(self.infos[i]['amounts'][symbol] * price)
+
 
 
     async def leverage(self, factor_list):

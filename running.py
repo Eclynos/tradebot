@@ -13,12 +13,12 @@ async def main():
         print("erreur")
         return;
 
-    await w.init()
+    #await w.init()
     await mi.init()
 
-    await mi.chart_visualisation("BTC/USDT", "1m", t.time_frame_to_ms("2h"), 2)
+    await mi.chart_visualisation("SOL/USDT", "1m", t.time_frame_to_ms("2h"), 2)
 
-    await w.account.disconnect()
+    #await w.account.disconnect()
     await mi.account.disconnect()
 
 

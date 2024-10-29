@@ -9,7 +9,7 @@ class Executer:
         self.mi = MarketInformations(t)
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
-        self.costs = [3] # cost to spend at each trade in USDT
+        self.costs = [2] # cost to spend at each trade in USDT
 
         self.symbols = ['BTC/USDT',
                         'SOL/USDT',
@@ -27,7 +27,7 @@ class Executer:
             dico['amounts'] = {}
             for symbol in self.symbols:
                 dico['amounts'][symbol] = 0
-            self.infos.extend(dico)
+            self.infos.append(dico)
 
 
     async def start(self):
@@ -95,13 +95,13 @@ class Executer:
             try:
                 order = await w.open_swap(
                     symbol,
-                    self.amounts[symbol][i],
+                    self.infos[i]['amounts'][symbol],
                     'buy')
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
             
             if order != None:
-                print(f"Achat swap de {self.amounts[symbol][i]} {symbol}")
+                print(f"Achat swap de {self.infos[i]['amounts'][symbol]} {symbol}")
     
     
     async def sell_swap(self, symbol):
@@ -132,16 +132,12 @@ class Executer:
         """Calcule les montants correspondants aux coûts à acheter"""
         price = await self.mi.getPrice(symbol)
         for i in range(len(self.wallets)):
-            self.amounts[symbol][i] = self.mi.currency_equivalence(self.costs[i], price)
-        print(self.amounts[symbol][i])
-        print(self.amounts[symbol][i] * price)
+            self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
+        print(self.infos[i]['amounts'][symbol])
+        print(self.infos[i]['amounts'][symbol] * price)
 
 
     async def leverage(self, factor_list):
-        for symbol in self.symbols:
-            for i, w in enumerate(self.wallets):
+        for i, w in enumerate(self.wallets):
+            for symbol in self.symbols:
                 await w.leverage(factor_list[i], symbol)
-
-
-# fonction pour check le prix dispo en USDT pour pouvoir investir
-# gestion des achats, rearrangement des listes amounts et symbols

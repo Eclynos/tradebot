@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import pandas as pd, asyncio
+import pandas as pd
 import mplfinance as mpf
 from matplotlib.animation import FuncAnimation
 from account import Account
@@ -282,7 +282,7 @@ class MarketInformations:
                                 color=line_color, fontsize=12,
                                 verticalalignment='center')
 
-        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000 * refresh_rate)
+        A = FuncAnimation(fig, self.update_chart, fargs=(symbol, timeFrame, since), interval=1000 * refresh_rate, cache_frame_data=False)
 
         while self.running:
             try:

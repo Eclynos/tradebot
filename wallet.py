@@ -55,9 +55,9 @@ class Wallet:
     async def leverage(self, factor, symbol):
         """Défini le taux d'effet de levier à utiliser"""
         try:
-            await self.exchange.set_leverage(factor, symbol)
+            await self.exchange.set_leverage(factor, symbol, params={"marginCoin": "USDT"})
         except Exception as e:
-            print(f"Error setting leverage:\n{e}")
+            raise ValueError(e)
 
 
     async def position_mode(self, mode, symbol):
@@ -197,10 +197,9 @@ class Wallet:
         Open a futures position.
         
         Args:
-            symbol: The futures pair to trade (e.g., BTC/USDT).
-            amount: The amount to buy or sell.
-            leverage: The leverage to apply (e.g., 5x).
-            direction: 'buy' for long position, 'sell' for short position.
+            symbol: The futures pair to trade
+            amount: The amount to buy or sell
+            direction: 'buy' for long position, 'sell' for short position
         """
 
         try:

@@ -1,4 +1,5 @@
 import requests, json, csv
+import pandas as pd
 
 class Tools:
     def __init__(self) -> None:
@@ -48,3 +49,27 @@ class Tools:
             return True if response.status_code == 200 else False
         except (requests.ConnectionError, requests.Timeout):
             return False
+        
+    def binarySearch(self, data, value, key=None):
+        a= 0
+        b= len(data)-1
+        while a != b:
+            mid = (a+b)//2
+            if key == None:
+                if data[mid] == value:
+                    return mid
+                elif data[mid] > value:
+                    b = mid
+                else:
+                    a = mid+1
+
+            else:
+                if data[mid][key] == value:
+                    return mid
+                if data[mid][key] > value:
+                    b = mid
+                else:
+                    a=mid+1
+        
+        return a
+

@@ -99,14 +99,14 @@ class DataAnalysis:
         total = 0
         for i in range(len(data) - MASize):
             if i==0:
-                for j in range(MASize+1):
+                for j in range(MASize):
                     total += data[j]["price"]**(weight+1)
                     denom += data[j]["price"]**weight
             else :
                 total += data[i+MASize]["price"]**(weight+1) - data[i-1]["price"]**(weight+1)
                 denom += data[i+MASize]["price"]**weight - data[i-1]["price"]**weight
             
-            avg.append({"date" : data[i+MASize]["date"], "price":total/denom})
+            avg.append({"date" : data[i+MASize-1]["date"], "price":total/denom})
         
         return avg
     
@@ -129,7 +129,7 @@ class DataAnalysis:
         avgPrice = 0
         for i in range(len(data)):
             if i >= MAsize:
-                ma.append({"date" : data[i]["date"], "price" : avgPrice/normalisationFactor})
+                ma.append({"date" : data[i-1]["date"], "price" : avgPrice/normalisationFactor})
                 avgPrice -= powerMultiplier**(MAsize-1) * data[i-MAsize]["price"]
             avgPrice *= powerMultiplier
             avgPrice += data[i]["price"]
@@ -145,6 +145,53 @@ class DataAnalysis:
             sd[i]["price"] = (seum / (popSize-1))**0.5
         
         return sd
+    
+    def fastSD(self, data, MA, popSize):
+        sd = []
+        seum = 0
+        s = 0
+        for j in range(popSize):
+            seum += (data[j]["price"] - MA[0]["price"])**2
+            s += data[j]["price"]
+
+        sd.append({"price":seum/(popSize-1), "date":MA[0]["date"]})
+
+        for i in range(1, len(MA)):
+            ns = s - data[i-1]["price"] + data[i+popSize-1]["price"]
+            sd.append({"price": sd[i-1]["price"] + (data[i+popSize-1]["price"]**2 - data[i-1]["price"]**2 + 1/popSize * (s**2 - ns**2))/(popSize-1)
+                       , "date":MA[i]["date"]})
+            s = ns
+
+        for i in range(len(sd)):
+            sd[i]["price"] **= 0.5
+        
+        return sd        
+    
+    def fastExponentialStandardDeviation(self, data, popSize, power1 = 0.95, power2 = 0.95):
+        sd = []
+        s1 = 0
+        s2 = 0
+        s3 = 0
+        nf1 = 0
+        nf2 = 0
+        for i in range(popSize):
+            s1 += power1**(popSize-i-1) * data[i]["price"] ** 2
+            s2 += power1**(popSize-i-1) * data[i]["price"]
+            s3 += power2**(popSize-i-1) * data[i]["price"]
+            nf1 += power1**(popSize-i-1)
+            nf2 += power2**(popSize-i-1)
+        
+        sd.append({"date": data[popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2**2) * s3**2})
+        for i in range(1, len(data)-popSize):
+            s1 = power1*s1 - power1**popSize * data[i-1]["price"]**2 + data[i+popSize-1]["price"]**2 
+            s2 = power1*s2 - power1**popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
+            s3 = power2*s3 - power2**popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
+            sd.append({"date": data[i+popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2**2) * s3**2})
+
+        for i in range(len(sd)):
+            sd[i]["price"] = (sd[i]["price"]/nf1)**0.5
+        return sd
+
     
     def expoStandardDeviation(self, data, MA, popSize, powerMultiplier=0.95):
         sd = []

@@ -16,5 +16,6 @@ if __name__ == "__main__":
     asyncio.run(main())
 
 
-# faire fonctionner les buy/sell swap -> amount = amount in USDT
+# tester futures car swap = spot fees -> try futures
+# tester leverage
 # faire fonctionner la loop, check toutes les minutes

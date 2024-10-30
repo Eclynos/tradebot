@@ -86,17 +86,17 @@ class Executer:
 
 
     async def buy_swap(self, symbol):
-        
-        await self.calculate_amounts(symbol)
-        
         for i, w in enumerate(self.wallets):
             order = None
             
             try:
                 order = await w.open_swap(
                     symbol,
-                    self.infos[i]['amounts'][symbol],
+                    self.infos[i]['cost'],
                     'buy')
+                
+                print(order)
+
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
             
@@ -120,6 +120,8 @@ class Executer:
                     symbol,
                     amount,
                     'sell')
+                
+                print(order)
             
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
@@ -133,12 +135,6 @@ class Executer:
         price = await self.mi.getPrice(symbol)
         for i in range(len(self.wallets)):
             self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
-            if self.infos[i]['amounts'][symbol] * price < 1:
-                print(f"Adjusted amount for {symbol} to meet the 1 USDT minimum.")
-                self.infos[i]['amounts'][symbol] = 1 / price
-        print("{:.9f}".format(self.infos[i]['amounts'][symbol]))
-        print(self.infos[i]['amounts'][symbol] * price)
-
 
 
     async def leverage(self, factor_list):

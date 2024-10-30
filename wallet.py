@@ -194,11 +194,11 @@ class Wallet:
 
     async def open_swap(self, symbol, amount, direction):
         """
-        Open a futures position ensuring minimum trade requirements.
+        Open a futures position ensuring minimum trade requirements
         
         Args:
             symbol: The futures pair to trade
-            amount: The amount to buy or sell
+            amount: The amount to buy or sell in USDT
             direction: 'buy' for long position, 'sell' for short position
         """
         try:
@@ -207,28 +207,24 @@ class Wallet:
                 symbol=symbol,
                 type='market',
                 side=direction,
-                amount=2,
+                amount=amount,
                 params={'type': 'swap'}
             )
             return order
 
         except Exception as e:
-            if 'less than the minimum amount' in str(e):
-                print("Retrying with minimum amount of 1 USDT in base currency terms.")
-                min_amount = 1 / await self.mi.getPrice(symbol)
-                try:
-                    order = await self.exchange.create_order(
-                        symbol=symbol,
-                        type='market',
-                        side=direction,
-                        amount=2,
-                        params={'type': 'swap'}
-                    )
-                    return order
-                except Exception as retry_exception:
-                    print(f"Failed to open position after retry: {retry_exception}")
-            else:
-                print(f"Error opening swap position: {e}")
+            print(f"Error opening swap position: {e}")
+            try:
+                order = await self.exchange.create_order(
+                    symbol=symbol,
+                    type='market',
+                    side=direction,
+                    amount=amount,
+                    params={'type': 'swap'}
+                )
+                return order
+            except Exception as retry_exception:
+                print(f"Failed to open position after retry: {retry_exception}")
 
 
 
@@ -239,7 +235,7 @@ class Wallet:
 
         Args:
             symbol: The futures pair to trade
-            amount: The amount to buy or sell
+            amount: The amount to buy or sell in amount of trade currency
             direction: 'buy' to close a short position, 'sell' to close a long position
         """
         try:
@@ -276,7 +272,7 @@ class Wallet:
                 f.write(f"{symbol}  {self.exchange.iso8601(trade['timestamp'])}\n")
                 f.write(f"ID: {trade['id']}, {trade['side']}\nPrice: {trade['price']}")
                 f.write(f"\nQuantity: {trade['amount']} = {self.mi.crypto_equivalence(trade['amount'], trade['price'])} €")
-                f.write(f"\nCost: {trade['cost']} Fees: {trade['fee']['cost']} {trade['fee']['currency']}\n\n")
+                f.write(f"\nCost: {trade['cost']} Fees: {trade['fee']['cost']:.9f} {trade['fee']['currency']}\n\n")
 
 
     def append_order(self, order):

@@ -134,7 +134,6 @@ class Wallet:
                 amount,
                 params = {'cost': cost}
             )
-            await self.save_and_print_positions(symbol, 1)
             
             return order
             
@@ -147,8 +146,6 @@ class Wallet:
 
         try:
             order = await self.exchange.create_order(symbol, 'market', 'sell', amount)
-            
-            await self.save_and_print_positions(symbol, 1)
             
             return order
 
@@ -170,8 +167,6 @@ class Wallet:
             amount = available_amount * (percentage / 100)
             
             order = await self.exchange.create_order(symbol, 'market', 'sell', amount, params={'reduceOnly':True})
-
-            await self.save_and_print_positions(symbol, 1)
             
             return order
 
@@ -192,9 +187,9 @@ class Wallet:
             print(f"Erreur lors de la vente de tous les actifs:\n{e}")
 
 
-    async def open_swap(self, symbol, amount, direction):
+    async def openp(self, symbol, amount, direction):
         """
-        Open a futures position ensuring minimum trade requirements
+        Open a future/swap position
         
         Args:
             symbol: The futures pair to trade
@@ -204,7 +199,7 @@ class Wallet:
         try:
 
             order = await self.exchange.create_order(
-                symbol=symbol,
+                symbol=symbol+':USDT',
                 type='market',
                 side=direction,
                 amount=amount,
@@ -216,7 +211,7 @@ class Wallet:
             print(f"Error opening swap position: {e}")
             try:
                 order = await self.exchange.create_order(
-                    symbol=symbol,
+                    symbol=symbol+':USDT',
                     type='market',
                     side=direction,
                     amount=amount,
@@ -229,9 +224,9 @@ class Wallet:
 
 
 
-    async def close_swap(self, symbol, amount, direction):
+    async def closep(self, symbol, direction):
         """
-        Close a futures position.
+        Close a futures/swap position
 
         Args:
             symbol: The futures pair to trade
@@ -239,11 +234,9 @@ class Wallet:
             direction: 'buy' to close a short position, 'sell' to close a long position
         """
         try:
-            order = await self.exchange.create_order(
-                symbol=symbol,
-                type='market',
+            order = await self.exchange.close_position(
+                symbol=symbol+':USDT',
                 side=direction,
-                amount=amount,
                 params={'type': 'swap'}
             )
             
@@ -253,8 +246,8 @@ class Wallet:
             print(f"Error closing swap position: {e}")
 
 
-    async def close_all_positions(self):
-        """Vend toutes les positions existantes"""
+    async def close_all_p(self):
+        """Ferme toutes les positions existantes"""
         
         try:
             await self.exchange.close_all_positions()
@@ -264,7 +257,7 @@ class Wallet:
 
 
     async def save_and_print_positions(self, symbol, nb=None):
-        """Sauvegarde la position dans la liste des positions et print les informations"""
+        """Sauvegarde la position dans le fichier des positions"""
         trades = await self.exchange.fetch_my_trades(symbol, limit=nb)
         
         with open(self.transaction_file, "a") as f:
@@ -275,56 +268,51 @@ class Wallet:
                 f.write(f"\nCost: {trade['cost']} Fees: {trade['fee']['cost']:.9f} {trade['fee']['currency']}\n\n")
 
 
-    def append_order(self, order):
-        """Ajoute un ordre à la liste des ordres"""
-        self.orders.append({'id': order['id'], 'datetime': order['datetime']})
-        
-        
-    def remove_order(self, id):
-        """Supprime un ordre de la liste des ordres"""
-        for i in range(len(self.orders) - 1):
-            if self.orders[i]['id'] == id:
-                self.orders.pop(i)
-        
-        
-    async def update_order(self, id):
-        order = await self.exchange.fetch_order(id)
-        if order['status'] == 'closed':
-            await self.save_and_print_position(order['symbol'], 1)
-            self.remove_order(id)
-
-
 # WATCH WALLET INFORMATIONS
 
 
-    async def check_positions(self):
+    async def checkPositions(self): # À tester 
         """Vérifie les positions ouvertes sur le compte.
         Les positions peuvent être les achats en future / margin / swap
         ou les ordres d'achat / vente qui n'ont pas encore abouti"""
         try:
-            positions = await self.exchange.fetch_positions(params={'type': 'spot'})
+            positions = await self.exchange.fetch_positions()
             if positions:
                 print("Positions ouvertes :")
-                for position in positions:
-                    print(position)
-                return positions
+                for p in positions:
+                    print(f"{p['entryPrice']} {p['symbol']}")
+                    print(f"ID: {p['id']}, {p['side']}")
+                    print(f"Leverage: {p['leverage']}, LiquidationPrice: {p['liquidationPrice']}")
+                    print(f"Pnl: {p['unrealizedPnl']}") #PnL = Profit and Loss
             else:
                 print("Aucune position ouverte.")
         except Exception as e:
-            print(f"Erreur lors de la récupération des positions : {e}")
-      
-        
-    async def watchOrders(self, symbol):
-        """Regarde les ordres en temps réel."""
+            print(f"Erreur lors de la récupération des positions actuelles : {e}")
+
+
+    async def positionsHistory(self, symbol, limit=20):
+        """Donne l'historique des positions prises en swap / future"""
+
         try:
-            orders = await self.exchange.fetch_open_orders(symbol)
-            print(f"Orders for {symbol}:\n{orders}")
+            positions = await self.exchange.fetch_position_history(
+                symbol=symbol+':USDT',
+                limit=limit
+            )
+
+            for p in positions:
+                print(f"{p['entryPrice']} {p['symbol']}")
+                print(p['datetime'])
+                print(f"ID: {p['id']}, {p['side']}")
+                print(f"Leverage: {p['leverage']}, LiquidationPrice: {p['liquidationPrice']}")
+                print(f"Pnl: {p['unrealizedPnl']}")
+
         except Exception as e:
-            print(f"Erreur lors de la récupération des ordres en cours: {e}")
+            print(f"Erreur lors de la récupération de l'historique des positions : {e}")
+
 
 
     async def transactionHistory(self, symbol, limit=None):
-        """Donne l'historique des trades sur une paire"""
+        """Donne l'historique des trades sur une paire en spot"""
         trades = await self.exchange.fetch_my_trades(symbol, limit = limit)
         print('\n' + symbol + " History : " + str(len(trades)))
         
@@ -339,7 +327,7 @@ class Wallet:
 
 
     async def walletInformations(self):
-        """Recupère les informations sur les positions dans un type de marché"""
+        """Donne les montants possédés dans chaque cryptomonnaie en spot"""
         
         if self.exchange.options['defaultType'] == "spot":
             balance = await self.exchange.fetch_balance()

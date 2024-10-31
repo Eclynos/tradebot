@@ -1,5 +1,6 @@
 from executer import Executer
-import asyncio
+from math import floor
+import asyncio, time
     
     
 async def main():
@@ -7,27 +8,15 @@ async def main():
 
     await e.start()
 
-    """
+    start_time = time.time()
     
-    await e.buy_swap("SOL/USDT")
-    
-    await asyncio.sleep(5)
-
-    e.wallets[0].market_mode('spot')
-    
-    await e.wallets[0].walletInformations()
-    
-    await asyncio.sleep(7)
-    
-    await e.sell_swap("SOL/USDT")
-
-    e.wallets[0].market_mode('spot')
-    
-    await e.wallets[0].walletInformations()
-
-    """
-
-    await e.wallets[0].save_and_print_positions("SOL/USDT", 2)
+    while True:
+        time.sleep(0.1)
+        start = floor(start_time) // 60
+        actual = await e.mi.exchange.fetch_time() // 60000
+        print(actual)
+        if actual > start:
+            break
     
     await e.end()
     

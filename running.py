@@ -16,7 +16,7 @@ async def main():
     #await w.init()
     await mi.init()
 
-    await mi.chart_visualisation("SOL/USDT", "1m", t.time_frame_to_ms("2h"), 2)
+    await mi.chart_visualisation("BTC/USDT", "15m", t.time_frame_to_ms("26h"), 2)
 
     #await w.account.disconnect()
     await mi.account.disconnect()

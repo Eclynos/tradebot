@@ -4,17 +4,14 @@ from tools import Tools, left
 
 
 class Executer:
-    def __init__(self) -> None:
+    def __init__(self, symbols) -> None:
         self.t = Tools()
         self.mi = MarketInformations(self.t)
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
         self.costs = [17.1] # cost to spend at each trade in USDT
 
-        self.symbols = ['BTC/USDT',
-                        'SOL/USDT',
-                        'ETH/USDT',
-                        'HNT/USDT']
+        self.symbols = symbols
         
         self.factors = [1] # preset leverage factor
         

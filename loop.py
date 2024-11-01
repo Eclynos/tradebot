@@ -5,6 +5,8 @@ import asyncio, time
     
     
 async def main():
+    symbols = ['BTC/USDT','SOL/USDT','ETH/USDT','HNT/USDT']
+    keys = ["date", "open", "high", "low", "price", "volume"]
     e = Executer()
     s = Strategy()
     await e.start()
@@ -13,25 +15,23 @@ async def main():
     timeFrame = "1m"
     timeLoop = e.t.time_frame_to_s(timeFrame)
 
-    is_open = {}
-    candles = {}
-    for symbol in e.symbols:
-        is_open[symbol] = False
-        candles[symbol] = []
+    candles_dict = list(len(symbols))
+    is_open = {symbol: False for symbol in symbols}
 
     while run:
         start_time = time.time()
 
-        for symbol in e.symbols:
-            await e.mi.fetch_candles(symbol, timeFrame, e.t.time_frame_to_ms("30d"))
+        fetch_tasks = [e.mi.fetch_candles(symbol, timeFrame, e.t.time_frame_to_ms("30d")) for symbol in symbols]
+        candles_list = await asyncio.gather(*fetch_tasks)
+        candles_dict = [dict(zip(keys, candle)) for candle in candles_list]
 
-        for symbol in e.symbols:
+        for i, symbol in enumerate(symbols):
             if is_open[symbol]:
-                if s.sellingEvaluation(candles[symbol]):
+                if s.sellingEvaluation(candles_dict[i]):
                     await e.sell_swap(symbol)
                     is_open[symbol] = False
             else:
-                if s.buyingEvaluation(candles[symbol]):
+                if s.buyingEvaluation(candles_dict[i]):
                     await e.buy_swap(symbol)
                     is_open[symbol] = True
 

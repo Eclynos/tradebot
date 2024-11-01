@@ -1,6 +1,8 @@
 import numpy
 import matplotlib.pyplot as plt
 import copy
+import math
+sqrt = math.sqrt
 
 class DataAnalysis:
     def getMathLocalMins(self, baseList : list) -> list:
@@ -142,7 +144,7 @@ class DataAnalysis:
             for j in range(popSize):
                 seum += (data[i+j]["price"] - MA[i]["price"])**2
             
-            sd[i]["price"] = (seum / (popSize-1))**0.5
+            sd[i]["price"] = sqrt(seum / (popSize-1))
         
         return sd
     
@@ -163,7 +165,7 @@ class DataAnalysis:
             s = ns
 
         for i in range(len(sd)):
-            sd[i]["price"] **= 0.5
+            sd[i]["price"] = sqrt(sd[i]["price"])
         
         return sd        
     
@@ -181,15 +183,15 @@ class DataAnalysis:
             nf1 += power1**(popSize-i-1)
             nf2 += power2**(popSize-i-1)
         
-        sd.append({"date": data[popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2**2) * s3**2})
+        sd.append({"date": data[popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2*nf2) * s3*s3})
         for i in range(1, len(data)-popSize):
-            s1 = power1*s1 - power1**popSize * data[i-1]["price"]**2 + data[i+popSize-1]["price"]**2 
+            s1 = power1*s1 - power1**popSize * data[i-1]["price"]*data[i-1]["price"] + data[i+popSize-1]["price"]*data[i+popSize-1]["price"]
             s2 = power1*s2 - power1**popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
             s3 = power2*s3 - power2**popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
-            sd.append({"date": data[i+popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2**2) * s3**2})
+            sd.append({"date": data[i+popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2*nf2) * s3*s3})
 
         for i in range(len(sd)):
-            sd[i]["price"] = (sd[i]["price"]/nf1)**0.5
+            sd[i]["price"] = sqrt(sd[i]["price"]/nf1)
         return sd
 
     
@@ -202,9 +204,9 @@ class DataAnalysis:
         for i in range(len(MA)):
             seum = 0
             for j in range(popSize):
-                seum += powerMultiplier**(popSize-j-1) * (data[i+j]["price"] - MA[i]["price"])**2  
+                seum += powerMultiplier**(popSize-j-1) * (data[i+j]["price"] - MA[i]["price"])*(data[i+j]["price"] - MA[i]["price"]) 
     
-            sd.append({"date" : MA[i]["date"], "price" : (seum/normalisationFactor)**0.5})
+            sd.append({"date" : MA[i]["date"], "price" : sqrt(seum/normalisationFactor)})
 
         return sd
     

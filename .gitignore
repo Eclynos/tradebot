@@ -9,3 +9,4 @@ trade_logs
 candles
 candles_manager.py
 backtest-images/*
+res.txt

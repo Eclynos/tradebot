@@ -1,21 +1,25 @@
 from dataAnalysis import DataAnalysis
 from tools import Tools
+import time
 
 class Strategy: 
-    def __init__(self) -> None:
+    def __init__(self, maSize=100, wAvgSize=2000, power1=0.995, power2=0.99, buyingBollinger=1.5) -> None:
         self.dA = DataAnalysis()
         self.t = Tools()
         self.sd=[]
         self.ma = []
         self.sdWeightedAvg = []
-        self.movingAverageSize = 100
-        self.weightedAvgSize = 2000
+        self.movingAverageSize = maSize
+        self.weightedAvgSize = wAvgSize
+        self.power1 = power1 
+        self.power2 = power2
+        self.buyingBollinger=buyingBollinger
 
     def batchBuyingEvaluation(self, data):
-        self.ma = self.dA.exponentialMovingAverage(data, self.movingAverageSize, 0.95)
-        self.sd = self.dA.fastExponentialStandardDeviation(data, self.movingAverageSize, 0.95, 0.95)
+        self.ma = self.dA.exponentialMovingAverage(data, self.movingAverageSize, self.power1)
+        self.sd = self.dA.fastExponentialStandardDeviation(data, self.movingAverageSize, self.power1, self.power2)
         self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
-        bb = self.dA.bollinger(self.ma, self.sd, 1.5)
+        bb = self.dA.bollinger(self.ma, self.sd, self.buyingBollinger)
         
         buyTimes = []
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(data)-2):
@@ -30,10 +34,12 @@ class Strategy:
             
 
     def buyingEvaluation(self, data, time):
-        ma = self.dA.exponentialMovingAverage(data[-self.movingAverageSize-1:], self.movingAverageSize, 0.95)
-        self.sd += self.dA.expoStandardDeviation(data[-self.movingAverageSize-1:], ma, self.movingAverageSize, 0.95)
+        ma = self.dA.exponentialMovingAverage(data[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)
+        self.ma.append(ma[0])
+        self.sd += self.dA.expoStandardDeviation(data[-self.movingAverageSize-1:], ma, self.movingAverageSize, self.power2)
+        
 
-        bb3 = self.dA.bollinger(ma, self.sd[-1:], 1.5)
+        bb3 = self.dA.bollinger(ma, self.sd[-1:], self.buyingBollinger)
 
         if len(self.sd) > self.weightedAvgSize:
             self.sdWeightedAvg += self.dA.simpleWeightedAverage(self.sd[-self.weightedAvgSize-1:], self.weightedAvgSize)
@@ -52,13 +58,15 @@ class Strategy:
         numberOfPositive = 0
         profit = 1
 
-        ma = self.dA.exponentialMovingAverage(data, self.movingAverageSize)
-        bb = self.dA.bollinger(ma, self.sd, 0)
-        bb2 = self.dA.bollinger(ma, self.sd, 1) 
+        bb = self.dA.bollinger(self.ma[self.movingAverageSize:], self.sd, 0)
+        bb2 = self.dA.bollinger(self.ma[self.movingAverageSize:], self.sd, 1)
 
         for i in range(numberOfTrades):
             hasPassedUnder0 = False
-            for j in range(len(data)):
+            for j in range(tradeList[0]["index"]-data[0]["index"], len(data)):
+                if j == len(data)-1:
+                    sellIndex = j
+                    break
                 if (data[j]["date"] > tradeList[0]["date"] and
                     data[j]["price"] < bb[j-self.movingAverageSize+1]["price"]):
                     hasPassedUnder0 = True
@@ -76,6 +84,7 @@ class Strategy:
 
                     sellIndex = j
                     break
+            
 
             sellRes.append([tradeList[0]['date'], data[sellIndex]['date'], tradeList[0]['price'], data[sellIndex]['price']])
             increase = data[sellIndex]["price"] / tradeList[0]["price"] -1
@@ -86,5 +95,6 @@ class Strategy:
                 numberOfPositive += 1
             tradeList.pop(0)
             
-        
+        if numberOfTrades == 0:
+            return (sellRes, profit, 0, 0)
         return (sellRes, profit, numberOfPositive/numberOfTrades, numberOfTrades)  

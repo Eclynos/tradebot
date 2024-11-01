@@ -1,6 +1,15 @@
 import requests, json, csv
 import pandas as pd
 
+
+def left(symbol):
+    return symbol.split("/")[0]
+
+
+def right(symbol):
+    return symbol.split("/")[1]
+
+
 class Tools:
     def __init__(self) -> None:
         pass
@@ -49,7 +58,8 @@ class Tools:
             return True if response.status_code == 200 else False
         except (requests.ConnectionError, requests.Timeout):
             return False
-        
+
+
     def binarySearch(self, data, value, key=None):
         a= 0
         b= len(data)-1
@@ -73,3 +83,4 @@ class Tools:
         
         return a
 
+# remplacer la class tools par une liste de fonctions à importer

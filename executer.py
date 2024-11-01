@@ -1,15 +1,15 @@
 from wallet import Wallet
 from marketInfo import MarketInformations
-from tools import Tools
+from tools import Tools, left
 
 
 class Executer:
     def __init__(self) -> None:
-        t = Tools()
-        self.mi = MarketInformations(t)
+        self.t = Tools()
+        self.mi = MarketInformations(self.t)
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
-        self.costs = [3] # cost to spend at each trade in USDT
+        self.costs = [17.1] # cost to spend at each trade in USDT
 
         self.symbols = ['BTC/USDT',
                         'SOL/USDT',
@@ -27,7 +27,7 @@ class Executer:
             dico['amounts'] = {}
             for symbol in self.symbols:
                 dico['amounts'][symbol] = 0
-            self.infos.extend(dico)
+            self.infos.append(dico)
 
 
     async def start(self):
@@ -86,62 +86,65 @@ class Executer:
 
 
     async def buy_swap(self, symbol):
-        
+
         await self.calculate_amounts(symbol)
-        
+
+        print(self.infos[0]['amounts'][symbol])
+
         for i, w in enumerate(self.wallets):
             order = None
             
             try:
-                order = await w.open_swap(
+                order = await w.openp(
                     symbol,
-                    self.amounts[symbol][i],
-                    'buy')
+                    self.infos[i]['amounts'][symbol],
+                    'long')
+
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
             
             if order != None:
-                print(f"Achat swap de {self.amounts[symbol][i]} {symbol}")
+                print(f"Achat swap de {self.infos[i]['amounts'][symbol]} {symbol}")
     
     
     async def sell_swap(self, symbol):
         for i, w in enumerate(self.wallets):
-            order = None
             
             try:
-                base_currency = symbol.split('/')[0]
-                balance = await w.exchange.fetch_balance()
-                
-                if base_currency not in balance['free']:
-                    raise ValueError(f"Pas de {base_currency}")
-                amount = balance['free'].get(base_currency, 0)
-                
-                order = await w.close_swap(
-                    symbol,
-                    amount,
-                    'sell')
+                await w.closep(symbol, 'long')
             
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
-                
-            if order != None:
-                print(f"Vente de tout le {symbol} du wallet {i}")
+
+
+
+    async def watch_positions(self):
+        positions = list(len(self.wallets))
+
+        try:
+            for i, w in enumerate(self.wallets):
+                positions[i] = await w.exchange.fetch_positions()
+        except Exception as e:
+            print(f"Error fetching positions of wallet {i}\n{e}")
+
+        for i in enumerate(self.wallets):
+            print(f"Positions of wallet {i}:")
+            for p in positions[i]:
+                print(f"{p['entryPrice']} {p['symbol']}")
+                print(f"ID: {p['id']}, {p['side']}")
+                print(f"Leverage: {p['leverage']}, LiquidationPrice: {p['liquidationPrice']}")
+                print(f"Pnl: {p['unrealizedPnl']}") #PnL = Profit and Loss
+
 
 
     async def calculate_amounts(self, symbol):
         """Calcule les montants correspondants aux coûts à acheter"""
         price = await self.mi.getPrice(symbol)
         for i in range(len(self.wallets)):
-            self.amounts[symbol][i] = self.mi.currency_equivalence(self.costs[i], price)
-        print(self.amounts[symbol][i])
-        print(self.amounts[symbol][i] * price)
+            self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
 
 
     async def leverage(self, factor_list):
-        for symbol in self.symbols:
-            for i, w in enumerate(self.wallets):
+        for i, w in enumerate(self.wallets):
+            for symbol in self.symbols:
                 await w.leverage(factor_list[i], symbol)
-
-
-# fonction pour check le prix dispo en USDT pour pouvoir investir
-# gestion des achats, rearrangement des listes amounts et symbols

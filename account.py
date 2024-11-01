@@ -11,15 +11,22 @@ class Account:
         
     async def connect(self):
         """Connect account with api keys to python"""
-        self.exchange = ccxt.bitget({ # etablie la connexion au compte
-            'apiKey': self.access_key,
-            'secret': self.secret_key,
-            'password': self.passphrase,
-            'enableRateLimit': True
-        })
+        try:
+            self.exchange = ccxt.bitget({ # etablie la connexion au compte
+                'apiKey': self.access_key,
+                'secret': self.secret_key,
+                'password': self.passphrase,
+                'enableRateLimit': True,
+                'options': {
+                    'defaultType': 'swap',
+                }
+            })
         
-        self.exchange.verbose = False # pour le debug si True
-        print("Connected")
+            self.exchange.verbose = False # pour le debug si True
+            print("Connected")
+
+        except Exception as e:
+            print(f"Failed connecting\n{e}")
         
         
     async def disconnect(self): # à faire à la fin de l'utilisation du compte, à la fin du code
@@ -28,5 +35,4 @@ class Account:
             await self.exchange.close()
             print("Disconnected")
         except Exception as e:
-            print("Failed disconnecting")
-            print(e)
+            print(f"Failed disconnecting\n{e}")

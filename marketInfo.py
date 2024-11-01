@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import mplfinance as mpf
 from matplotlib.animation import FuncAnimation
+from tools import *
 from account import Account
 
 
 class MarketInformations:
-    def __init__(self, tools) -> None:
+    def __init__(self) -> None:
         self.account = Account("info_keys")
-        self.tools = tools
         self.axlist = None
         self.running = True
 
@@ -140,7 +140,7 @@ class MarketInformations:
 
             candles.extend(ohclv)
             last_timestamp = ohclv[-1][0]
-            current_since = last_timestamp + self.tools.time_frame_to_ms(timeFrame)
+            current_since = last_timestamp + time_frame_to_ms(timeFrame)
 
             if current_since >= timestamp:
                 break
@@ -210,7 +210,7 @@ class MarketInformations:
 
         new = await self.exchange.fetch_ohlcv(symbol,
                                               timeFrame,
-                                              await self.exchange.fetch_time() - self.tools.time_frame_to_ms(str(2 * int(timeFrame[:-1])) + timeFrame[-1]),
+                                              await self.exchange.fetch_time() - time_frame_to_ms(str(2 * int(timeFrame[:-1])) + timeFrame[-1]),
                                               2)
 
         if new[0][0] != self.candles[-2][0]:

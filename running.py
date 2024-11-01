@@ -1,22 +1,21 @@
 from marketInfo import MarketInformations
 from wallet import Wallet
-from tools import Tools
+from tools import time_frame_to_ms,  ping_test
 import asyncio
 
 
 async def main():
-    t = Tools()
-    mi = MarketInformations(t)
+    mi = MarketInformations()
     w = Wallet("keys_nathael", False, mi)
     
-    if not t.ping_test():
+    if not ping_test():
         print("erreur")
         return;
 
     #await w.init()
     await mi.init()
 
-    await mi.chart_visualisation("BTC/USDT", "15m", t.time_frame_to_ms("26h"), 2)
+    await mi.chart_visualisation("BTC/USDT", "15m", time_frame_to_ms("26h"), 2)
 
     #await w.account.disconnect()
     await mi.account.disconnect()

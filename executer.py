@@ -1,12 +1,11 @@
 from wallet import Wallet
 from marketInfo import MarketInformations
-from tools import Tools, left
+from tools import *
 
 
 class Executer:
     def __init__(self, symbols) -> None:
-        self.t = Tools()
-        self.mi = MarketInformations(self.t)
+        self.mi = MarketInformations()
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
         self.costs = [17.1] # cost to spend at each trade in USDT

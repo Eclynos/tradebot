@@ -1,7 +1,18 @@
 from executer import Executer
 from strategyStandardDevPump import Strategy
+from tools import *
 from math import floor
 import asyncio, time
+
+
+async def wait_next_minute(start_time, e):
+    """Teste si on a changé de minute"""
+    while True:
+        time.sleep(0.1) # prevents serv ddos
+        start = floor(start_time) // 60
+        actual = await e.mi.exchange.fetch_time() // 60000 #request
+        if actual > start:
+            break
     
     
 async def main():
@@ -9,19 +20,26 @@ async def main():
     keys = ["date", "open", "high", "low", "price", "volume"]
     e = Executer()
     s = Strategy()
+
+    if not ping_test():
+        print("erreur")
+        return;
+
     await e.start()
 
     run = True
     timeFrame = "5m"
-    timeLoop = e.t.time_frame_to_s(timeFrame)
+    timeLoop = time_frame_to_s(timeFrame)
 
     candles_dict = list(len(symbols))
     is_open = {symbol: False for symbol in symbols}
 
+    wait_next_minute(time.time(), e)
+
     while run:
         start_time = time.time()
 
-        fetch_tasks = [e.mi.fetch_candles(symbol, timeFrame, e.t.time_frame_to_ms("167h"), 2000) for symbol in symbols]
+        fetch_tasks = [e.mi.fetch_candles(symbol, timeFrame, time_frame_to_ms("167h"), 2000) for symbol in symbols]
         candles_list = await asyncio.gather(*fetch_tasks)
         candles_dict = [dict(zip(keys, candle)) for candle in candles_list]
 
@@ -42,12 +60,7 @@ async def main():
 
             time.sleep(floor(sleep_time))
 
-            while True: # teste si on a changé de minute
-                time.sleep(0.1) # prevents serv ddos
-                start = floor(start_time) // 60
-                actual = await e.mi.exchange.fetch_time() // 60000 #requete
-                if actual > start:
-                    break
+            await wait_next_minute(start_time, e)
     
     await e.end()
     

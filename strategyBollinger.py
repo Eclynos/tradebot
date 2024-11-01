@@ -1,10 +1,9 @@
 from dataAnalysis import DataAnalysis
-from tools import Tools
+from tools import *
 
 class Strategy: 
     def __init__(self) -> None:
         self.dA = DataAnalysis()
-        self.t = Tools()        
     
     def buyingEvaluation(self, data, time):
         movingAverageSize = len(data)-1
@@ -19,7 +18,7 @@ class Strategy:
         wentUnderBB1 = False
         for i in range(len(data)-1, movingAverageSize-1, -1):
             if (bb[i-movingAverageSize-1]["price"] > data[i]["price"]
-                and time - data[i]["date"] < self.t.time_frame_to_s(maxLatestGCTimeAgo)):
+                and time - data[i]["date"] < time_frame_to_s(maxLatestGCTimeAgo)):
                 wentUnderBB1 = True
                 break
 
@@ -44,7 +43,7 @@ class Strategy:
         for i in range(numberOfTrades):
             for j in range(latestTrade, len(data)):
                 if (data[j]["date"] > tradeList[0]["date"] and data[j]["price"] < bb[j-movingAverageSize]["price"] and data[j-1]["price"] > bb[j-movingAverageSize-1]["price"]
-                    or j==tradeList[0]["index"] + self.t.time_frame_to_s(maxHoldTime)//300):
+                    or j==tradeList[0]["index"] + time_frame_to_s(maxHoldTime)//300):
                     buyCandidate = j
                     latestTrade = j-1
                     break

@@ -4,12 +4,11 @@ from tools import *
 import time
 
 if __name__ == "__main__":
-    t = Tools()
     coinCodes = ["ATOM", "BTC", "DOGE", "DOT", "DYM", "ETH", "LINK", "LTC", "SOL"]
     allData = []
 
     for coinCode in coinCodes:
-        allData.append(t.readFile(coinCode))
+        allData.append(readFile(coinCode))
 
     usableData = []
     for j in range(len(coinCodes)):
@@ -19,15 +18,15 @@ if __name__ == "__main__":
     
     da = DataAnalysis()
     currentDate = int(time.time())
-    startIndex = [[t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("36M"), "date"),
-                   t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("33M"), "date"),
-                   t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("30M"), "date"),
-                   t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("27M"), "date")]
+    startIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("36M"), "date"),
+                   binarySearch(usableData[j], currentDate-time_frame_to_s("33M"), "date"),
+                   binarySearch(usableData[j], currentDate-time_frame_to_s("30M"), "date"),
+                   binarySearch(usableData[j], currentDate-time_frame_to_s("27M"), "date")]
                    for j in range(len(coinCodes))]
-    endIndex = [[t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("33M"), "date"),
-                 t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("30M"), "date"),
-                 t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("27M"), "date"),
-                 t.binarySearch(usableData[j], currentDate-t.time_frame_to_s("24M"), "date")]
+    endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("33M"), "date"),
+                 binarySearch(usableData[j], currentDate-time_frame_to_s("30M"), "date"),
+                 binarySearch(usableData[j], currentDate-time_frame_to_s("27M"), "date"),
+                 binarySearch(usableData[j], currentDate-time_frame_to_s("24M"), "date")]
                  for j in range(len(coinCodes))]
     
     
@@ -42,7 +41,7 @@ if __name__ == "__main__":
                     if startIndex[cc][index] > i+j:
                     
                         tradeTimeList = s.batchBuyingEvaluation(usableData[cc][startIndex[cc][index]-i:endIndex[cc][index]])
-                        tradeList = [usableData[cc][t.binarySearch(usableData[cc], tradeTimeList[k], "date")] for k in range(len(tradeTimeList))]
+                        tradeList = [usableData[cc][binarySearch(usableData[cc], tradeTimeList[k], "date")] for k in range(len(tradeTimeList))]
                         
                         sell = s.sellingEvaluation(usableData[cc][startIndex[cc][index]: endIndex[cc][index]], tradeList)
                         

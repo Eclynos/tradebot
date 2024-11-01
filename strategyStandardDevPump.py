@@ -1,11 +1,10 @@
 from dataAnalysis import DataAnalysis
-from tools import Tools
+from tools import *
 import time
 
 class Strategy: 
     def __init__(self, maSize=100, wAvgSize=2000, power1=0.995, power2=0.99, buyingBollinger=1.5) -> None:
         self.dA = DataAnalysis()
-        self.t = Tools()
         self.sd=[]
         self.ma = []
         self.sdWeightedAvg = []

@@ -1,10 +1,9 @@
 from dataAnalysis import DataAnalysis
-from tools import Tools
+from tools import *
 
 class Strategy:
     def __init__(self) -> None:
         self.dA = DataAnalysis()
-        self.t = Tools()
 
     def buyingEvaluation(self, data, time):
         longMATime = 20    #Nombre de bougies du MA
@@ -17,7 +16,7 @@ class Strategy:
             return False
         lastestGC = GCList[-1]
 
-        if time-lastestGC["date"] > self.t.time_frame_to_s(maxLatestGCTimeAgo):
+        if time-lastestGC["date"] > time_frame_to_s(maxLatestGCTimeAgo):
             return False
         if lastestGC["force"] < 1.000:
             return False
@@ -25,7 +24,7 @@ class Strategy:
 
         i=lastestGC["index"]
         minPrice = data[lastestGC["index"]]["price"]
-        secdiff = 4*self.t.time_frame_to_s(maxLatestGCTimeAgo)
+        secdiff = 4*time_frame_to_s(maxLatestGCTimeAgo)
         
         while lastestGC["date"]-data[i]["date"] < secdiff:
             if minPrice>data[i]["price"]:

@@ -70,8 +70,7 @@ if __name__ == "__main__":
                     
                     if i%10000 == 0:
                         print("buying progress :", 100*(i-startIndex[cc][index])/(endIndex[cc][index]-startIndex[cc][index]), "%")
-                # tradeTimeList = s.batchBuyingEvaluation(usableData[cc][startIndex[cc][index]-100:endIndex[cc][index]])
-                # tradeList = [usableData[cc][t.binarySearch(usableData[cc], tradeTimeList[k], "date")] for k in range(len(tradeTimeList))]
+              
                 sell = s.sellingEvaluation(usableData[cc][startIndex[cc][index]: endIndex[cc][index]], tradeList)
 
                 print()

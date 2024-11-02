@@ -8,11 +8,6 @@ async def main():
 
     await e.start()
 
-    await e.history(0, "SOL/USDT")
-
-    await e.history(0, "SOL/USDT", 1)
-
-    """
     await e.buy_swap('SOL/USDT')
 
     time.sleep(8)
@@ -23,8 +18,7 @@ async def main():
 
     await e.positions()
 
-    await e.history(0, "SOL/USDT")
-    """
+    await e.history(0, "SOL/USDT", 1)
     
     await e.end()
     

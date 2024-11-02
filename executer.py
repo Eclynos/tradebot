@@ -113,7 +113,7 @@ class Executer:
                 order = await w.openp(
                     symbol,
                     self.infos[i]['amounts'][symbol],
-                    'long')
+                    'buy')
 
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
@@ -126,7 +126,7 @@ class Executer:
         for i, w in enumerate(self.wallets):
             
             try:
-                await w.closep(symbol, 'long')
+                await w.closep(symbol)
             
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
@@ -158,7 +158,7 @@ class Executer:
 
 
     async def history(self, wallet, symbol, limit=20):
-        await self.wallets[wallet].positionsHistory(symbol, limit)
+        print(await self.wallets[wallet].positionsHistory(symbol, limit))
 
 
 

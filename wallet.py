@@ -216,7 +216,8 @@ class Wallet:
                     type='market',
                     side=direction,
                     amount=amount,
-                    params={'type': 'swap'}
+                    params={'type': 'swap',
+                            'oneWayMode': True}
                 )
                 return order
             except Exception as retry_exception:
@@ -225,7 +226,7 @@ class Wallet:
 
 
 
-    async def closep(self, symbol, direction):
+    async def closep(self, symbol):
         """
         Close a futures/swap position
 
@@ -237,7 +238,6 @@ class Wallet:
         try:
             order = await self.exchange.close_position(
                 symbol=symbol+':USDT',
-                side=direction,
                 params={'type': 'swap'}
             )
             
@@ -292,7 +292,9 @@ class Wallet:
 
 
     async def positionsHistory(self, symbol, limit=20):
-        """Donne l'historique des positions prises en swap / future"""
+        """Retourne l'historique des positions prises en swap / future"""
+
+        h = ""
 
         try:
             positions = await self.exchange.fetch_position_history(
@@ -301,11 +303,14 @@ class Wallet:
             )
 
             for p in positions:
-                print(f"{p['symbol']} {p['side']}")
-                print(p['datetime'])
-                print(f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}")
-                print(f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}")
-                print(f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}")
+                h += f"{p['symbol']} {p['side']}\n"
+                h += f"{p['datetime']}\n"
+                h += f"{p['info']['openTotalPos']}\n"
+                h += f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}\n"
+                h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
+                h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n"
+
+            return h
 
         except Exception as e:
             print(f"Erreur lors de la récupération de l'historique des positions : {e}")

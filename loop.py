@@ -58,7 +58,7 @@ async def main():
 
         for symbol in symbols:
             if has_been_closed[symbol]:
-                log_file.write(await e.history(0, symbol, 1))
+                log_file.write(await e.wallets[0].positionsHistory(symbol, 1))
 
         execution_time = time.time() - start_time
 
@@ -76,10 +76,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-# tester futures car swap = spot fees -> try futures
-# tester leverage
-# close positions et pas créer un short -> modifier close_swap
-
-#time.time en s != fetch_time en ms

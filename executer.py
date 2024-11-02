@@ -38,9 +38,28 @@ class Executer:
             await w.account.disconnect()
 
 
+# OPTIONS / CALCULATIONS
+
+
     def market_mode(self, mode):
         for w in self.wallets:
             w.market_mode(mode)
+
+
+    async def calculate_amounts(self, symbol):
+        """Calcule les montants correspondants aux coûts à acheter"""
+        price = await self.mi.getPrice(symbol)
+        for i in range(len(self.wallets)):
+            self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
+
+
+    async def leverage(self, factor_list):
+        for i, w in enumerate(self.wallets):
+            for symbol in self.symbols:
+                await w.leverage(factor_list[i], symbol)
+
+
+# ORDER MANAGEMENT
 
 
     async def buy_spot(self, symbol):
@@ -113,9 +132,12 @@ class Executer:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
 
 
+# INFORMATIONS GIVERS
 
-    async def watch_positions(self):
-        positions = list(len(self.wallets))
+
+    async def positions(self):
+        size = len(self.wallets)
+        positions = [None] * size
 
         try:
             for i, w in enumerate(self.wallets):
@@ -123,24 +145,20 @@ class Executer:
         except Exception as e:
             print(f"Error fetching positions of wallet {i}\n{e}")
 
-        for i in enumerate(self.wallets):
-            print(f"Positions of wallet {i}:")
-            for p in positions[i]:
-                print(f"{p['entryPrice']} {p['symbol']}")
-                print(f"ID: {p['id']}, {p['side']}")
-                print(f"Leverage: {p['leverage']}, LiquidationPrice: {p['liquidationPrice']}")
-                print(f"Pnl: {p['unrealizedPnl']}") #PnL = Profit and Loss
+        for i in range(size):
+            if positions[i] != []:
+                print(f"Positions of wallet {i}:")
+                for p in positions[i]:
+                    print(f"Entry Price: {p['entryPrice']}, Symbol: {p['symbol']}")
+                    print(f"ID: {p['id']}, Side: {p['side']}")
+                    print(f"Leverage: {p['leverage']}, Liquidation Price: {p['liquidationPrice']}")
+                    print(f"Pnl: {p['unrealizedPnl']}")
+            else:
+                print(f"No positions are open on wallet {i}")
+
+
+    async def history(self, wallet, symbol, limit=20):
+        await self.wallets[wallet].positionsHistory(symbol, limit)
 
 
 
-    async def calculate_amounts(self, symbol):
-        """Calcule les montants correspondants aux coûts à acheter"""
-        price = await self.mi.getPrice(symbol)
-        for i in range(len(self.wallets)):
-            self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
-
-
-    async def leverage(self, factor_list):
-        for i, w in enumerate(self.wallets):
-            for symbol in self.symbols:
-                await w.leverage(factor_list[i], symbol)

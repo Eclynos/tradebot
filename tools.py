@@ -76,3 +76,9 @@ def binarySearch(data, value, key=None):
                 a=mid+1
     
     return a
+
+
+def read_symbols():
+    with open('data/symbols', 'r') as file:
+        symbols = [line.strip() for line in file]
+    return symbols

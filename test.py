@@ -1,22 +1,30 @@
 from executer import Executer
-from math import floor
+from tools import read_symbols
 import asyncio, time
     
     
 async def main():
-    e = Executer()
+    e = Executer(read_symbols())
 
     await e.start()
 
-    start_time = time.time()
-    
-    while True:
-        time.sleep(0.1)
-        start = floor(start_time) // 60
-        actual = await e.mi.exchange.fetch_time() // 60000
-        print(actual)
-        if actual > start:
-            break
+    await e.history(0, "SOL/USDT")
+
+    await e.history(0, "SOL/USDT", 1)
+
+    """
+    await e.buy_swap('SOL/USDT')
+
+    time.sleep(8)
+
+    await e.positions()
+
+    await e.sell_swap('SOL/USDT')
+
+    await e.positions()
+
+    await e.history(0, "SOL/USDT")
+    """
     
     await e.end()
     

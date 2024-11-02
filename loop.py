@@ -16,9 +16,9 @@ async def wait_next_minute(start_time, e):
     
     
 async def main():
-    symbols = ['BTC/USDT','SOL/USDT','ETH/USDT','HNT/USDT']
+    symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
-    e = Executer()
+    e = Executer(symbols)
     s = Strategy()
 
     if not ping_test():
@@ -31,8 +31,11 @@ async def main():
     timeFrame = "5m"
     timeLoop = time_frame_to_s(timeFrame)
 
+    log_file = open('trade_logs', 'a')
+
     candles_dict = list(len(symbols))
     is_open = {symbol: False for symbol in symbols}
+    has_been_closed = {symbol: False for symbol in symbols}
 
     wait_next_minute(time.time(), e)
 
@@ -47,11 +50,15 @@ async def main():
             if is_open[symbol]:
                 if s.sellingEvaluation(candles_dict[i]):
                     await e.sell_swap(symbol)
-                    is_open[symbol] = False
+                    has_been_closed = True
             else:
                 if s.buyingEvaluation(candles_dict[i]):
                     await e.buy_swap(symbol)
                     is_open[symbol] = True
+
+        for symbol in symbols:
+            if has_been_closed[symbol]:
+                log_file.write(await e.history(0, symbol, 1))
 
         execution_time = time.time() - start_time
 
@@ -63,6 +70,8 @@ async def main():
             await wait_next_minute(start_time, e)
     
     await e.end()
+
+    log_file.close()
     
 
 if __name__ == "__main__":

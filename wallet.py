@@ -203,7 +203,8 @@ class Wallet:
                 type='market',
                 side=direction,
                 amount=amount,
-                params={'type': 'swap'}
+                params={'type': 'swap',
+                        'oneWayMode': True}
             )
             return order
 
@@ -300,11 +301,11 @@ class Wallet:
             )
 
             for p in positions:
-                print(f"{p['entryPrice']} {p['symbol']}")
+                print(f"{p['symbol']} {p['side']}")
                 print(p['datetime'])
-                print(f"ID: {p['id']}, {p['side']}")
-                print(f"Leverage: {p['leverage']}, LiquidationPrice: {p['liquidationPrice']}")
-                print(f"Pnl: {p['unrealizedPnl']}")
+                print(f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}")
+                print(f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}")
+                print(f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}")
 
         except Exception as e:
             print(f"Erreur lors de la récupération de l'historique des positions : {e}")

@@ -15,7 +15,9 @@ async def main():
     #await w.init()
     await mi.init()
 
-    await mi.chart_visualisation("SOL/USDT", "1m", time_frame_to_ms("2h"), 2)
+    candles = await mi.fetch_candles_amount("SOL/USDT", "1m", 2)
+    print(await mi.exchange.fetch_time())
+    print(candles[1][0])
 
     #await w.account.disconnect()
     await mi.account.disconnect()

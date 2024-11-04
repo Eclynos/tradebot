@@ -114,7 +114,7 @@ class MarketInformations:
         print(f"{fee['symbol']} fee, maker: {fee['maker']} taker: {fee['taker']}")
 
    
-    async def fetch_candles(self, symbol, timeFrame, since, limit=None):
+    async def fetch_candles(self, symbol, timeFrame, since):
         """Récupère les bougies d'une paire de trading d'une fréquence depuis un temps donné en ms
         renvoie [timestamp, open, high, low, close, volume]"""
 
@@ -125,15 +125,39 @@ class MarketInformations:
         
         while current_since < timestamp:
             try:
-                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000 if limit == None else limit)
+                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
             except Exception as e:
                 print(e)
                 break
-            
-            if limit != None:
-                limit -= 1000
-                if limit < 0:
-                    break
+
+            if not ohclv:
+                break
+
+            candles.extend(ohclv)
+            last_timestamp = ohclv[-1][0]
+            current_since = last_timestamp + time_frame_to_ms(timeFrame)
+
+            if current_since >= timestamp:
+                break
+        
+        return candles
+
+
+    async def fetch_candles_amount(self, symbol, timeFrame, amount):
+        """Récupère les dernières "amount" bougies d'une paire de trading d'une fréquence donnée
+        renvoie [timestamp, open, high, low, close, volume]"""
+
+        candles = []
+        timestamp = await self.exchange.fetch_time()
+        time_ago = timestamp - time_frame_to_ms(timeFrame) * amount
+        current_since = time_ago
+        
+        while current_since < timestamp:
+            try:
+                ohclv = await self.exchange.fetch_ohlcv(symbol, timeFrame, current_since, 1000)
+            except Exception as e:
+                print(e)
+                break
 
             if not ohclv:
                 break
@@ -147,6 +171,16 @@ class MarketInformations:
         
         return candles
     
+
+    async def before_last_candle(self, symbol, timeFrame, time): # time in ms
+        """Fetch before last candle to fill a list of candles"""
+        try:
+            candles = await self.exchange.fetch_ohlcv(symbol, timeFrame, time - 120000)
+            return candles[0]
+        except Exception as e:
+            print(f"Error fetching candle\n{e}")
+
+
     
     async def curve_visualisation(self, symbol, timeFrame, since):
         """Affiche la courbe d'une timeFrame depuis un temps donné"""

@@ -74,6 +74,11 @@ async def main():
             candles_dict[i].append(dict(zip(keys, new_candles[i])))
 
         for i, symbol in enumerate(symbols):
+            if s.buyingEvaluation(candles_dict[i]):
+                trade_logger.info(f"buy {symbol}")
+                #await e.buy_swap(symbol)
+                is_open[symbol] = True
+            """
             if is_open[symbol]:
                 if s.sellingEvaluation(candles_dict[i]):
                     print(f"sell {symbol}")
@@ -84,10 +89,13 @@ async def main():
                     print(f"buy {symbol}")
                     #await e.buy_swap(symbol)
                     is_open[symbol] = True
+            """
 
+        """
         for symbol in symbols:
             if has_been_closed[symbol]:
                 trade_logger.info(await e.wallets[0].positionsHistory(symbol, 1))
+        """
 
         execution_time = time.time() - start_time
         execution_logger.info(execution_time)

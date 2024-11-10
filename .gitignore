@@ -10,3 +10,5 @@ candles
 candles_manager.py
 backtest-images/*
 res.txt
+trade_logs.log
+execution_logs.log

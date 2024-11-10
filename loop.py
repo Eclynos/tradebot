@@ -50,46 +50,39 @@ async def main():
 
     start_time = time.time()
 
-    fetch_tasks = [e.mi.fetch_candles_amount(symbol, timeFrame, 2000) for symbol in symbols]
-    candles_list = await asyncio.gather(*fetch_tasks)
-    for i in range(len(symbols)):
-        candles_dict[i] = [dict(zip(keys, candle)) for candle in candles_list[i]]
-
-    print(time.time() - start_time)
-
     for i, symbol in enumerate(symbols):
-        if s.buyingEvaluation(candles_dict[i]):
-            #await e.buy_swap(symbol)
-            print("buy")
-            is_open[symbol] = True
+        candles_dict[i] = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2001, start_time)]
+        candles_dict[i] = candles_dict[i][:-1]
 
     execution_time = time.time() - start_time
     execution_logger.info(execution_time)
-
-    await e.end()
-    return;
 
     if execution_time < 58:
         sleep_time = timeLoop - execution_time - 3
         time.sleep(floor(sleep_time))
 
         await wait_next_minute(start_time, e)
-
+        
     while run:
         start_time = time.time()
 
-        fetch_tasks = [e.mi.before_last_candle(symbol, timeFrame, start_time // 1000) for symbol in symbols]
+        fetch_tasks = [e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
         new_candles = await asyncio.gather(*fetch_tasks)
-        candles_dict = [dict(zip(keys, candle)) for candle in candles_list]
+
+        for i in range(len(symbols)):
+            candles_dict[i] = candles_dict[i][1:]
+            candles_dict[i].append(dict(zip(keys, new_candles[i])))
 
         for i, symbol in enumerate(symbols):
             if is_open[symbol]:
                 if s.sellingEvaluation(candles_dict[i]):
-                    await e.sell_swap(symbol)
+                    print(f"sell {symbol}")
+                    #await e.sell_swap(symbol)
                     has_been_closed = True
             else:
                 if s.buyingEvaluation(candles_dict[i]):
-                    await e.buy_swap(symbol)
+                    print(f"buy {symbol}")
+                    #await e.buy_swap(symbol)
                     is_open[symbol] = True
 
         for symbol in symbols:

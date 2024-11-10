@@ -1,5 +1,5 @@
-import requests, csv
-
+import requests, csv, time
+from math import floor
 
 def left(symbol):
     return symbol.split("/")[0]
@@ -82,3 +82,13 @@ def read_symbols():
     with open('data/symbols', 'r') as file:
         symbols = [line.strip() for line in file]
     return symbols
+
+
+async def wait_next_minute(start_time, e):
+    """Teste si on a changé de minute"""
+    start = floor(start_time) // 60
+    while True:
+        time.sleep(0.2) # prevents serv ddos
+        actual = await e.mi.exchange.fetch_time() // 60000 #request
+        if actual > start:
+            break

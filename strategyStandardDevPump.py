@@ -32,7 +32,7 @@ class Strategy:
         return buyTimes
             
 
-    def buyingEvaluation(self, data, time):
+    def buyingEvaluation(self, data):
         ma = self.dA.exponentialMovingAverage(data[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)
         self.ma.append(ma[0])
         self.sd += self.dA.expoStandardDeviation(data[-self.movingAverageSize-1:], ma, self.movingAverageSize, self.power2)

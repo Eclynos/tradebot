@@ -39,14 +39,14 @@ async def main():
     await e.start()
 
     run = True
-    timeFrame = "1m"
+    timeFrame = "5m"
     timeLoop = time_frame_to_s(timeFrame)
 
     is_open = {symbol: False for symbol in symbols}
     has_been_closed = is_open
     candles_dict = [[] for _ in range(len(symbols))]
 
-    await wait_next_minute(time.time(), e)
+    await wait_next_frame(time.time(), e, timeLoop)
 
     start_time = time.time()
 
@@ -57,11 +57,10 @@ async def main():
     execution_time = time.time() - start_time
     execution_logger.info(execution_time)
 
-    if execution_time < 58:
-        sleep_time = timeLoop - execution_time - 3
-        time.sleep(floor(sleep_time))
+    sleep_time = timeLoop - execution_time - 3
+    time.sleep(floor(sleep_time))
 
-        await wait_next_minute(start_time, e)
+    await wait_next_frame(start_time, e, timeLoop)
         
     while run:
         start_time = time.time()
@@ -100,11 +99,10 @@ async def main():
         execution_time = time.time() - start_time
         execution_logger.info(execution_time)
 
-        if execution_time < 58:
-            sleep_time = timeLoop - execution_time - 3
-            time.sleep(floor(sleep_time))
+        sleep_time = timeLoop - execution_time - 3
+        time.sleep(floor(sleep_time))
 
-            await wait_next_minute(start_time, e)
+        await wait_next_frame(start_time, e, timeLoop)
     
     await e.end()
 

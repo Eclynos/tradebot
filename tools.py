@@ -84,9 +84,9 @@ def read_symbols():
     return symbols
 
 
-async def wait_next_minute(start_time, e):
-    """Teste si on a changé de minute"""
-    start = floor(start_time) // 60
+async def wait_next_frame(start_time, e, minutes=5):
+    """Teste si on a changé de frame"""
+    start = floor(start_time + minutes*60) // 60
     while True:
         time.sleep(0.2) # prevents serv ddos
         actual = await e.mi.exchange.fetch_time() // 60000 #request

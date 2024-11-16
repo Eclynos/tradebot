@@ -143,12 +143,12 @@ class MarketInformations:
         return candles
 
 
-    async def fetch_candles_amount(self, symbol, timeFrame, amount):
+    async def fetch_candles_amount(self, symbol, timeFrame, amount, time):
         """Récupère les dernières "amount" bougies d'une paire de trading d'une fréquence donnée
         renvoie [timestamp, open, high, low, close, volume]"""
 
         candles = []
-        timestamp = await self.exchange.fetch_time()
+        timestamp = floor(time * 1000)
         time_ago = timestamp - time_frame_to_ms(timeFrame) * amount
         current_since = time_ago
         
@@ -175,8 +175,13 @@ class MarketInformations:
     async def before_last_candle(self, symbol, timeFrame, time): # time in ms
         """Fetch before last candle to fill a list of candles"""
         try:
-            candles = await self.exchange.fetch_ohlcv(symbol, timeFrame, time - 120000)
-            return candles[0]
+            candles = await self.exchange.fetch_ohlcv(symbol, timeFrame, time - 2*time_frame_to_ms(timeFrame))
+            if len(candles) == 1 or len(candles) == 2:
+                return candles[0]
+            elif len(candles) == 3:
+                return candles[1]
+            else:
+                raise ValueError(candles, time)
         except Exception as e:
             print(f"Error fetching candle\n{e}")
 

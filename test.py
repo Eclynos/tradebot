@@ -3,17 +3,6 @@ from strategyStandardDevPump import Strategy
 from tools import *
 from math import floor
 import asyncio, time
-
-
-async def wait_next_minute(start_time, e):
-    """Teste si on a changé de minute"""
-    while True:
-        time.sleep(0.1) # prevents serv ddos
-        start = floor(start_time) // 60
-        actual = await e.mi.exchange.fetch_time() // 60000 #request
-        if actual > start:
-            break
-
     
 async def main():
     symbols = read_symbols()

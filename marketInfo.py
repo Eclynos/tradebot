@@ -183,7 +183,7 @@ class MarketInformations:
             else:
                 raise ValueError(candles, time)
         except Exception as e:
-            print(f"Error fetching candle\n{e}")
+            raise ValueError(f"Error fetching candle\n{e}")
 
 
     

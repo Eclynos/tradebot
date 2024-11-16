@@ -39,14 +39,17 @@ async def main():
     await e.start()
 
     run = True
-    timeFrame = "5m"
+    timeFrame = "5m" # in minutes
     timeLoop = time_frame_to_s(timeFrame)
 
     is_open = {symbol: False for symbol in symbols}
     has_been_closed = is_open
     candles_dict = [[] for _ in range(len(symbols))]
 
-    await wait_next_frame(time.time(), e, timeLoop)
+    start_time = time.time()
+    
+    if start_time % (60 * timeLoop) > 60 * (timeLoop - 1) + 26:
+        wait_next_frame(timeLoop)
 
     start_time = time.time()
 
@@ -57,16 +60,24 @@ async def main():
     execution_time = time.time() - start_time
     execution_logger.info(execution_time)
 
-    sleep_time = timeLoop - execution_time - 3
+    if execution_time > 30:
+        raise ValueError(f"Too long candles fetching time: {execution_time}")
+
+    sleep_time = timeLoop - execution_time - 2
     time.sleep(floor(sleep_time))
 
-    await wait_next_frame(start_time, e, timeLoop)
-        
+    wait_next_frame(timeLoop)
+
     while run:
         start_time = time.time()
 
-        fetch_tasks = [e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
-        new_candles = await asyncio.gather(*fetch_tasks)
+        try:
+            fetch_tasks = [e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            new_candles = await asyncio.gather(*fetch_tasks)
+        except:
+            new_candles = []
+            for symbol in symbols:
+                new_candles.append(e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)))
 
         for i in range(len(symbols)):
             candles_dict[i] = candles_dict[i][1:]
@@ -75,7 +86,7 @@ async def main():
         for i, symbol in enumerate(symbols):
             if s.buyingEvaluation(candles_dict[i]):
                 trade_logger.info(f"buy {symbol}")
-                #await e.buy_swap(symbol)
+                #await e.buy_swap(symbol) ajouter des différents cas de logs en fonction d'echec ou de reussite de l'achat
                 is_open[symbol] = True
             """
             if is_open[symbol]:
@@ -93,16 +104,13 @@ async def main():
         """
         for symbol in symbols:
             if has_been_closed[symbol]:
-                trade_logger.info(await e.wallets[0].positionsHistory(symbol, 1))
+                trade_logger.info(await e.last_trades(symbol))
         """
 
         execution_time = time.time() - start_time
         execution_logger.info(execution_time)
 
-        sleep_time = timeLoop - execution_time - 3
-        time.sleep(floor(sleep_time))
-
-        await wait_next_frame(start_time, e, timeLoop)
+        time.sleep(timeLoop * 60 - execution_time)
     
     await e.end()
 

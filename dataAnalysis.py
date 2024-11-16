@@ -108,7 +108,7 @@ class DataAnalysis:
                 total += data[i+MASize]["price"]**(weight+1) - data[i-1]["price"]**(weight+1)
                 denom += data[i+MASize]["price"]**weight - data[i-1]["price"]**weight
             
-            avg.append({"date" : data[i+MASize-1]["date"], "price":total/denom})
+            avg.append({"date" : data[i+MASize]["date"], "price":total/denom})
         
         return avg
     
@@ -131,7 +131,7 @@ class DataAnalysis:
         avgPrice = 0
         for i in range(len(data)):
             if i >= MAsize:
-                ma.append({"date" : data[i-1]["date"], "price" : avgPrice/normalisationFactor})
+                ma.append({"date" : data[i]["date"], "price" : avgPrice/normalisationFactor})
                 avgPrice -= powerMultiplier**(MAsize-1) * data[i-MAsize]["price"]
             avgPrice *= powerMultiplier
             avgPrice += data[i]["price"]

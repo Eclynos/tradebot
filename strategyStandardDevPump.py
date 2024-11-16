@@ -3,7 +3,7 @@ from tools import *
 import time
 
 class Strategy: 
-    def __init__(self, maSize=100, wAvgSize=2000, power1=0.995, power2=0.99, buyingBollinger=1.5) -> None:
+    def __init__(self, maSize=100, wAvgSize=2000, power1=0.995, power2=0.99, buyingBollinger=1.5, sellingBollinger1 = 0, sellingBollinger2=1) -> None:
         self.dA = DataAnalysis()
         self.sd=[]
         self.ma = []
@@ -13,6 +13,8 @@ class Strategy:
         self.power1 = power1 
         self.power2 = power2
         self.buyingBollinger=buyingBollinger
+        self.sellingBollinger1 = sellingBollinger1
+        self.sellingBollinger2 = sellingBollinger2
 
     def batchBuyingEvaluation(self, data):
         self.ma = self.dA.exponentialMovingAverage(data, self.movingAverageSize, self.power1)
@@ -32,7 +34,7 @@ class Strategy:
         return buyTimes
             
 
-    def buyingEvaluation(self, data, time):
+    def buyingEvaluation(self, data):
         ma = self.dA.exponentialMovingAverage(data[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)
         self.ma.append(ma[0])
         self.sd += self.dA.expoStandardDeviation(data[-self.movingAverageSize-1:], ma, self.movingAverageSize, self.power2)
@@ -51,36 +53,69 @@ class Strategy:
             return True
         return False
 
-    def sellingEvaluation(self, data, tradeList):
+    def sellingEvaluation(self, data, numberOfIndexBoughtAgo):
+        if len(self.sd) < 2 or numberOfIndexBoughtAgo < 0:
+            return False
+        
+        bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sellingBollinger1)
+        bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
+
+        wentUnderLowBB = False
+        for i in range(1, numberOfIndexBoughtAgo):
+            if data[-i]["price"] < bbBas[-i]["price"]:
+                wentUnderLowBB = True 
+        
+        # print(data[-1], self.sd[-1], self.sdWeightedAvg[-1])
+        if (self.sd[-2]["price"] > self.sdWeightedAvg[-2]["price"]
+            and self.sd[-1]["price"] < self.sdWeightedAvg[-1]["price"]):
+            # print(self.sd[-1], self.sdWeightedAvg[-1], "normal")
+            return True 
+            
+        if (wentUnderLowBB
+            and data[-1]["price"] > bbHaut[-1]["price"]):
+            # print("SL")
+            return True
+        
+        else :
+            return False
+
+
+
+    def batchSellingEvaluation(self, data, tradeList):
         numberOfTrades = len(tradeList)
         sellRes = []
         numberOfPositive = 0
         profit = 1
 
-        bb = self.dA.bollinger(self.ma[self.movingAverageSize:], self.sd, 0)
-        bb2 = self.dA.bollinger(self.ma[self.movingAverageSize:], self.sd, 1)
+        bb = self.dA.bollinger(self.ma, self.sd, self.sellingBollinger1)
+        bb2 = self.dA.bollinger(self.ma, self.sd, self.sellingBollinger2)
 
         for i in range(numberOfTrades):
             hasPassedUnder0 = False
             for j in range(tradeList[0]["index"]-data[0]["index"], len(data)):
+                # print(data[j], self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize])
                 if j == len(data)-1:
                     sellIndex = j
                     break
                 if (data[j]["date"] > tradeList[0]["date"] and
-                    data[j]["price"] < bb[j-self.movingAverageSize+1]["price"]):
+                    data[j]["price"] < bb[j]["price"]):
                     hasPassedUnder0 = True
                 if (j-self.weightedAvgSize > 0 and
                     data[j]["date"] > tradeList[0]["date"] and
-                    self.sd[j-self.movingAverageSize+1]["price"] < self.sdWeightedAvg[j-self.movingAverageSize-self.weightedAvgSize+2]["price"]
-                    and self.sd[j-self.movingAverageSize]["price"] > self.sdWeightedAvg[j-self.movingAverageSize-self.weightedAvgSize+1]["price"]
-                    
-                    or 
+                    self.sd[j]["price"] < self.sdWeightedAvg[j-self.weightedAvgSize]["price"]
+                    and self.sd[j-1]["price"] > self.sdWeightedAvg[j-self.weightedAvgSize-1]["price"]):
 
-                    hasPassedUnder0 and
+                    # print(self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize], "- normal")
+                    sellIndex = j
+                    break
+                
+
+                if (hasPassedUnder0 and
                     data[j]["date"] > tradeList[0]["date"] and
-                    data[j]["price"] > bb2[j-self.movingAverageSize+1]["price"]
+                    data[j]["price"] > bb2[j]["price"]
                     ):
 
+                    # print("- SL")
                     sellIndex = j
                     break
             
@@ -88,7 +123,7 @@ class Strategy:
             sellRes.append([tradeList[0]['date'], data[sellIndex]['date'], tradeList[0]['price'], data[sellIndex]['price']])
             increase = data[sellIndex]["price"] / tradeList[0]["price"] -1
 
-            profit += profit/2 * (increase - 0.0008)
+            profit += profit/2 * (increase - 0.0012)
 
             if increase > 0:
                 numberOfPositive += 1

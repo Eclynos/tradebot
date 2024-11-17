@@ -132,3 +132,13 @@ class Strategy:
         if numberOfTrades == 0:
             return (sellRes, profit, 0, 0)
         return (sellRes, profit, numberOfPositive/numberOfTrades, numberOfTrades)  
+    
+    def clean(self):
+        if len(self.ma)>5000:
+            self.ma = self.ma[-5000:]
+        
+        if len(self.sd)>5000:
+            self.sd = self.sd[-5000:]
+        
+        if len(self.sdWeightedAvg)>5000:
+            self.sdWeightedAvg = self.sdWeightedAvg[-5000:]

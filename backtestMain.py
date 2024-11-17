@@ -64,6 +64,7 @@ if __name__ == "__main__":
                         and (len(tradeList) == 0 or usableData[cc][i]["date"] > tradeList[-1]["date"] + time_frame_to_s("0m"))):
                         tradeList.append(usableData[cc][i])
                         nbIndexBoughtAgo = 0
+                        s.clean()
                         # print("bought : ", i)
                     
                     

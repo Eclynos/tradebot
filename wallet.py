@@ -199,11 +199,11 @@ class Wallet:
         try:
 
             order = await self.exchange.create_order(
-                symbol=symbol+':USDT',
-                type='market',
-                side=direction,
-                amount=amount,
-                params={'type': 'swap',
+                symbol = symbol + ':USDT',
+                type = 'market',
+                side = direction,
+                amount = amount,
+                params = {'type': 'swap',
                         'oneWayMode': True}
             )
             return order
@@ -212,11 +212,11 @@ class Wallet:
             print(f"Error opening swap position: {e}")
             try:
                 order = await self.exchange.create_order(
-                    symbol=symbol+':USDT',
-                    type='market',
-                    side=direction,
-                    amount=amount,
-                    params={'type': 'swap',
+                    symbol = symbol + ':USDT',
+                    type = 'market',
+                    side = direction,
+                    amount = amount,
+                    params = {'type': 'swap',
                             'oneWayMode': True}
                 )
                 return order
@@ -237,8 +237,8 @@ class Wallet:
         """
         try:
             order = await self.exchange.close_position(
-                symbol=symbol+':USDT',
-                params={'type': 'swap'}
+                symbol = symbol + ':USDT',
+                params = {'type': 'swap'}
             )
             
             return order

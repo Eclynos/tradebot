@@ -84,28 +84,22 @@ async def main():
             candles_dict[i].append(dict(zip(keys, new_candles[i])))
 
         for i, symbol in enumerate(symbols):
-            if s.buyingEvaluation(candles_dict[i]):
-                trade_logger.info(f"buy {symbol}")
-                #await e.buy_swap(symbol) ajouter des différents cas de logs en fonction d'echec ou de reussite de l'achat
-                is_open[symbol] = True
-            """
             if is_open[symbol]:
                 if s.sellingEvaluation(candles_dict[i]):
-                    print(f"sell {symbol}")
+                    trade_logger.info(f"sell {symbol}")
                     #await e.sell_swap(symbol)
-                    has_been_closed = True
+                    has_been_closed[symbol] = True
             else:
                 if s.buyingEvaluation(candles_dict[i]):
-                    print(f"buy {symbol}")
-                    #await e.buy_swap(symbol)
+                    trade_logger.info(f"buy {symbol}")
+                    #await e.buy_swap(symbol) ajouter des différents cas de logs en fonction d'echec ou de reussite de l'achat
                     is_open[symbol] = True
-            """
 
-        """
         for symbol in symbols:
             if has_been_closed[symbol]:
-                trade_logger.info(await e.last_trades(symbol))
-        """
+                #trade_logger.info(await e.last_trades(symbol))
+                is_open[symbol] = False
+                has_been_closed[symbol] = False 
 
         execution_time = time.time() - start_time
         execution_logger.info(execution_time)

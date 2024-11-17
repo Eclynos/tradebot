@@ -8,9 +8,10 @@ class Executer:
         self.mi = MarketInformations()
         self.wallets = [Wallet("info_keys", False, self.mi)]
         
-        self.costs = [17.1] # cost to spend at each trade in USDT
+        self.costs = [2] # cost to spend at each trade in USDT
 
         self.symbols = symbols
+        self.min_amounts = {}
         
         self.factors = [1] # preset leverage factor
         
@@ -30,6 +31,7 @@ class Executer:
         await self.mi.init()
         for w in self.wallets:
             await w.init()
+        await self.calculate_min_amounts()
 
 
     async def end(self):
@@ -51,6 +53,20 @@ class Executer:
         price = await self.mi.getPrice(symbol)
         for i in range(len(self.wallets)):
             self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
+
+
+    async def calculate_min_amounts(self):
+        """Rempli le dictionnaire des montants de trading minimums:
+        Avec l'amount si l'équivalent en USDT est supérieur à 5$
+        avec None sinon
+        """
+        await self.mi.exchange.load_markets()
+        for symbol in self.symbols:
+            market = self.mi.exchange.market(symbol + ':USDT')
+            if await self.mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']) > 6:
+                self.min_amounts[symbol] = market['limits']['amount']['min']
+            else:
+                self.min_amounts[symbol] = None
 
 
     async def leverage(self, factor_list):

@@ -6,7 +6,7 @@ from tools import *
 class Executer:
     def __init__(self, symbols) -> None:
         self.mi = MarketInformations()
-        self.wallets = [Wallet("keys_nathael", False, self.mi)]
+        self.wallets = [Wallet("info_keys", False, self.mi)]
         
         self.costs = [17.1] # cost to spend at each trade in USDT
 

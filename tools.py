@@ -55,8 +55,8 @@ def ping_test(url="https://www.google.com", timeout=3):
 
 
 def binarySearch(data, value, key=None):
-    a= 0
-    b= len(data)-1
+    a = 0
+    b = len(data)-1
     while a != b:
         mid = (a+b)//2
         if key == None:
@@ -65,7 +65,7 @@ def binarySearch(data, value, key=None):
             elif data[mid] > value:
                 b = mid
             else:
-                a = mid+1
+                a = mid + 1
 
         else:
             if data[mid][key] == value:
@@ -73,7 +73,7 @@ def binarySearch(data, value, key=None):
             if data[mid][key] > value:
                 b = mid
             else:
-                a=mid+1
+                a = mid + 1
     
     return a
 
@@ -84,11 +84,7 @@ def read_symbols():
     return symbols
 
 
-async def wait_next_frame(start_time, e, minutes=5):
-    """Teste si on a changé de frame"""
-    start = floor(start_time + minutes*60) // 60
-    while True:
-        time.sleep(0.2) # prevents serv ddos
-        actual = await e.mi.exchange.fetch_time() // 60000 #request
-        if actual > start:
-            break
+def wait_next_frame(timeLoop=5):
+    """Wait for next time frame comparing to world time"""
+    actual = time.time() % (60 * timeLoop)
+    time.sleep(60 * timeLoop - actual)

@@ -158,7 +158,9 @@ class Executer:
 
 
     async def history(self, wallet, symbol, limit=20):
+        """Donne l'historique des trades en effectuant une requête au serveur"""
         print(await self.wallets[wallet].positionsHistory(symbol, limit))
 
 
-
+    async def last_trades(self, symbol):
+        return '\n'.join(await self.wallets[w].positionsHistory(symbol, 1) for w in range(self.wallets))

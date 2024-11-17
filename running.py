@@ -16,6 +16,9 @@ async def main():
 
     #await mi.chart_visualisation("RENDER/USDT", "15m", time_frame_to_ms("12h"), 2)
 
+    print((time.time()//60) % (120))
+
+    """
     await mi.exchange.load_markets()
 
     for symbol in symbols:
@@ -24,6 +27,7 @@ async def main():
         print(market['limits']['amount']['min'])
         print(await mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']))
         print(market['limits']['cost']['min'])
+    """
 
     await mi.account.disconnect()
 

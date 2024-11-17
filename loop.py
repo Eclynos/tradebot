@@ -99,7 +99,10 @@ async def main():
             if has_been_closed[symbol]:
                 #trade_logger.info(await e.last_trades(symbol))
                 is_open[symbol] = False
-                has_been_closed[symbol] = False 
+                has_been_closed[symbol] = False
+
+        if (start_time//60) % 120 == 0:
+            s.clean()
 
         execution_time = time.time() - start_time
         execution_logger.info(execution_time)

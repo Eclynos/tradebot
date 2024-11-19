@@ -302,6 +302,8 @@ class Wallet:
                 limit=limit
             )
 
+            print(positions)
+
             for p in positions:
                 h += f"{p['symbol']} {p['side']}\n"
                 h += f"{p['datetime']}\n"

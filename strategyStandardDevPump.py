@@ -5,39 +5,41 @@ import time
 class Strategy: 
     def __init__(self, maSize=100, wAvgSize=2000, power1=0.995, power2=0.99, buyingBollinger=1.5, sellingBollinger1 = 0, sellingBollinger2=1) -> None:
         self.dA = DataAnalysis()
-        self.sd=[]
+        self.sd = []
         self.ma = []
         self.sdWeightedAvg = []
         self.movingAverageSize = maSize
         self.weightedAvgSize = wAvgSize
         self.power1 = power1 
         self.power2 = power2
-        self.buyingBollinger=buyingBollinger
+        self.buyingBollinger = buyingBollinger
         self.sellingBollinger1 = sellingBollinger1
         self.sellingBollinger2 = sellingBollinger2
 
-    def batchBuyingEvaluation(self, data):
-        self.ma = self.dA.exponentialMovingAverage(data, self.movingAverageSize, self.power1)
-        self.sd = self.dA.fastExponentialStandardDeviation(data, self.movingAverageSize, self.power1, self.power2)
+        self.candles = [] # liste de dict de bougies
+
+    def batchBuyingEvaluation(self):
+        self.ma = self.dA.exponentialMovingAverage(self.candles, self.movingAverageSize, self.power1)
+        self.sd = self.dA.fastExponentialStandardDeviation(self.candles, self.movingAverageSize, self.power1, self.power2)
         self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
         bb = self.dA.bollinger(self.ma, self.sd, self.buyingBollinger)
         
         buyTimes = []
-        for i in range(self.weightedAvgSize+self.movingAverageSize, len(data)-2):
+        for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):
             if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] 
             and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] 
-            and self.dA.trend(data[i-self.movingAverageSize+1:i+1], 1/2) == 1
-            and data[i]["price"] > bb[i-self.movingAverageSize]["price"]
+            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == 1
+            and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]
             ):
-                buyTimes.append(data[i]["date"])
+                buyTimes.append(self.candles[i]["date"])
 
         return buyTimes
             
 
-    def buyingEvaluation(self, data):
-        ma = self.dA.exponentialMovingAverage(data[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)
+    def buyingEvaluation(self):
+        ma = self.dA.exponentialMovingAverage(self.candles[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)
         self.ma.append(ma[0])
-        self.sd += self.dA.expoStandardDeviation(data[-self.movingAverageSize-1:], ma, self.movingAverageSize, self.power2)
+        self.sd += self.dA.expoStandardDeviation(self.candles[-self.movingAverageSize-1:], ma, self.movingAverageSize, self.power2)
         
 
         bb3 = self.dA.bollinger(ma, self.sd[-1:], self.buyingBollinger)
@@ -47,13 +49,13 @@ class Strategy:
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 
-            and self.dA.trend(data[-self.movingAverageSize:], 1/2) == 1
-            and data[-1]["price"] > bb3[-1]["price"]
+            and self.dA.trend(self.candles[-self.movingAverageSize:], 1/2) == 1
+            and self.candles[-1]["price"] > bb3[-1]["price"]
             ):
             return True
         return False
 
-    def sellingEvaluation(self, data, numberOfIndexBoughtAgo):
+    def sellingEvaluation(self, numberOfIndexBoughtAgo):
         if len(self.sd) < 2 or numberOfIndexBoughtAgo < 0:
             return False
         
@@ -62,17 +64,17 @@ class Strategy:
 
         wentUnderLowBB = False
         for i in range(1, numberOfIndexBoughtAgo):
-            if data[-i]["price"] < bbBas[-i]["price"]:
+            if self.candles[-i]["price"] < bbBas[-i]["price"]:
                 wentUnderLowBB = True 
         
-        # print(data[-1], self.sd[-1], self.sdWeightedAvg[-1])
+        # print(self.candles[-1], self.sd[-1], self.sdWeightedAvg[-1])
         if (self.sd[-2]["price"] > self.sdWeightedAvg[-2]["price"]
             and self.sd[-1]["price"] < self.sdWeightedAvg[-1]["price"]):
             # print(self.sd[-1], self.sdWeightedAvg[-1], "normal")
             return True 
             
         if (wentUnderLowBB
-            and data[-1]["price"] > bbHaut[-1]["price"]):
+            and self.candles[-1]["price"] > bbHaut[-1]["price"]):
             # print("SL")
             return True
         
@@ -81,7 +83,7 @@ class Strategy:
 
 
 
-    def batchSellingEvaluation(self, data, tradeList):
+    def batchSellingEvaluation(self, tradeList):
         numberOfTrades = len(tradeList)
         sellRes = []
         numberOfPositive = 0
@@ -92,16 +94,16 @@ class Strategy:
 
         for i in range(numberOfTrades):
             hasPassedUnder0 = False
-            for j in range(tradeList[0]["index"]-data[0]["index"], len(data)):
-                # print(data[j], self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize])
-                if j == len(data)-1:
+            for j in range(tradeList[0]["index"]-self.candles[0]["index"], len(self.candles)):
+                # print(self.candles[j], self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize])
+                if j == len(self.candles)-1:
                     sellIndex = j
                     break
-                if (data[j]["date"] > tradeList[0]["date"] and
-                    data[j]["price"] < bb[j]["price"]):
+                if (self.candles[j]["date"] > tradeList[0]["date"] and
+                    self.candles[j]["price"] < bb[j]["price"]):
                     hasPassedUnder0 = True
                 if (j-self.weightedAvgSize > 0 and
-                    data[j]["date"] > tradeList[0]["date"] and
+                    self.candles[j]["date"] > tradeList[0]["date"] and
                     self.sd[j]["price"] < self.sdWeightedAvg[j-self.weightedAvgSize]["price"]
                     and self.sd[j-1]["price"] > self.sdWeightedAvg[j-self.weightedAvgSize-1]["price"]):
 
@@ -111,8 +113,8 @@ class Strategy:
                 
 
                 if (hasPassedUnder0 and
-                    data[j]["date"] > tradeList[0]["date"] and
-                    data[j]["price"] > bb2[j]["price"]
+                    self.candles[j]["date"] > tradeList[0]["date"] and
+                    self.candles[j]["price"] > bb2[j]["price"]
                     ):
 
                     # print("- SL")
@@ -120,8 +122,8 @@ class Strategy:
                     break
             
 
-            sellRes.append([tradeList[0]['date'], data[sellIndex]['date'], tradeList[0]['price'], data[sellIndex]['price']])
-            increase = data[sellIndex]["price"] / tradeList[0]["price"] -1
+            sellRes.append([tradeList[0]['date'], self.candles[sellIndex]['date'], tradeList[0]['price'], self.candles[sellIndex]['price']])
+            increase = self.candles[sellIndex]["price"] / tradeList[0]["price"] -1
 
             profit += profit/2 * (increase - 0.0012)
 
@@ -134,10 +136,10 @@ class Strategy:
         return (sellRes, profit, numberOfPositive/numberOfTrades, numberOfTrades)  
     
     def clean(self):
-        if len(self.ma)>5000:
+        if len(self.ma) > 5000:
             self.ma = self.ma[-5000:]
         
-        if len(self.sd)>5000:
+        if len(self.sd) > 5000:
             self.sd = self.sd[-5000:]
         
         if len(self.sdWeightedAvg)>5000:

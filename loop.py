@@ -30,11 +30,13 @@ async def main():
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
     e = Executer(symbols)
-    s = Strategy()
+    strategies = {}
+    for symbol in symbols:
+        strategies[symbol] = Strategy()
 
     if not ping_test():
         print("Not connected to internet")
-        return;
+        return
 
     await e.start()
 
@@ -44,7 +46,6 @@ async def main():
 
     is_open = {symbol: False for symbol in symbols}
     has_been_closed = is_open
-    candles_dict = [[] for _ in range(len(symbols))]
 
     start_time = time.time()
     
@@ -54,17 +55,14 @@ async def main():
     start_time = time.time()
 
     for i, symbol in enumerate(symbols):
-        candles_dict[i] = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2001, start_time)]
-        candles_dict[i] = candles_dict[i][:-1]
+        strategies[symbol].candles = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2001, start_time)]
+        strategies[symbol].candles = strategies[symbol].candles[:-1]
 
     execution_time = time.time() - start_time
     execution_logger.info(execution_time)
 
     if execution_time > 30:
         raise ValueError(f"Too long candles fetching time: {execution_time}")
-
-    sleep_time = timeLoop - execution_time - 2
-    time.sleep(floor(sleep_time))
 
     wait_next_frame(timeLoop)
 
@@ -79,34 +77,54 @@ async def main():
             for symbol in symbols:
                 new_candles.append(e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)))
 
-        for i in range(len(symbols)):
-            candles_dict[i] = candles_dict[i][1:]
-            candles_dict[i].append(dict(zip(keys, new_candles[i])))
+        for i, symbol in enumerate(symbols):
+            strategies[symbol].candles = strategies[symbol].candles[1:]
+            strategies[symbol].candles.append(dict(zip(keys, new_candles[i])))
 
         for i, symbol in enumerate(symbols):
             if is_open[symbol]:
-                if s.sellingEvaluation(candles_dict[i]):
-                    trade_logger.info(f"sell {symbol}")
-                    #await e.sell_swap(symbol)
-                    has_been_closed[symbol] = True
+                if strategies[symbol].sellingEvaluation():
+                    if await e.sell_swap(symbol):
+                        trade_logger.info(f"Sell {symbol}")
+                        has_been_closed[symbol] = True
+                    else:
+                        trade_logger.info(f"Failed selling {symbol}")
             else:
-                if s.buyingEvaluation(candles_dict[i]):
-                    trade_logger.info(f"buy {symbol}")
-                    #await e.buy_swap(symbol) ajouter des différents cas de logs en fonction d'echec ou de reussite de l'achat
-                    is_open[symbol] = True
+                if strategies[symbol].buyingEvaluation():
+                    message = await e.buy_swap(symbol)
+                    if message == None:
+                        trade_logger.info(f"Buy {symbol}")
+                        is_open[symbol] = True
+                    elif message == "spot":
+                        pass
+                    else:
+                        trade_logger.info(f"Failed buying {symbol}\n{message}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
-                #trade_logger.info(await e.last_trades(symbol))
+                trade_logger.info(await e.last_trades(symbol))
                 is_open[symbol] = False
-                has_been_closed[symbol] = False 
+                has_been_closed[symbol] = False
 
-        execution_time = time.time() - start_time
-        execution_logger.info(execution_time)
+        await e.update_available_cost()
 
-        time.sleep(timeLoop * 60 - execution_time)
+        if (start_time//60) % 120 == 0:
+            for symbol in symbols:
+                strategies[symbol].clean()
+                execution_logger.info("Lists cleaned")
+
+        execution_logger.info(time.time() - start_time) # execution time
+
+        wait_next_frame(timeLoop)
     
     await e.end()
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# gerer les tradable costs -> creer un etat de retour "pas assez de moula dans le wallet" à buy_swap
+# gerer les min amounts
+# c'est buying evaluation qui update les listes -> buyingEvaluation nécessaire quand on stoppe la loop
+# donner "il y a combien de tours de boucles" on a acheté
+# lire un fichier et modifier la variable run en conséquence si ça a changé
+# envoyer code de parrainage

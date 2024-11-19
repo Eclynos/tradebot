@@ -132,7 +132,8 @@ class Wallet:
             order = await self.exchange.create_market_buy_order(
                 symbol,
                 amount,
-                params = {'cost': cost}
+                params = {'type': 'swap',
+                          'cost': cost}
             )
             
             return order
@@ -145,7 +146,8 @@ class Wallet:
         """Vend directement un nombre d'une crypto"""
 
         try:
-            order = await self.exchange.create_order(symbol, 'market', 'sell', amount)
+            order = await self.exchange.create_order(symbol, 'market', 'sell', amount,
+                                                     params={'type': 'spot'})
             
             return order
 
@@ -166,7 +168,7 @@ class Wallet:
             available_amount = balance['free'].get(base_currency, 0)
             amount = available_amount * (percentage / 100)
             
-            order = await self.exchange.create_order(symbol, 'market', 'sell', amount, params={'reduceOnly':True})
+            order = await self.exchange.create_order(symbol, 'market', 'sell', amount, params={'reduceOnly':True, 'type': 'spot'})
             
             return order
 
@@ -222,8 +224,6 @@ class Wallet:
                 return order
             except Exception as retry_exception:
                 print(f"Failed to open position after retry: {retry_exception}")
-
-
 
 
     async def closep(self, symbol):
@@ -347,6 +347,7 @@ class Wallet:
                     print(f"{elt['coin']}: {elt['available']} = {await self.mi.actual_crypto_equivalence('USDT/EUR', float(elt['available']))} €")
         elif self.exchange.options['defaultType'] in ["future", "swap"]:
             balance = await self.exchange.fetch_balance()
+            print(balance)
             print(f"Wallet informations in {self.exchange.options['defaultType']}:")
             for elt in balance["info"]:
                 print(f"{elt['marginCoin']}: {elt['available']}\naccountEquity: {elt['accountEquity']}\nusdtEquity: {elt['usdtEquity']}")       

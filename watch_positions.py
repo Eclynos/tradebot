@@ -7,7 +7,17 @@ async def main():
 
     await e.start()
 
-    await e.positions()
+    #await e.positions()
+
+    e.wallets[0].market_mode('swap')
+
+    #e.buy_swap("SUI/USDT")
+
+    #await e.wallets[0].walletInformations()
+
+    #e.sell_swap("SUI/USDT")
+
+    print(await e.wallets[0].exchange.fetch_balance())
     
     await e.end()
     

@@ -8,7 +8,7 @@ class Executer:
         self.mi = MarketInformations()
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
-        self.costs = [2] # cost to spend at each trade in USDT
+        self.costs = [5] # cost to spend at each trade in USDT
 
         self.symbols = symbols
         self.min_amounts = {}
@@ -32,6 +32,7 @@ class Executer:
         for w in self.wallets:
             await w.init()
         await self.calculate_min_amounts()
+        await self.update_tradable_cost()
 
 
     async def end(self):
@@ -73,6 +74,10 @@ class Executer:
         for i, w in enumerate(self.wallets):
             for symbol in self.symbols:
                 await w.leverage(factor_list[i], symbol)
+
+
+    async def update_tradable_cost(self):
+        pass
 
 
 # ORDER MANAGEMENT
@@ -133,19 +138,25 @@ class Executer:
 
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
+                return False
             
             if order != None:
-                print(f"Achat swap de {self.infos[i]['amounts'][symbol]} {symbol}")
+                return True
     
     
     async def sell_swap(self, symbol):
         for i, w in enumerate(self.wallets):
+            order = None
             
             try:
-                await w.closep(symbol)
+                order = await w.closep(symbol)
             
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
+                return False
+            
+            if order != None:
+                return True
 
 
 # INFORMATIONS GIVERS

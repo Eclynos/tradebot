@@ -1,7 +1,7 @@
 from marketInfo import MarketInformations
 from wallet import Wallet
 from tools import time_frame_to_ms,  ping_test, wait_next_frame, read_symbols
-import asyncio, time
+import asyncio, time, datetime
 
 
 async def main():
@@ -16,7 +16,8 @@ async def main():
 
     #await mi.chart_visualisation("RENDER/USDT", "15m", time_frame_to_ms("12h"), 2)
 
-    print((time.time()//60) % (120))
+    wait_next_frame(1)
+    print(datetime.datetime.fromtimestamp(int(time.time())).strftime('%Y-%m-%d %H:%M:%S'))
 
     """
     await mi.exchange.load_markets()

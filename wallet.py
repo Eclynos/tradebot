@@ -224,8 +224,6 @@ class Wallet:
                 print(f"Failed to open position after retry: {retry_exception}")
 
 
-
-
     async def closep(self, symbol):
         """
         Close a futures/swap position

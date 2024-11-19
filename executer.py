@@ -8,7 +8,8 @@ class Executer:
         self.mi = MarketInformations()
         self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
-        self.costs = [5] # cost to spend at each trade in USDT
+        self.costs = [12] # cost to spend at each trade in USDT
+        self.available_cost = [0] * len(self.wallets)
 
         self.symbols = symbols
         self.min_amounts = {}
@@ -32,7 +33,7 @@ class Executer:
         for w in self.wallets:
             await w.init()
         await self.calculate_min_amounts()
-        await self.update_tradable_cost()
+        await self.update_available_cost()
 
 
     async def end(self):
@@ -45,6 +46,7 @@ class Executer:
 
 
     def market_mode(self, mode):
+        """Change les modes de marché de tous les wallets"""
         for w in self.wallets:
             w.market_mode(mode)
 
@@ -67,7 +69,7 @@ class Executer:
             if await self.mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']) > 6:
                 self.min_amounts[symbol] = market['limits']['amount']['min']
             else:
-                self.min_amounts[symbol] = None
+                self.min_amounts[symbol] = 0
 
 
     async def leverage(self, factor_list):
@@ -76,8 +78,9 @@ class Executer:
                 await w.leverage(factor_list[i], symbol)
 
 
-    async def update_tradable_cost(self):
-        pass
+    async def update_available_cost(self):
+        self.available_cost = [float((await w.exchange.fetch_balance())['info'][0]['available']) for w in self.wallets]
+        print(self.available_cost)
 
 
 # ORDER MANAGEMENT
@@ -89,20 +92,19 @@ class Executer:
         
         for i, w in enumerate(self.wallets):
             order = None
+
+            try:
+                order = await w.buy(
+                symbol,
+                self.infos[i]['amounts'][symbol],
+                self.infos[i]['cost']
+                )
+            except Exception as e:
+                print(f"Le wallet {i} n'a pas réussi à acheter\n{e}")
             
-            for i in range(5):
-                try:
-                    order = await w.buy(
-                    symbol,
-                    self.infos[i]['amounts'][symbol],
-                    self.infos[i]['cost']
-                    )
-                except Exception as e:
-                    print(f"Le wallet {i} n'a pas réussi à acheter\n{e}")
-                
-                if order != None:
-                    print(f"Achat de {self.infos[i]['amounts'][symbol]} {symbol}")
-                    break
+            if order != None:
+                print(f"Achat de {self.infos[i]['amounts'][symbol]} {symbol}")
+                break
 
 
     async def sell_spot(self, symbol):
@@ -125,11 +127,30 @@ class Executer:
 
         await self.calculate_amounts(symbol)
 
-        print(self.infos[0]['amounts'][symbol])
+        print(await self.mi.actual_crypto_equivalence(symbol, self.infos[0]['amounts'][symbol]))
 
         for i, w in enumerate(self.wallets):
+
+            if self.costs[i] > self.available_cost[i] or self.available_cost[i] < 5:
+                return f"Pas assez d'usdt disponible sur le wallet {i}"
+
+            if self.infos[i]['amounts'][symbol] < self.min_amounts[symbol]: # buy spot si amount <
+                order = None
+                try:
+                    order = await w.buy(
+                    symbol,
+                    self.infos[i]['amounts'][symbol],
+                    self.infos[i]['cost']
+                    )
+                except Exception as e:
+                    return f"Le wallet {i} n'a pas réussi à acheter en spot\n{e}"
+                
+                if order != None:
+                    print(f"Achat de {self.infos[i]['amounts'][symbol]} {symbol}")
+                    break
+                return "spot"
+
             order = None
-            
             try:
                 order = await w.openp(
                     symbol,
@@ -137,11 +158,10 @@ class Executer:
                     'buy')
 
             except Exception as e:
-                print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
-                return False
+                return f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}"
             
             if order != None:
-                return True
+                return None
     
     
     async def sell_swap(self, symbol):

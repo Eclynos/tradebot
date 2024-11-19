@@ -46,7 +46,7 @@ def time_frame_to_ms(time_frame):
         return secAmount * 1000
 
 
-def ping_test(url="https://www.google.com", timeout=3):
+def ping_test(url="https://www.google.com", timeout=2):
     try:
         response = requests.get(url, timeout=timeout)
         return True if response.status_code == 200 else False

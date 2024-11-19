@@ -36,7 +36,7 @@ async def main():
 
     if not ping_test():
         print("Not connected to internet")
-        return;
+        return
 
     await e.start()
 
@@ -91,17 +91,22 @@ async def main():
                         trade_logger.info(f"Failed selling {symbol}")
             else:
                 if strategies[symbol].buyingEvaluation():
-                    if await e.buy_swap(symbol):
+                    message = await e.buy_swap(symbol)
+                    if message == None:
                         trade_logger.info(f"Buy {symbol}")
                         is_open[symbol] = True
+                    elif message == "spot":
+                        pass
                     else:
-                        trade_logger.info(f"Failed buying {symbol}")
+                        trade_logger.info(f"Failed buying {symbol}\n{message}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
                 trade_logger.info(await e.last_trades(symbol))
                 is_open[symbol] = False
                 has_been_closed[symbol] = False
+
+        await e.update_available_cost()
 
         if (start_time//60) % 120 == 0:
             for symbol in symbols:
@@ -119,3 +124,7 @@ if __name__ == "__main__":
 
 # gerer les tradable costs -> creer un etat de retour "pas assez de moula dans le wallet" à buy_swap
 # gerer les min amounts
+# c'est buying evaluation qui update les listes -> buyingEvaluation nécessaire quand on stoppe la loop
+# donner "il y a combien de tours de boucles" on a acheté
+# lire un fichier et modifier la variable run en conséquence si ça a changé
+# envoyer code de parrainage

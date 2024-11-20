@@ -18,6 +18,12 @@ class Strategy:
 
         self.candles = [] # liste de dict de bougies
 
+    def generateLists(self):
+        self.ma.append(self.dA.exponentialMovingAverage(self.candles[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)[0])
+        self.sd += self.dA.expoStandardDeviation(self.candles[-self.movingAverageSize-1:], self.ma[-1], self.movingAverageSize, self.power2)
+        if len(self.sd) > self.weightedAvgSize:
+            self.sdWeightedAvg += self.dA.simpleWeightedAverage(self.sd[-self.weightedAvgSize-1:], self.weightedAvgSize)
+        
     def batchBuyingEvaluation(self):
         self.ma = self.dA.exponentialMovingAverage(self.candles, self.movingAverageSize, self.power1)
         self.sd = self.dA.fastExponentialStandardDeviation(self.candles, self.movingAverageSize, self.power1, self.power2)
@@ -37,20 +43,12 @@ class Strategy:
             
 
     def buyingEvaluation(self):
-        ma = self.dA.exponentialMovingAverage(self.candles[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)
-        self.ma.append(ma[0])
-        self.sd += self.dA.expoStandardDeviation(self.candles[-self.movingAverageSize-1:], ma, self.movingAverageSize, self.power2)
-        
-
-        bb3 = self.dA.bollinger(ma, self.sd[-1:], self.buyingBollinger)
-
-        if len(self.sd) > self.weightedAvgSize:
-            self.sdWeightedAvg += self.dA.simpleWeightedAverage(self.sd[-self.weightedAvgSize-1:], self.weightedAvgSize)
+        bb = self.dA.bollinger(self.ma[-1], self.sd[-1:], self.buyingBollinger)
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 
             and self.dA.trend(self.candles[-self.movingAverageSize:], 1/2) == 1
-            and self.candles[-1]["price"] > bb3[-1]["price"]
+            and self.candles[-1]["price"] > bb[-1]["price"]
             ):
             return True
         return False
@@ -67,15 +65,12 @@ class Strategy:
             if self.candles[-i]["price"] < bbBas[-i]["price"]:
                 wentUnderLowBB = True 
         
-        # print(self.candles[-1], self.sd[-1], self.sdWeightedAvg[-1])
         if (self.sd[-2]["price"] > self.sdWeightedAvg[-2]["price"]
-            and self.sd[-1]["price"] < self.sdWeightedAvg[-1]["price"]):
-            # print(self.sd[-1], self.sdWeightedAvg[-1], "normal")
-            return True 
-            
-        if (wentUnderLowBB
+            and self.sd[-1]["price"] < self.sdWeightedAvg[-1]["price"]
+            or 
+            wentUnderLowBB
             and self.candles[-1]["price"] > bbHaut[-1]["price"]):
-            # print("SL")
+
             return True
         
         else :

@@ -12,21 +12,24 @@ async def main():
 
     await e.start()
 
-    await e.positions()
-
-    print(await e.history(0, "SUI/USDT"))
+    #print(await e.history(0, "SUI/USDT", 1))
 
     """
+
     print(await e.buy_swap("SUI/USDT"))
+
+    await e.positions()
 
     await e.wallets[0].walletInformations()
 
     await e.update_available_cost()
 
-    time.sleep(10)
+    time.sleep(19)
 
     await e.sell_swap("SUI/USDT")
     """
+
+    print(await e.history(0, "SUI/USDT", 1))
     
     await e.end()
     

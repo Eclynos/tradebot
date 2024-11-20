@@ -8,7 +8,7 @@ class Executer:
         self.mi = MarketInformations()
         self.wallets = [Wallet("info_keys", False, self.mi)]
         
-        self.costs = [12] # cost to spend at each trade in USDT
+        self.costs = [18] # cost to spend at each trade in USDT
         self.available_cost = [0] * len(self.wallets)
 
         self.symbols = symbols
@@ -79,7 +79,7 @@ class Executer:
 
 
     async def update_available_cost(self):
-        self.available_cost = [float((await w.exchange.fetch_balance())['info'][0]['available']) for w in self.wallets]
+        self.available_cost = [float((await w.exchange.fetch_balance())['info'][0]['crossedMaxAvailable']) for w in self.wallets]
         print(self.available_cost)
 
 
@@ -131,6 +131,7 @@ class Executer:
 
         for i, w in enumerate(self.wallets):
 
+            """
             if self.costs[i] > self.available_cost[i] or self.available_cost[i] < 5:
                 return f"Pas assez d'usdt disponible sur le wallet {i}"
 
@@ -149,6 +150,7 @@ class Executer:
                     print(f"Achat de {self.infos[i]['amounts'][symbol]} {symbol}")
                     break
                 return "spot"
+            """
 
             order = None
             try:

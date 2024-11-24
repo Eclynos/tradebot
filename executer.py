@@ -1,14 +1,15 @@
 from wallet import Wallet
 from marketInfo import MarketInformations
 from tools import *
+import asyncio
 
 
 class Executer:
     def __init__(self, symbols) -> None:
         self.mi = MarketInformations()
-        self.wallets = [Wallet("info_keys", False, self.mi)]
+        self.wallets = [Wallet("keys_nathael", False, self.mi)]
         
-        self.costs = [18] # cost to spend at each trade in USDT
+        self.costs = [10] # cost to spend at each trade in USDT
         self.available_cost = [0] * len(self.wallets)
 
         self.symbols = symbols
@@ -22,9 +23,8 @@ class Executer:
             dico = {}
             dico['cost'] = self.costs[i]
             dico['factor'] = self.factors[i]
-            dico['amounts'] = {}
-            for symbol in self.symbols:
-                dico['amounts'][symbol] = 0
+            dico['amounts'] = {symbol: 0 for symbol in self.symbols}
+            dico['buyedInSpot'] = {symbol: False for symbol in self.symbols}
             self.infos.append(dico)
 
 
@@ -56,6 +56,7 @@ class Executer:
         price = await self.mi.getPrice(symbol)
         for i in range(len(self.wallets)):
             self.infos[i]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[i]['cost'], price)
+            print(self.infos[i]['amounts'][symbol])
 
 
     async def calculate_min_amounts(self):
@@ -79,8 +80,7 @@ class Executer:
 
 
     async def update_available_cost(self):
-        self.available_cost = [float((await w.exchange.fetch_balance())['info'][0]['crossedMaxAvailable']) for w in self.wallets]
-        print(self.available_cost)
+        self.available_cost = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets))
 
 
 # ORDER MANAGEMENT
@@ -127,30 +127,27 @@ class Executer:
 
         await self.calculate_amounts(symbol)
 
-        print(await self.mi.actual_crypto_equivalence(symbol, self.infos[0]['amounts'][symbol]))
-
         for i, w in enumerate(self.wallets):
 
-            """
             if self.costs[i] > self.available_cost[i] or self.available_cost[i] < 5:
                 return f"Pas assez d'usdt disponible sur le wallet {i}"
 
             if self.infos[i]['amounts'][symbol] < self.min_amounts[symbol]: # buy spot si amount <
                 order = None
                 try:
+                    await w.transfer_swap_to_spot(self.infos[i]['cost'])
+
                     order = await w.buy(
                     symbol,
                     self.infos[i]['amounts'][symbol],
                     self.infos[i]['cost']
                     )
+
+                    return True
+
                 except Exception as e:
-                    return f"Le wallet {i} n'a pas réussi à acheter en spot\n{e}"
-                
-                if order != None:
-                    print(f"Achat de {self.infos[i]['amounts'][symbol]} {symbol}")
-                    break
-                return "spot"
-            """
+                    print(f"Le wallet {i} n'a pas réussi à acheter en spot\n{e}")
+                    return False
 
             order = None
             try:
@@ -160,10 +157,11 @@ class Executer:
                     'buy')
 
             except Exception as e:
-                return f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}"
+                print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
+                return False
             
             if order != None:
-                return None
+                return True
     
     
     async def sell_swap(self, symbol):
@@ -171,7 +169,12 @@ class Executer:
             order = None
             
             try:
-                order = await w.closep(symbol)
+                if self.infos[i]['buyedInSpot'][symbol]:
+                    order = await w.sell_percentage(symbol)
+                    balance = w.exchange.fetch_balance()
+                    await w.transfer_swap_to_spot()
+                else:
+                    order = await w.closep(symbol)
             
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")

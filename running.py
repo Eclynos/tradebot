@@ -14,15 +14,25 @@ async def main():
         return
 
     await mi.init()
-    #await w.init()
+    await w.init()
 
-    await mi.chart_visualisation("RENDER/USDT", "1m", time_frame_to_ms("2h"), 3)
+    symbol = "HNT/USDT"
+
+    """
+    order = await w.buy(symbol, 0.9, 2)
+    print(order)
+
+    time.sleep(7)
+    """
+
+    order = await w.sell_full(symbol)
+    print(order)
 
     await mi.account.disconnect()
-    #await w.account.disconnect()
+    await w.account.disconnect()
 
 
 if __name__ == "__main__":
     asyncio.run(main())
 
-# tester les mins de trading swap en changeant les paramètres
+# await mi.chart_visualisation("RENDER/USDT", "1m", time_frame_to_ms("2h"), 3)

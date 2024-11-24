@@ -172,5 +172,6 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-# gerer les tradable costs -> creer un etat de retour "pas assez de moula dans le wallet" à buy_swap
-# gerer les min amounts
+# importer en json les données hardcodées
+# vu que check le balance pour refaire le transfer du spot au swap demande bcp de tps, on peut le faire à la fin d'une frame si on estime qu'il y a le temps
+# regarder si on peut acheter en spot puis transférer en swap pour vendre

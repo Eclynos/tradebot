@@ -1,5 +1,6 @@
 import time
 from account import Account
+from tools import left
 
 class Wallet:
     def __init__(self, key_file, sandbox_mode, mi):
@@ -77,6 +78,40 @@ class Wallet:
             print("Wrong position mode")
 
 
+    async def transfer_spot_to_swap(self, amount):
+        """ Transfer USDT from Spot to Swap market """
+        try:
+            result = await self.exchange.transfer(
+                code='USDT',
+                amount=amount,
+                fromAccount='spot',
+                toAccount='swap'
+            )
+
+            return result
+
+        except Exception as e:
+            print(f"Error transferring {amount} USDT from spot to swap: {e}")
+            return None
+
+
+    async def transfer_swap_to_spot(self, amount):
+        """ Transfer USDT from Swap to Spot market """
+        try:
+            result = await self.exchange.transfer(
+                code='USDT',
+                amount=amount,
+                fromAccount='swap',
+                toAccount='spot'
+            )
+
+            return result
+
+        except Exception as e:
+            print(f"Error transferring {amount} USDT from swap to spot: {e}")
+            return None
+
+
 # ORDER MANAGING
 
 
@@ -132,7 +167,7 @@ class Wallet:
             order = await self.exchange.create_market_buy_order(
                 symbol,
                 amount,
-                params = {'type': 'swap',
+                params = {'type': 'spot',
                           'cost': cost}
             )
             
@@ -155,11 +190,34 @@ class Wallet:
             print(f"Erreur lors de la vente de {symbol} :\n{e}")
 
 
-    async def sell_percentage(self, symbol, percentage=100):
+    async def sell_full(self, symbol):
+        """Vend l'entièreté d'une position en spot et retourne le nombre vendu"""
+
+        try:
+            self.market_mode('spot')
+            balance = await self.exchange.fetch_balance()
+            amount = balance['free'][left(symbol)]
+
+            order = await self.exchange.create_order(
+                symbol=symbol,
+                type='market',
+                side='sell',
+                amount=amount,
+                params={'reduceOnly': True, 'type': 'spot'}
+            )
+
+            return order, amount
+        
+        except Exception as e:
+            print(f"Erreur lors de la vente totale {amount} {symbol} :\n{e}")
+
+
+
+    async def sell_percentage(self, symbol, percentage=100): #broken DONT USE
         """Vend directement un pourcentage d'une crypto possédée"""
 
         try:
-            base_currency = symbol.split('/')[0]
+            base_currency = left(symbol)
             balance = await self.exchange.fetch_balance()
             
             if base_currency not in balance['free']:
@@ -205,8 +263,7 @@ class Wallet:
                 type = 'market',
                 side = direction,
                 amount = amount,
-                params = {'type': 'swap',
-                        'oneWayMode': True}
+                params = {'type': 'swap'}
             )
             return order
 
@@ -218,8 +275,7 @@ class Wallet:
                     type = 'market',
                     side = direction,
                     amount = amount,
-                    params = {'type': 'swap',
-                            'oneWayMode': True}
+                    params = {'type': 'swap'}
                 )
                 return order
             except Exception as retry_exception:
@@ -270,6 +326,12 @@ class Wallet:
 
 
 # WATCH WALLET INFORMATIONS
+
+
+
+    async def get_crossed_max_available(self):
+        balance = await self.exchange.fetch_balance()
+        return float(balance['info'][0]['crossedMaxAvailable'])
 
 
     async def checkPositions(self): # À tester 

@@ -12,14 +12,17 @@ async def main():
 
     if not ping_test():
         print("erreur")
-        return;
+        return
+    
+    symbol = "BTC/USDT"
 
     await e.start()
 
-    for symbol in symbols:
-        await e.buy_swap(symbol)
+    await e.buy_swap(symbol)
 
-    #await e.sell_swap("RENDER/USDT")
+    time.sleep(16)
+
+    await e.sell_swap(symbol)
 
     await e.end()
     

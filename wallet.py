@@ -161,7 +161,7 @@ class Wallet:
 
 
     async def buy(self, symbol, amount, cost):
-        """Achète directement une quantité d'une crypto"""
+        """Achète directement une quantité d'une crypto en spot"""
         
         try:
             order = await self.exchange.create_market_buy_order(
@@ -175,6 +175,33 @@ class Wallet:
             
         except Exception as e:
             print(f"Erreur lors de l'achat de {symbol} :\n{e}")
+
+
+    async def buy_and_transfer(self, symbol, amount, cost):
+        """Achète directement une quantité d'une crypto en spot puis transfère en swap"""
+
+        try:
+            order = await self.exchange.create_market_buy_order(
+                symbol,
+                amount,
+                params = {'type': 'spot',
+                          'cost': cost}
+            )
+
+            result = await self.exchange.transfer(
+                code=left(symbol),
+                amount=amount,
+                fromAccount='spot',
+                toAccount='swap'
+            )
+
+            print(result)
+
+            return order
+
+
+        except Exception as e:
+            print(f"Erreur lors de l'achat et transfer de {symbol} :\n{e}")
         
     
     async def sell(self, symbol, amount):
@@ -411,7 +438,6 @@ class Wallet:
                     print(f"{elt['coin']}: {elt['available']} = {await self.mi.actual_crypto_equivalence('USDT/EUR', float(elt['available']))} €")
         elif self.exchange.options['defaultType'] in ["future", "swap"]:
             balance = await self.exchange.fetch_balance()
-            print(balance)
             print(f"Wallet informations in {self.exchange.options['defaultType']}:")
             for elt in balance["info"]:
                 print(f"{elt['marginCoin']}: {elt['available']}\naccountEquity: {elt['accountEquity']}\nusdtEquity: {elt['usdtEquity']}")       

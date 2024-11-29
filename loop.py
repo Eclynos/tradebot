@@ -81,13 +81,19 @@ async def main():
             s[symbol].updateLists()
             if is_open_since[symbol]:
                 if s[symbol].sellingEvaluation(is_open_since[symbol]):
+                    trade_logger.info(f"Sell {symbol}")
+                    has_been_closed[symbol] = True
+                    """
                     if await e.sell_swap(symbol):
                         trade_logger.info(f"Sell {symbol}")
                         has_been_closed[symbol] = True
                     else:
                         trade_logger.info(f"Failed selling {symbol}")
+                    """
             else:
                 if s[symbol].buyingEvaluation():
+                    trade_logger.info(f"Buy {symbol}")
+                    """
                     message = await e.buy_swap(symbol)
                     if message == None:
                         trade_logger.info(f"Buy {symbol}")
@@ -96,10 +102,11 @@ async def main():
                         pass
                     else:
                         trade_logger.info(f"Failed buying {symbol}\n{message}")
+                    """
 
         for symbol in symbols:
             if has_been_closed[symbol]:
-                trade_logger.info(await e.last_trades(symbol))
+                #trade_logger.info(await e.last_trades(symbol))
                 is_open_since[symbol] = 0
                 has_been_closed[symbol] = False
 
@@ -137,16 +144,19 @@ async def main():
             s[symbol].updateLists()
             if is_open_since[symbol]:
                 if s[symbol].sellingEvaluation(is_open_since[symbol]):
+                    trade_logger.info(f"Sell {symbol}")
+                    """
                     if await e.sell_swap(symbol):
                         trade_logger.info(f"Sell {symbol}")
                         has_been_closed[symbol] = True
                     else:
                         trade_logger.info(f"Failed selling {symbol}")
+                    """
 
         opened = False
         for symbol in symbols:
             if has_been_closed[symbol]:
-                trade_logger.info(await e.last_trades(symbol))
+                #trade_logger.info(await e.last_trades(symbol))
                 is_open_since[symbol] = 0
                 has_been_closed[symbol] = False
             if is_open_since[symbol]:
@@ -173,5 +183,8 @@ if __name__ == "__main__":
     asyncio.run(main())
 
 # importer en json les données hardcodées
+# gestion des coûts
 # vu que check le balance pour refaire le transfer du spot au swap demande bcp de tps, on peut le faire à la fin d'une frame si on estime qu'il y a le temps
 # regarder si on peut acheter en spot puis transférer en swap pour vendre
+
+# raffiner le code pour pouvoir lancer les tests

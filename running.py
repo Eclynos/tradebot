@@ -16,17 +16,25 @@ async def main():
     await mi.init()
     await w.init()
 
-    symbol = "HNT/USDT"
+    symbol = "BTC/USDT:USDT"
 
-    """
-    order = await w.buy(symbol, 0.9, 2)
-    print(order)
+    #print(await mi.actual_currency_equivalence(symbol, 2))
 
-    time.sleep(7)
-    """
+    #order = await w.buy_and_transfer(symbol, await mi.actual_currency_equivalence(symbol, 2), 2)
+    #print(order)
 
-    order = await w.sell_full(symbol)
-    print(order)
+    #await w.checkPositions()
+
+    #order = await w.closep(symbol)
+    #print(order)
+
+    #time.sleep(7)
+
+    #order = await w.exchange.close_position(symbol, "long", params={'type': 'swap'})
+    #print(order)
+
+    rate = await w.exchange.fetch_used_balance()
+    print(rate)
 
     await mi.account.disconnect()
     await w.account.disconnect()
@@ -35,4 +43,10 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
+
 # await mi.chart_visualisation("RENDER/USDT", "1m", time_frame_to_ms("2h"), 3)
+
+
+# fetch_free_balance() donne le coût restant de toutes les cryptos -> super pratique
+# pareil pour total_balance
+# regarder used_balance aussi

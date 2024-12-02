@@ -40,7 +40,7 @@ async def main():
     await e.start()
 
     timeFrame = "5m" # in minutes
-    timeLoop = time_frame_to_s(timeFrame)
+    timeLoop = int(timeFrame[:-1])
 
     is_open_since = {symbol: 0 for symbol in symbols}
     has_been_closed = {symbol: False for symbol in symbols}
@@ -51,6 +51,7 @@ async def main():
         wait_next_frame(timeLoop)
 
     start_time = time.time()
+    print("start reception")
 
     for i, symbol in enumerate(symbols):
         s[symbol].candles = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2001, start_time)]
@@ -65,6 +66,7 @@ async def main():
     wait_next_frame(timeLoop)
 
     while True:
+        print("new execution")
         start_time = time.time()
 
         is_open_since = {k: v + 1 if v > 0 else v for k, v in is_open_since.items()}
@@ -188,3 +190,4 @@ if __name__ == "__main__":
 # regarder si on peut acheter en spot puis transférer en swap pour vendre
 
 # raffiner le code pour pouvoir lancer les tests
+# ajouter un sl ?

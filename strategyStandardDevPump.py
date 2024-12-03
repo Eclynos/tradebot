@@ -43,7 +43,7 @@ class Strategy:
             
 
     def buyingEvaluation(self):
-        bb = self.dA.bollinger(self.ma[-1], self.sd[-1:], self.buyingBollinger)
+        bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], self.buyingBollinger)
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 

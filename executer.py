@@ -7,7 +7,7 @@ import asyncio
 class Executer:
     def __init__(self, symbols) -> None:
         self.mi = MarketInformations()
-        self.wallets = [Wallet("keys_nathael", False, self.mi)]
+        self.wallets = [Wallet("keys_nico.txt", False, self.mi)]
         
         self.costs = [10] # cost to spend at each trade in USDT
         self.available_cost = [0] * len(self.wallets)

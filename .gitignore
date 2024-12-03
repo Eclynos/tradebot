@@ -12,3 +12,4 @@ backtest-images/*
 res.txt
 trade_logs.log
 execution_logs.log
+commands

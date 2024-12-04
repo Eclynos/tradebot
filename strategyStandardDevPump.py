@@ -18,6 +18,11 @@ class Strategy:
 
         self.candles = [] # liste de dict de bougies
 
+    def createLists(self):
+        self.ma = self.dA.exponentialMovingAverage(self.candles, self.movingAverageSize, self.power1)
+        self.sd = self.dA.expoStandardDeviation(self.candles, self.ma, self.movingAverageSize, self.power2)
+        self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
+
     def updateLists(self):
         self.ma.append(self.dA.exponentialMovingAverage(self.candles[-self.movingAverageSize-1:], self.movingAverageSize, self.power1)[0])
         self.sd += self.dA.expoStandardDeviation(self.candles[-self.movingAverageSize-1:], [self.ma[-1]], self.movingAverageSize, self.power2)

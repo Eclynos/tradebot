@@ -53,7 +53,7 @@ async def main():
     start_time = time.time()
 
     for i, symbol in enumerate(symbols):
-        s[symbol].candles = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2001, start_time)]
+        s[symbol].candles = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2104, start_time)]
         s[symbol].candles = s[symbol].candles[:-1]
 
     execution_time = time.time() - start_time
@@ -61,6 +61,10 @@ async def main():
 
     if execution_time > 30:
         raise ValueError(f"Too long candles fetching time: {execution_time}")
+    
+    for i, symbol in enumerate(symbols):
+        s[symbol].createLists()
+        s[symbol].candles = s[symbol].candles[-2001:]
 
     wait_next_frame(timeLoop)
 

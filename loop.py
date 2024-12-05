@@ -1,4 +1,4 @@
-import logging
+import logging, json
 from executer import Executer
 from strategyStandardDevPump import Strategy
 from tools import *
@@ -24,13 +24,17 @@ execution_handler.setFormatter(execution_formatter)
 trade_logger.addHandler(trade_handler)
 execution_logger.addHandler(execution_handler)
 
+with open('settings.json', 'r') as f:
+    settings = json.load(f)
+
 
 async def main():
+    global settings
     instruction_file = open("instruction", "w+")
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
-    e = Executer(symbols)
+    e = Executer(symbols, settings)
     s = {symbol: Strategy() for symbol in symbols}
 
     if not ping_test():
@@ -87,26 +91,13 @@ async def main():
                 if s[symbol].sellingEvaluation(is_open_since[symbol]):
                     trade_logger.info(f"Sell {symbol}")
                     has_been_closed[symbol] = True
-                    """
-                    if await e.sell_swap(symbol):
-                        trade_logger.info(f"Sell {symbol}")
-                        has_been_closed[symbol] = True
-                    else:
-                        trade_logger.info(f"Failed selling {symbol}")
-                    """
+                    #nb = await e.sell_swap(symbol)
+                    #trade_logger.info(f"{nb} wallets sold {symbol}")
             else:
                 if s[symbol].buyingEvaluation():
                     trade_logger.info(f"Buy {symbol}")
-                    """
-                    message = await e.buy_swap(symbol)
-                    if message == None:
-                        trade_logger.info(f"Buy {symbol}")
-                        is_open_since[symbol] = 1
-                    elif message == "spot":
-                        pass
-                    else:
-                        trade_logger.info(f"Failed buying {symbol}\n{message}")
-                    """
+                    #nb = await e.buy_swap(symbol)
+                    #trade_logger.info(f"{nb} wallets bought {symbol}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
@@ -188,8 +179,5 @@ if __name__ == "__main__":
 
 # importer en json les données hardcodées
 # gestion des coûts
-# vu que check le balance pour refaire le transfer du spot au swap demande bcp de tps, on peut le faire à la fin d'une frame si on estime qu'il y a le temps
-# regarder si on peut acheter en spot puis transférer en swap pour vendre
-
-# raffiner le code pour pouvoir lancer les tests
-# ajouter un sl ?
+# acheter en swap uniquement si on a assez sur le wallet -> faire une liste des wallets qui ont acheté ou pas
+# il reste à update cette liste et gérer les coûts en pourcentage

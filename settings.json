@@ -1,0 +1,9 @@
+{
+    "wallets": [
+        {
+            "key_file": "keys_nathael",
+            "cost": 20,
+            "factor": 1
+        }
+    ]
+}

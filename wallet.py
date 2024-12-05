@@ -275,14 +275,7 @@ class Wallet:
 
 
     async def openp(self, symbol, amount, direction):
-        """
-        Open a future/swap position
-        
-        Args:
-            symbol: The futures pair to trade
-            amount: The amount to buy or sell in USDT
-            direction: 'buy' for long position, 'sell' for short position
-        """
+        """ Open a future/swap position """
         try:
 
             order = await self.exchange.create_order(
@@ -296,28 +289,10 @@ class Wallet:
 
         except Exception as e:
             print(f"Error opening swap position: {e}")
-            try:
-                order = await self.exchange.create_order(
-                    symbol = symbol + ':USDT',
-                    type = 'market',
-                    side = direction,
-                    amount = amount,
-                    params = {'type': 'swap'}
-                )
-                return order
-            except Exception as retry_exception:
-                print(f"Failed to open position after retry: {retry_exception}")
 
 
     async def closep(self, symbol):
-        """
-        Close a futures/swap position
-
-        Args:
-            symbol: The futures pair to trade
-            amount: The amount to buy or sell in amount of trade currency
-            direction: 'buy' to close a short position, 'sell' to close a long position
-        """
+        """ Close a futures/swap position """
         try:
             order = await self.exchange.close_position(
                 symbol = symbol + ':USDT',

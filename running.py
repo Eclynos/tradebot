@@ -16,25 +16,15 @@ async def main():
     await mi.init()
     await w.init()
 
-    symbol = "BTC/USDT:USDT"
+    symbol = "BTC/USDT"
 
-    #print(await mi.actual_currency_equivalence(symbol, 2))
+    await w.checkPositions()
 
-    #order = await w.buy_and_transfer(symbol, await mi.actual_currency_equivalence(symbol, 2), 2)
-    #print(order)
-
-    #await w.checkPositions()
-
-    #order = await w.closep(symbol)
-    #print(order)
-
-    #time.sleep(7)
-
-    #order = await w.exchange.close_position(symbol, "long", params={'type': 'swap'})
-    #print(order)
-
-    rate = await w.exchange.fetch_used_balance()
-    print(rate)
+    order = await w.closep(symbol)
+    if order != None:
+        print(order)
+    else:
+        print("order is None")
 
     await mi.account.disconnect()
     await w.account.disconnect()

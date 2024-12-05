@@ -5,27 +5,24 @@ import asyncio
 
 
 class Executer:
-    def __init__(self, symbols) -> None:
+    def __init__(self, symbols, settings) -> None:
         self.mi = MarketInformations()
-        self.wallets = [Wallet("keys_nico.txt", False, self.mi)]
-        
-        self.costs = [10] # cost to spend at each trade in USDT
-        self.available_cost = [0] * len(self.wallets)
 
         self.symbols = symbols
         self.min_amounts = {}
-        
-        self.factors = [1] # preset leverage factor
-        
         self.infos = []
-        
-        for i in range(len(self.wallets)):
+        self.wallets = []
+
+        for w in settings["wallets"]:
             dico = {}
-            dico['cost'] = self.costs[i]
-            dico['factor'] = self.factors[i]
+            self.wallets.append(Wallet(w["key_file"], False, self.mi))
+            dico['cost'] = w["cost"] # % of wallet to spend at each trade in USDT
+            dico['factor'] = w["factor"] # preset leverage factor
             dico['amounts'] = {symbol: 0 for symbol in self.symbols}
-            dico['buyedInSpot'] = {symbol: False for symbol in self.symbols}
+            dico['buyed?'] = {symbol: False for symbol in self.symbols}
             self.infos.append(dico)
+        
+        self.available_cost = [0] * len(self.wallets)
 
 
     async def start(self):
@@ -125,6 +122,7 @@ class Executer:
 
     async def buy_swap(self, symbol):
 
+        purchases = 0
         await self.calculate_amounts(symbol)
 
         for i, w in enumerate(self.wallets):
@@ -132,56 +130,40 @@ class Executer:
             if self.costs[i] > self.available_cost[i] or self.available_cost[i] < 5:
                 return f"Pas assez d'usdt disponible sur le wallet {i}"
 
-            if self.infos[i]['amounts'][symbol] < self.min_amounts[symbol]: # buy spot si amount <
+            if self.infos[i]['amounts'][symbol] > self.min_amounts[symbol]:
+
                 order = None
                 try:
-                    await w.transfer_swap_to_spot(self.infos[i]['cost'])
-
-                    order = await w.buy(
-                    symbol,
-                    self.infos[i]['amounts'][symbol],
-                    self.infos[i]['cost']
-                    )
-
-                    return True
+                    order = await w.openp(
+                        symbol,
+                        self.infos[i]['amounts'][symbol],
+                        'buy')
+                    
+                    if order != None:
+                        purchases += 1
 
                 except Exception as e:
-                    print(f"Le wallet {i} n'a pas réussi à acheter en spot\n{e}")
-                    return False
-
-            order = None
-            try:
-                order = await w.openp(
-                    symbol,
-                    self.infos[i]['amounts'][symbol],
-                    'buy')
-
-            except Exception as e:
-                print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
-                return False
+                    print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
             
-            if order != None:
-                return True
+        return purchases
     
     
     async def sell_swap(self, symbol):
+
+        sales = 0
         for i, w in enumerate(self.wallets):
             order = None
             
             try:
-                if self.infos[i]['buyedInSpot'][symbol]:
-                    order = await w.sell_percentage(symbol)
-                    balance = w.exchange.fetch_balance()
-                    await w.transfer_swap_to_spot()
-                else:
-                    order = await w.closep(symbol)
+                order = await w.closep(symbol)
+
+                if order != None:
+                    sales += 1
             
             except Exception as e:
                 print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
-                return False
             
-            if order != None:
-                return True
+            return sales
 
 
 # INFORMATIONS GIVERS

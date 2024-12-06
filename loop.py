@@ -3,17 +3,23 @@ from executer import Executer
 from strategyStandardDevPump import Strategy
 from tools import *
 from math import floor
+from os import remove, path
 import asyncio, time
+
 
 with open('settings.json', 'r') as f:
     settings = json.load(f)
+
+for name in settings["file_names"]:
+    if path.exists(name):
+        remove(name)
 
 logging.basicConfig(level=logging.INFO)
 trade_logger = logging.getLogger('trade_logger')
 execution_logger = logging.getLogger('execution_logger')
 
-trade_handler = logging.FileHandler(settings["trade_file_name"])
-execution_handler = logging.FileHandler(settings["execution_file_name"])
+trade_handler = logging.FileHandler(settings["file_names"]["trade"])
+execution_handler = logging.FileHandler(settings["file_names"]["execution"])
 
 trade_handler.setLevel(logging.INFO)
 execution_handler.setLevel(logging.INFO)
@@ -28,9 +34,11 @@ trade_logger.addHandler(trade_handler)
 execution_logger.addHandler(execution_handler)
 
 
+
 async def main():
     global settings
-    instruction_file = open(settings["instruction_file_name"], "w+")
+    instruction_file = open(settings["file_names"]["instruction"], "a+")
+    instruction_file.seek(0)
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
@@ -56,7 +64,7 @@ async def main():
 
     start_time = time.time()
 
-    for i, symbol in enumerate(symbols):
+    for symbol in symbols:
         s[symbol].candles = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2104, start_time)]
         s[symbol].candles = s[symbol].candles[:-1]
 
@@ -66,7 +74,7 @@ async def main():
     if execution_time > 37:
         raise ValueError(f"Too long candles fetching time: {execution_time}")
     
-    for i, symbol in enumerate(symbols):
+    for symbol in symbols:
         s[symbol].createLists()
         s[symbol].candles = s[symbol].candles[-2001:]
 
@@ -96,6 +104,7 @@ async def main():
             else:
                 if s[symbol].buyingEvaluation():
                     trade_logger.info(f"Buy {symbol}")
+                    is_open_since[symbol] = 1
                     #nb = await e.buy_swap(symbol)
                     #trade_logger.info(f"{nb} wallets bought {symbol}")
 
@@ -113,8 +122,10 @@ async def main():
             execution_logger.info("Lists cleaned")
 
         execution_logger.info(time.time() - start_time) # execution time
+        
+        execution_logger.info(instruction_file.readline())
 
-        if instruction_file.readline() == "stop":
+        if instruction_file.readline().strip() == "stop":
             execution_logger.info("Stopping bot")
             break
 
@@ -141,12 +152,11 @@ async def main():
             s[symbol].candles = s[symbol].candles[1:]
             s[symbol].candles.append(dict(zip(keys, new_candles[i])))
             s[symbol].updateLists()
-            if is_open_since[symbol]:
-                if s[symbol].sellingEvaluation(is_open_since[symbol]):
-                    trade_logger.info(f"Sell {symbol}")
-                    has_been_closed[symbol] = True
-                    #nb = await e.sell_swap(symbol)
-                    #trade_logger.info(f"{nb} wallets sold {symbol}")
+            if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol]):
+                trade_logger.info(f"Sell {symbol}")
+                has_been_closed[symbol] = True
+                #nb = await e.sell_swap(symbol)
+                #trade_logger.info(f"{nb} wallets sold {symbol}")
 
         opened = False
         for symbol in symbols:
@@ -181,4 +191,3 @@ if __name__ == "__main__":
 # acheter en swap uniquement si on a assez sur le wallet -> faire une liste des wallets qui ont acheté ou pas
 # il reste à update cette liste et gérer les coûts en pourcentage
 # faire en sorte que le bot détecte les positions ouvertes et leur donne suite si elles sont ouvertes lorsqu'on lance le bot
-# tester les changements de variables de is_open_since

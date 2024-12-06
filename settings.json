@@ -6,7 +6,9 @@
             "factor": 1
         }
     ],
-    "execution_file_name": "execution_logs.log",
-    "trade_file_name": "trade_logs.log",
-    "instruction_file_name": "instruction"
+    "file_names": {
+        "execution": "execution_logs.log",
+        "trade": "trade_logs.log",
+        "instruction": "instruction"
+    }
 }

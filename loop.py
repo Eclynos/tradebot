@@ -51,7 +51,7 @@ async def main():
 
     start_time = time.time()
     
-    if start_time % (60 * timeLoop) > 60 * (timeLoop - 1) + 26:
+    if start_time % (60 * timeLoop) > 60 * (timeLoop - 1) + 20:
         wait_next_frame(timeLoop)
 
     start_time = time.time()
@@ -63,7 +63,7 @@ async def main():
     execution_time = time.time() - start_time
     execution_logger.info(f"Start : {execution_time}")
 
-    if execution_time > 30:
+    if execution_time > 37:
         raise ValueError(f"Too long candles fetching time: {execution_time}")
     
     for i, symbol in enumerate(symbols):
@@ -120,7 +120,11 @@ async def main():
 
         wait_next_frame(timeLoop)
 
-    opened = True
+    opened = False
+    for symbol in symbols:
+        if is_open_since[symbol]:
+            opened = True
+            break
 
     while opened:
         start_time = time.time()
@@ -140,13 +144,9 @@ async def main():
             if is_open_since[symbol]:
                 if s[symbol].sellingEvaluation(is_open_since[symbol]):
                     trade_logger.info(f"Sell {symbol}")
-                    """
-                    if await e.sell_swap(symbol):
-                        trade_logger.info(f"Sell {symbol}")
-                        has_been_closed[symbol] = True
-                    else:
-                        trade_logger.info(f"Failed selling {symbol}")
-                    """
+                    has_been_closed[symbol] = True
+                    #nb = await e.sell_swap(symbol)
+                    #trade_logger.info(f"{nb} wallets sold {symbol}")
 
         opened = False
         for symbol in symbols:
@@ -162,7 +162,7 @@ async def main():
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
                 s[symbol].clean()
-                execution_logger.info("Lists cleaned")          
+            execution_logger.info("Lists cleaned")          
 
         execution_logger.info(time.time() - start_time) # execution time
 
@@ -181,3 +181,4 @@ if __name__ == "__main__":
 # gestion des coûts
 # acheter en swap uniquement si on a assez sur le wallet -> faire une liste des wallets qui ont acheté ou pas
 # il reste à update cette liste et gérer les coûts en pourcentage
+# faire en sorte que le bot détecte les positions ouvertes et leur donne suite si elles sont ouvertes lorsqu'on lance le bot

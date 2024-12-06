@@ -10,7 +10,7 @@ import asyncio, time
 with open('settings.json', 'r') as f:
     settings = json.load(f)
 
-for name in settings["file_names"]:
+for name in settings["file_names"].values():
     if path.exists(name):
         remove(name)
 
@@ -122,12 +122,11 @@ async def main():
             execution_logger.info("Lists cleaned")
 
         execution_logger.info(time.time() - start_time) # execution time
-        
-        execution_logger.info(instruction_file.readline())
 
-        if instruction_file.readline().strip() == "stop":
+        if instruction_file.readline() == "stop":
             execution_logger.info("Stopping bot")
             break
+        instruction_file.seek(0)
 
         wait_next_frame(timeLoop)
 

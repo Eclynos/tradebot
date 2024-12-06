@@ -5,12 +5,15 @@ from tools import *
 from math import floor
 import asyncio, time
 
+with open('settings.json', 'r') as f:
+    settings = json.load(f)
+
 logging.basicConfig(level=logging.INFO)
 trade_logger = logging.getLogger('trade_logger')
 execution_logger = logging.getLogger('execution_logger')
 
-trade_handler = logging.FileHandler('trade_logs.log')
-execution_handler = logging.FileHandler('execution_logs.log')
+trade_handler = logging.FileHandler(settings["trade_file_name"])
+execution_handler = logging.FileHandler(settings["execution_file_name"])
 
 trade_handler.setLevel(logging.INFO)
 execution_handler.setLevel(logging.INFO)
@@ -24,13 +27,10 @@ execution_handler.setFormatter(execution_formatter)
 trade_logger.addHandler(trade_handler)
 execution_logger.addHandler(execution_handler)
 
-with open('settings.json', 'r') as f:
-    settings = json.load(f)
-
 
 async def main():
     global settings
-    instruction_file = open("instruction", "w+")
+    instruction_file = open(settings["instruction_file_name"], "w+")
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
@@ -110,7 +110,7 @@ async def main():
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
                 s[symbol].clean()
-                execution_logger.info("Lists cleaned")
+            execution_logger.info("Lists cleaned")
 
         execution_logger.info(time.time() - start_time) # execution time
 
@@ -177,8 +177,8 @@ async def main():
 if __name__ == "__main__":
     asyncio.run(main())
 
-# importer en json les données hardcodées
 # gestion des coûts
 # acheter en swap uniquement si on a assez sur le wallet -> faire une liste des wallets qui ont acheté ou pas
 # il reste à update cette liste et gérer les coûts en pourcentage
 # faire en sorte que le bot détecte les positions ouvertes et leur donne suite si elles sont ouvertes lorsqu'on lance le bot
+# tester les changements de variables de is_open_since

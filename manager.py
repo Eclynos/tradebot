@@ -127,10 +127,7 @@ class Manager:
 
         for i, w in enumerate(self.wallets):
 
-            if self.infos[i]['cost'] > self.available_cost[i] or self.available_cost[i] < 5:
-                return f"Pas assez d'usdt disponible sur le wallet {i}"
-
-            if self.infos[i]['amounts'][symbol] > self.min_amounts[symbol]:
+            if self.available_cost[i] > 5 and self.infos[i]['amounts'][symbol] > self.min_amounts[symbol]:
 
                 order = None
                 try:
@@ -141,6 +138,7 @@ class Manager:
                     
                     if order != None:
                         purchases += 1
+                        self.infos[i]['buyed?'][symbol] = True
 
                 except Exception as e:
                     print(f"Le wallet {i} n'a pas réussi à acheter en swap\n{e}")
@@ -154,14 +152,16 @@ class Manager:
         for i, w in enumerate(self.wallets):
             order = None
             
-            try:
-                order = await w.closep(symbol)
+            if self.infos[i]['buyed?'][symbol]:
+                try:
+                    order = await w.closep(symbol)
 
-                if order != None:
-                    sales += 1
-            
-            except Exception as e:
-                print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
+                    if order != None:
+                        sales += 1
+                        self.infos[i]['buyed?'][symbol] = False
+                
+                except Exception as e:
+                    print(f"Le wallet {i} n'a pas réussi à vendre\n{e}")
             
             return sales
 

@@ -332,8 +332,12 @@ class Wallet:
 
 
     async def get_crossed_max_available(self):
+        free = await self.exchange.fetch_free_balance()
+        return free['USDT']
+        """
         balance = await self.exchange.fetch_balance()
         return float(balance['info'][0]['crossedMaxAvailable'])
+        """
 
 
     async def checkPositions(self): # À tester 

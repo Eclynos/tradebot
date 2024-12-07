@@ -127,7 +127,7 @@ async def main():
             if is_open_since[symbol]:
                 catVars += f"{symbol}: {is_open_since[symbol]} " 
 
-        execution_logger.info(f"{time.time() - start_time}\n")
+        execution_logger.info(f"{time.time() - start_time}\n{catVars}")
 
         if instruction_file.readline() == "stop":
             execution_logger.info("Stopping bot")
@@ -192,8 +192,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# gestion des coûts
-# acheter en swap uniquement si on a assez sur le wallet -> faire une liste des wallets qui ont acheté ou pas
-# il reste à update cette liste et gérer les coûts en pourcentage
-# faire en sorte que le bot détecte les positions ouvertes et leur donne suite si elles sont ouvertes lorsqu'on lance le bot

@@ -37,8 +37,7 @@ execution_logger.addHandler(execution_handler)
 
 async def main():
     global settings
-    instruction_file = open(settings["file_names"]["instruction"], "a+")
-    instruction_file.seek(0)
+    instruction_file = open(settings["file_names"]["instruction"], "a+", encoding='utf-8')
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
@@ -97,13 +96,13 @@ async def main():
             s[symbol].updateLists()
             if is_open_since[symbol]:
                 if s[symbol].sellingEvaluation(is_open_since[symbol]):
-                    trade_logger.info(f"Sell {symbol} at {m.mi.getPrice(symbol)}")
+                    trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
                     has_been_closed[symbol] = True
                     #nb = await m.sell_swap(symbol)
                     #trade_logger.info(f"{nb} wallets sold {symbol}")
             else:
                 if s[symbol].buyingEvaluation():
-                    trade_logger.info(f"Buy {symbol} at {m.mi.getPrice(symbol)}")
+                    trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)}")
                     is_open_since[symbol] = 1
                     #nb = await m.buy_swap(symbol)
                     #trade_logger.info(f"{nb} wallets bought {symbol}")
@@ -125,14 +124,13 @@ async def main():
         catVars = ""
         for symbol in symbols:
             if is_open_since[symbol]:
-                catVars += f"{symbol}: {is_open_since[symbol]} " 
+                catVars += f"\n{symbol}: {is_open_since[symbol]} " 
 
-        execution_logger.info(f"{time.time() - start_time}\n{catVars}")
+        execution_logger.info(f"{time.time() - start_time}{catVars}")
 
-        if instruction_file.readline() == "stop":
+        if instruction_file.read() == "stop":
             execution_logger.info("Stopping bot")
             break
-        instruction_file.seek(0)
 
         wait_next_frame(timeLoop)
 
@@ -158,7 +156,7 @@ async def main():
             s[symbol].candles.append(dict(zip(keys, new_candles[i])))
             s[symbol].updateLists()
             if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol]):
-                trade_logger.info(f"Sell {symbol} at {m.mi.getPrice(symbol)}")
+                trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
                 has_been_closed[symbol] = True
                 #nb = await m.sell_swap(symbol)
                 #trade_logger.info(f"{nb} wallets sold {symbol}")

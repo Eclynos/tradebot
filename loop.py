@@ -1,5 +1,5 @@
 import logging, json
-from executer import Executer
+from manager import Manager
 from strategyStandardDevPump import Strategy
 from tools import *
 from math import floor
@@ -42,14 +42,14 @@ async def main():
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
-    e = Executer(symbols, settings)
+    m = Manager(symbols, settings)
     s = {symbol: Strategy() for symbol in symbols}
 
     if not ping_test():
         print("Not connected to internet")
         return
 
-    await e.start()
+    await m.start()
 
     timeFrame = "5m" # in minutes
     timeLoop = int(timeFrame[:-1])
@@ -65,7 +65,7 @@ async def main():
     start_time = time.time()
 
     for symbol in symbols:
-        s[symbol].candles = [dict(zip(keys, candle)) for candle in await e.mi.fetch_candles_amount(symbol, timeFrame, 2104, start_time)]
+        s[symbol].candles = [dict(zip(keys, candle)) for candle in await m.mi.fetch_candles_amount(symbol, timeFrame, 2104, start_time)]
         s[symbol].candles = s[symbol].candles[:-1]
 
     execution_time = time.time() - start_time
@@ -86,10 +86,10 @@ async def main():
         is_open_since = {k: v + 1 if v > 0 else v for k, v in is_open_since.items()}
 
         try:
-            fetch_tasks = [e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
             new_candles = await asyncio.gather(*fetch_tasks)
         except:
-            new_candles = [await e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
 
         for i, symbol in enumerate(symbols):
             s[symbol].candles = s[symbol].candles[1:]
@@ -97,31 +97,37 @@ async def main():
             s[symbol].updateLists()
             if is_open_since[symbol]:
                 if s[symbol].sellingEvaluation(is_open_since[symbol]):
-                    trade_logger.info(f"Sell {symbol}")
+                    trade_logger.info(f"Sell {symbol} at {m.mi.getPrice(symbol)}")
                     has_been_closed[symbol] = True
-                    #nb = await e.sell_swap(symbol)
+                    #nb = await m.sell_swap(symbol)
                     #trade_logger.info(f"{nb} wallets sold {symbol}")
             else:
                 if s[symbol].buyingEvaluation():
-                    trade_logger.info(f"Buy {symbol}")
+                    trade_logger.info(f"Buy {symbol} at {m.mi.getPrice(symbol)}")
                     is_open_since[symbol] = 1
-                    #nb = await e.buy_swap(symbol)
+                    #nb = await m.buy_swap(symbol)
                     #trade_logger.info(f"{nb} wallets bought {symbol}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
-                #trade_logger.info(await e.last_trades(symbol))
+                #trade_logger.info(await m.last_trades(symbol))
                 is_open_since[symbol] = 0
                 has_been_closed[symbol] = False
 
-        await e.update_available_cost()
+        await m.update_available_cost()
+        await m.calculate_min_amounts()
 
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
                 s[symbol].clean()
             execution_logger.info("Lists cleaned")
 
-        execution_logger.info(time.time() - start_time) # execution time
+        catVars = ""
+        for symbol in symbols:
+            if is_open_since[symbol]:
+                catVars += f"{symbol}: {is_open_since[symbol]} " 
+
+        execution_logger.info(f"{time.time() - start_time}\n")
 
         if instruction_file.readline() == "stop":
             execution_logger.info("Stopping bot")
@@ -142,31 +148,32 @@ async def main():
         is_open_since = {k: v + 1 if v > 0 else v for k, v in is_open_since.items()}
 
         try:
-            fetch_tasks = [e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
             new_candles = await asyncio.gather(*fetch_tasks)
         except:
-            new_candles = [await e.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
 
         for i, symbol in enumerate(symbols):
             s[symbol].candles = s[symbol].candles[1:]
             s[symbol].candles.append(dict(zip(keys, new_candles[i])))
             s[symbol].updateLists()
             if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol]):
-                trade_logger.info(f"Sell {symbol}")
+                trade_logger.info(f"Sell {symbol} at {m.mi.getPrice(symbol)}")
                 has_been_closed[symbol] = True
-                #nb = await e.sell_swap(symbol)
+                #nb = await m.sell_swap(symbol)
                 #trade_logger.info(f"{nb} wallets sold {symbol}")
 
         opened = False
         for symbol in symbols:
             if has_been_closed[symbol]:
-                #trade_logger.info(await e.last_trades(symbol))
+                #trade_logger.info(await m.last_trades(symbol))
                 is_open_since[symbol] = 0
                 has_been_closed[symbol] = False
             if is_open_since[symbol]:
                 opened = True
 
-        await e.update_available_cost()
+        await m.update_available_cost()
+        await m.calculate_min_amounts()
 
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
@@ -177,7 +184,7 @@ async def main():
 
         wait_next_frame(timeLoop)
     
-    await e.end()
+    await m.end()
 
     execution_logger.info("Bot stopped")
 

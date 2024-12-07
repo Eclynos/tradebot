@@ -16,15 +16,16 @@ async def main():
     await mi.init()
     await w.init()
 
-    symbol = "BTC/USDT"
-
-    await w.checkPositions()
-
-    order = await w.closep(symbol)
-    if order != None:
-        print(order)
-    else:
-        print("order is None")
+    balance = await w.exchange.fetch_balance()
+    free = await w.exchange.fetch_free_balance()
+    total = await w.exchange.fetch_total_balance()
+    used = await w.exchange.fetch_used_balance()
+    print(float(balance['info'][0]['crossedMaxAvailable']))
+    print(free)
+    print(total)
+    print(used)
+    print(total['USDT'] - used['USDT'])
+    print(total['USDT'] - float(balance['info'][0]['crossedMaxAvailable']))
 
     await mi.account.disconnect()
     await w.account.disconnect()

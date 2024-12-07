@@ -4,7 +4,7 @@ from tools import *
 import asyncio
 
 
-class Executer:
+class Manager:
     def __init__(self, symbols, settings) -> None:
         self.mi = MarketInformations()
 
@@ -127,7 +127,7 @@ class Executer:
 
         for i, w in enumerate(self.wallets):
 
-            if self.costs[i] > self.available_cost[i] or self.available_cost[i] < 5:
+            if self.infos[i]['cost'] > self.available_cost[i] or self.available_cost[i] < 5:
                 return f"Pas assez d'usdt disponible sur le wallet {i}"
 
             if self.infos[i]['amounts'][symbol] > self.min_amounts[symbol]:
@@ -198,3 +198,12 @@ class Executer:
 
     async def last_trades(self, symbol):
         return '\n'.join(await self.wallets[w].positionsHistory(symbol, 1) for w in range(self.wallets))
+
+
+    async def balances(self):
+        """Renvoie une chaîne de caractères contenant le montant possédé sur chaque portefeuille"""
+        chain = ""
+        for i, w in enumerate(self.wallets):
+            total = await w.exchange.fetch_total_balance()
+            used = await w.exchange.fetch_used_balance()
+            chain += f"{i}: Total:{total} Used:{used}\n"

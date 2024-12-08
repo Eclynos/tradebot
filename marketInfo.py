@@ -4,6 +4,7 @@ import mplfinance as mpf
 from matplotlib.animation import FuncAnimation
 from tools import *
 from account import Account
+from math import floor
 
 
 class MarketInformations:

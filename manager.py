@@ -97,6 +97,7 @@ class Manager:
         availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
         for key, cost in zip(self.wallets.keys(), availables):
             self.infos[key]['available'] = cost * 0.99
+        asyncio.sleep(1)
         totals = await asyncio.gather(*(w.get_crossed_total_available() for w in self.wallets.values()))
         for key, cost in zip(self.wallets.keys(), totals):
             self.infos[key]['total'] = cost * 0.99

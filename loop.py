@@ -113,13 +113,15 @@ async def main():
                 is_open_since[symbol] = 0
                 has_been_closed[symbol] = False
 
-        await m.update_cost_datas()
-        await m.calculate_min_amounts()
-
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
                 s[symbol].clean()
             execution_logger.info("Lists cleaned")
+        elif (start_time // 60) % 120 == 60:
+            await m.calculate_min_amounts()
+            execution_logger.info("Min amounts updated")
+
+        await m.update_cost_datas()
 
         catVars = ""
         for symbol in symbols:
@@ -170,13 +172,15 @@ async def main():
             if is_open_since[symbol]:
                 opened = True
 
-        await m.update_cost_datas()
-        await m.calculate_min_amounts()
-
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
                 s[symbol].clean()
-            execution_logger.info("Lists cleaned")          
+            execution_logger.info("Lists cleaned")
+        elif (start_time // 60) % 120 == 60:
+            await m.calculate_min_amounts()
+            execution_logger.info("Min amounts updated")
+
+        await m.update_cost_datas()         
 
         execution_logger.info(time.time() - start_time) # execution time
 

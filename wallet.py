@@ -340,6 +340,11 @@ class Wallet:
         """
 
 
+    async def get_crossed_total_available(self):
+        total = await self.exchange.fetch_total_balance()
+        return total['USDT']
+
+
     async def checkPositions(self): # À tester 
         """Vérifie les positions ouvertes sur le compte.
         Les positions peuvent être les achats en future / margin / swap
@@ -369,8 +374,6 @@ class Wallet:
                 symbol=symbol+':USDT',
                 limit=limit
             )
-
-            print(positions)
 
             for p in positions:
                 h += f"{p['symbol']} {p['side']}\n"

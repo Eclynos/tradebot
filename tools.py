@@ -1,5 +1,4 @@
 import requests, csv, time
-from math import floor
 
 def left(symbol):
     return symbol.split("/")[0]

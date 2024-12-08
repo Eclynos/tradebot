@@ -16,16 +16,20 @@ async def main():
     await mi.init()
     await w.init()
 
-    balance = await w.exchange.fetch_balance()
-    free = await w.exchange.fetch_free_balance()
-    total = await w.exchange.fetch_total_balance()
-    used = await w.exchange.fetch_used_balance()
-    print(float(balance['info'][0]['crossedMaxAvailable']))
-    print(free)
-    print(total)
-    print(used)
-    print(total['USDT'] - used['USDT'])
-    print(total['USDT'] - float(balance['info'][0]['crossedMaxAvailable']))
+    min_amounts = {}
+
+    await mi.exchange.load_markets()
+    for symbol in symbols:
+        market = mi.exchange.market(symbol + ':USDT')
+        min_amounts[symbol] = market['limits']['amount']['min']
+        """
+        if await mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']) > 6:
+            min_amounts[symbol] = market['limits']['amount']['min']
+        else:
+            min_amounts[symbol] = 0
+        """
+
+    print(min_amounts)
 
     await mi.account.disconnect()
     await w.account.disconnect()
@@ -36,8 +40,3 @@ if __name__ == "__main__":
 
 
 # await mi.chart_visualisation("RENDER/USDT", "1m", time_frame_to_ms("2h"), 3)
-
-
-# fetch_free_balance() donne le coût restant de toutes les cryptos -> super pratique
-# pareil pour total_balance
-# regarder used_balance aussi

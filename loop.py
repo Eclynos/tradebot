@@ -113,7 +113,7 @@ async def main():
                 is_open_since[symbol] = 0
                 has_been_closed[symbol] = False
 
-        await m.update_available_cost()
+        await m.update_cost_datas()
         await m.calculate_min_amounts()
 
         if (start_time // 60) % 120 == 0:
@@ -170,7 +170,7 @@ async def main():
             if is_open_since[symbol]:
                 opened = True
 
-        await m.update_available_cost()
+        await m.update_cost_datas()
         await m.calculate_min_amounts()
 
         if (start_time // 60) % 120 == 0:
@@ -190,3 +190,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# On trade le pourcentage demandé du total du wallet
+#  Si ce pourcentage est inférieur on essaie de trade ce qu'il reste

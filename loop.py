@@ -88,24 +88,28 @@ async def main():
             fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
             new_candles = await asyncio.gather(*fetch_tasks)
         except:
-            new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            try:
+                new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            except:
+                execution_logger.info("No connection")
 
-        for i, symbol in enumerate(symbols):
-            s[symbol].candles = s[symbol].candles[1:]
-            s[symbol].candles.append(dict(zip(keys, new_candles[i])))
-            s[symbol].updateLists()
-            if is_open_since[symbol]:
-                if s[symbol].sellingEvaluation(is_open_since[symbol]):
-                    trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
-                    has_been_closed[symbol] = True
-                    #nb = await m.sell_swap(symbol)
-                    #trade_logger.info(f"{nb} wallets sold {symbol}")
-            else:
-                if s[symbol].buyingEvaluation():
-                    trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)}")
-                    is_open_since[symbol] = 1
-                    #nb = await m.buy_swap(symbol)
-                    #trade_logger.info(f"{nb} wallets bought {symbol}")
+        if len(new_candles) != len(symbols):
+            for i, symbol in enumerate(symbols):
+                s[symbol].candles = s[symbol].candles[1:]
+                s[symbol].candles.append(dict(zip(keys, new_candles[i])))
+                s[symbol].updateLists()
+                if is_open_since[symbol]:
+                    if s[symbol].sellingEvaluation(is_open_since[symbol]):
+                        trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
+                        has_been_closed[symbol] = True
+                        #nb = await m.sell_swap(symbol)
+                        #trade_logger.info(f"{nb} wallets sold {symbol}")
+                else:
+                    if s[symbol].buyingEvaluation():
+                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)}")
+                        is_open_since[symbol] = 1
+                        #nb = await m.buy_swap(symbol)
+                        #trade_logger.info(f"{nb} wallets bought {symbol}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
@@ -151,17 +155,21 @@ async def main():
             fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
             new_candles = await asyncio.gather(*fetch_tasks)
         except:
-            new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            try:
+                new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            except:
+                execution_logger.info("No connection")
 
-        for i, symbol in enumerate(symbols):
-            s[symbol].candles = s[symbol].candles[1:]
-            s[symbol].candles.append(dict(zip(keys, new_candles[i])))
-            s[symbol].updateLists()
-            if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol]):
-                trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
-                has_been_closed[symbol] = True
-                #nb = await m.sell_swap(symbol)
-                #trade_logger.info(f"{nb} wallets sold {symbol}")
+        if len(new_candles) != len(symbols):
+            for i, symbol in enumerate(symbols):
+                s[symbol].candles = s[symbol].candles[1:]
+                s[symbol].candles.append(dict(zip(keys, new_candles[i])))
+                s[symbol].updateLists()
+                if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol]):
+                    trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
+                    has_been_closed[symbol] = True
+                    #nb = await m.sell_swap(symbol)
+                    #trade_logger.info(f"{nb} wallets sold {symbol}")
 
         opened = False
         for symbol in symbols:
@@ -180,7 +188,7 @@ async def main():
             await m.calculate_min_amounts()
             execution_logger.info("Min amounts updated")
 
-        await m.update_cost_datas()         
+        await m.update_cost_datas()    
 
         execution_logger.info(time.time() - start_time) # execution time
 
@@ -194,6 +202,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# On trade le pourcentage demandé du total du wallet
-#  Si ce pourcentage est inférieur on essaie de trade ce qu'il reste

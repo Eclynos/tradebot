@@ -25,17 +25,23 @@ class Manager:
 
 
     async def start(self):
-        await self.mi.init()
-        for w in self.wallets.values():
-            await w.init()
-        await self.calculate_min_amounts()
-        await self.update_cost_datas()
+        try:
+            await self.mi.init()
+            for w in self.wallets.values():
+                await w.init()
+            await self.calculate_min_amounts()
+            await self.update_cost_datas()
+        except Exception as e:
+            raise ValueError(e)
 
 
     async def end(self):
-        await self.mi.account.disconnect()
-        for w in self.wallets.values():
-            await w.account.disconnect()
+        try:
+            await self.mi.account.disconnect()
+            for w in self.wallets.values():
+                await w.account.disconnect()
+        except Exception as e:
+            raise ValueError(e)
 
 
 # OPTIONS / CALCULATIONS
@@ -49,23 +55,28 @@ class Manager:
 
     async def calculate_amounts(self, symbol):
         """Calcule les montants correspondants aux coûts à acheter"""
-        price = await self.mi.getPrice(symbol)
-        for key in self.wallets:
-            self.infos[key]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[key]['cost'], price)
-
+        try:
+            price = await self.mi.getPrice(symbol)
+            for key in self.wallets:
+                self.infos[key]['amounts'][symbol] = self.mi.currency_equivalence(self.infos[key]['cost'], price)
+        except Exception as e:
+            print(e)
 
     async def calculate_min_amounts(self):
         """Rempli le dictionnaire des montants de trading minimums:
         Avec l'amount si l'équivalent en USDT est supérieur à 5$
         avec None sinon
         """
-        await self.mi.exchange.load_markets()
-        for symbol in self.symbols:
-            market = self.mi.exchange.market(symbol + ':USDT')
-            if await self.mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']) > 6:
-                self.min_amounts[symbol] = market['limits']['amount']['min']
-            else:
-                self.min_amounts[symbol] = 0
+        try:
+            await self.mi.exchange.load_markets()
+            for symbol in self.symbols:
+                market = self.mi.exchange.market(symbol + ':USDT')
+                if await self.mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']) > 6:
+                    self.min_amounts[symbol] = market['limits']['amount']['min']
+                else:
+                    self.min_amounts[symbol] = 0
+        except Exception as e:
+            print(e)
 
 
     async def leverage(self, factor_list):
@@ -94,13 +105,16 @@ class Manager:
 
 
     async def update_cost_datas(self):
-        availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
-        for key, cost in zip(self.wallets.keys(), availables):
-            self.infos[key]['available'] = cost * 0.99
-        await asyncio.sleep(1)
-        totals = await asyncio.gather(*(w.get_crossed_total_available() for w in self.wallets.values()))
-        for key, cost in zip(self.wallets.keys(), totals):
-            self.infos[key]['total'] = cost * 0.99
+        try:
+            availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
+            for key, cost in zip(self.wallets.keys(), availables):
+                self.infos[key]['available'] = cost * 0.99
+            await asyncio.sleep(1)
+            totals = await asyncio.gather(*(w.get_crossed_total_available() for w in self.wallets.values()))
+            for key, cost in zip(self.wallets.keys(), totals):
+                self.infos[key]['total'] = cost * 0.99
+        except Exception as e:
+            print(e)
 
 
 # ORDER MANAGEMENT

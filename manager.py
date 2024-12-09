@@ -102,6 +102,19 @@ class Manager:
                 self.infos[key]['factor'] = w["factor"] # preset leverage factor
                 self.infos[key]['amounts'] = {symbol: 0 for symbol in self.symbols}
                 self.infos[key]['buyed?'] = {symbol: False for symbol in self.symbols}
+    
+
+    async def load_positions(self, timeLoop):
+        is_open_since = {symbol: 0 for symbol in self.symbols}
+
+        for key, w in self.wallets.items():
+            positions = await w.exchange.fetch_positions()
+            for p in positions:
+                symbol = p['symbol'].split(":")[0]
+                self.infos[key]['buyed?'][symbol] = True
+                if is_open_since[symbol] < ((time.time() * 1000) - p['timestamp']) // (timeLoop * 60000):
+                    is_open_since[symbol] = int(((time.time() * 1000) - p['timestamp']) // (timeLoop * 60000))
+        return is_open_since
 
 
     async def update_cost_datas(self):
@@ -212,7 +225,7 @@ class Manager:
 # INFORMATIONS GIVERS
 
 
-    async def positions(self):
+    async def tell_positions(self):
         positions = [None] * len(self.wallets)
 
         try:
@@ -229,6 +242,7 @@ class Manager:
                     print(f"ID: {p['id']}, Side: {p['side']}")
                     print(f"Leverage: {p['leverage']}, Liquidation Price: {p['liquidationPrice']}")
                     print(f"Pnl: {p['unrealizedPnl']}")
+                    print(f"{p['datetime']}")
             else:
                 print(f"No positions are open on wallet {key}")
 

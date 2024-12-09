@@ -16,20 +16,8 @@ async def main():
     await mi.init()
     await w.init()
 
-    min_amounts = {}
-
-    await mi.exchange.load_markets()
-    for symbol in symbols:
-        market = mi.exchange.market(symbol + ':USDT')
-        min_amounts[symbol] = market['limits']['amount']['min']
-        """
-        if await mi.actual_crypto_equivalence(symbol, market['limits']['amount']['min']) > 6:
-            min_amounts[symbol] = market['limits']['amount']['min']
-        else:
-            min_amounts[symbol] = 0
-        """
-
-    print(min_amounts)
+    price = await mi.getPrice("POPCAT/USDT")
+    print(price)
 
     await mi.account.disconnect()
     await w.account.disconnect()

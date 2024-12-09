@@ -59,7 +59,7 @@ class MarketInformations:
     async def getPrice(self, symbol):
         """Donne le prix instantané d'un symbole par rapport à une monnaie."""
         try:
-            ticker = await self.exchange.fetch_ticker(symbol)
+            ticker = await self.exchange.fetch_ticker(symbol + ":USDT")
             return ticker['last']
         except Exception as e:
             print(f"Erreur lors de la récupération du prix de {symbol} : {e}")

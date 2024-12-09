@@ -20,16 +20,19 @@ async def main():
 
     await m.start()
 
-    result = await m.buy_swap(symbol)
-    print(result)
+    #result = await m.buy_swap(symbol)
+    #print(result)
 
-    time.sleep(16)
+    #time.sleep(16)
 
-    result = await m.sell_swap(symbol)
-    print(result)
+    is_open_since = await m.load_positions(5)
+    print(is_open_since)
 
-    last_trade = await m.last_trades(symbol)
-    print(last_trade)
+    #result = await m.sell_swap(symbol)
+    #print(result)
+
+    #last_trade = await m.last_trades(symbol)
+    #print(last_trade)
 
     await m.end()
     

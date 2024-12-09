@@ -53,7 +53,6 @@ async def main():
     timeFrame = "5m" # in minutes
     timeLoop = int(timeFrame[:-1])
 
-    is_open_since = {symbol: 0 for symbol in symbols}
     has_been_closed = {symbol: False for symbol in symbols}
 
     start_time = time.time()
@@ -67,7 +66,12 @@ async def main():
         s[symbol].candles = [dict(zip(keys, candle)) for candle in await m.mi.fetch_candles_amount(symbol, timeFrame, 2104, start_time)]
         s[symbol].candles = s[symbol].candles[:-1]
 
+    is_open_since = {symbol: 0 for symbol in symbols}
+    #is_open_since = await m.load_positions(timeLoop)
+    #print(is_open_since)
+
     execution_time = time.time() - start_time
+
     execution_logger.info(f"Start : {execution_time}")
 
     if execution_time > 37:

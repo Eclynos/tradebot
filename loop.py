@@ -38,6 +38,7 @@ execution_logger.addHandler(execution_handler)
 async def main():
     global settings
     instruction_file = open(settings["file_names"]["instruction"], "w+", encoding='utf-8')
+    instruction_file.seek(0)
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]
@@ -97,7 +98,7 @@ async def main():
             except:
                 execution_logger.info("No connection")
 
-        if len(new_candles) != len(symbols):
+        if len(new_candles) == len(symbols):
             for i, symbol in enumerate(symbols):
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
@@ -115,6 +116,8 @@ async def main():
                         #nb = await m.buy_swap(symbol)
                         #trade_logger.info(f"{nb} wallets bought {symbol}")
 
+        execution_logger.info(str(s["BTC/USDT"].candles[-1])+"\n"+str(s["BTC/USDT"].ma[-1]), str(s["BTC/USDT"].sd[-1]))
+
         for symbol in symbols:
             if has_been_closed[symbol]:
                 #trade_logger.info(await m.last_trades(symbol))
@@ -131,12 +134,7 @@ async def main():
 
         await m.update_cost_datas()
 
-        catVars = ""
-        for symbol in symbols:
-            if is_open_since[symbol]:
-                catVars += f"\n{symbol}: {is_open_since[symbol]} " 
-
-        execution_logger.info(f"{time.time() - start_time}{catVars}")
+        #execution_logger.info(time.time() - start_time)
 
         if instruction_file.read() == "stop":
             execution_logger.info("Stopping bot")

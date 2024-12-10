@@ -12,11 +12,13 @@ async def main():
     if not ping_test():
         print("erreur")
         return
+    
+    symbol = "BTC/USDT"
 
     await mi.init()
     await w.init()
 
-
+    """
     with open('liste.json', 'r+') as f:
         data = json.load(f)
         f.seek(0)
@@ -29,6 +31,12 @@ async def main():
         price = await mi.getPrice("SOL/USDT")
         data['liste'].append(price)
         json.dump(data, f)
+    """
+
+    candles = await mi.fetch_candles_amount(symbol, "5m", 3, time.time())
+    candle = await mi.before_last_candle(symbol, "5m", time.time())
+    print(candles)
+    print(candle)
 
 
     await mi.account.disconnect()

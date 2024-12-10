@@ -90,11 +90,11 @@ async def main():
         is_open_since = {k: v + 1 if v > 0 else v for k, v in is_open_since.items()}
 
         try:
-            fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
             new_candles = await asyncio.gather(*fetch_tasks)
         except:
             try:
-                new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+                new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
             except:
                 execution_logger.info("No connection")
 
@@ -102,6 +102,13 @@ async def main():
             for i, symbol in enumerate(symbols):
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
+                if symbol == "BTC/USDT":
+                    #candles = await m.mi.fetch_candles_amount(symbol, "5m", 3, time.time())
+                    #candle = await m.mi.before_last_candle(symbol, "5m", time.time())
+                    #print(candles)
+                    #print(candle)
+                    for i in range(5):
+                        print(s[symbol].candles[-i])
                 s[symbol].updateLists()
                 if is_open_since[symbol]:
                     if s[symbol].sellingEvaluation(is_open_since[symbol]):
@@ -116,7 +123,7 @@ async def main():
                         #nb = await m.buy_swap(symbol)
                         #trade_logger.info(f"{nb} wallets bought {symbol}")
 
-        execution_logger.info(str(s["BTC/USDT"].candles[-1])+"\n"+str(s["BTC/USDT"].ma[-1])+"\n"+str(s["BTC/USDT"].sd[-1]))
+        execution_logger.info(f"{s['BTC/USDT'].candles[-1]}\n{s['BTC/USDT'].ma[-1]}\n{s['BTC/USDT'].sd[-1]}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
@@ -139,6 +146,7 @@ async def main():
         if instruction_file.read() == "stop":
             execution_logger.info("Stopping bot")
             break
+        instruction_file.seek(0)
 
         wait_next_frame(timeLoop)
 

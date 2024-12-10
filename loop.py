@@ -37,7 +37,7 @@ execution_logger.addHandler(execution_handler)
 
 async def main():
     global settings
-    instruction_file = open(settings["file_names"]["instruction"], "a+", encoding='utf-8')
+    instruction_file = open(settings["file_names"]["instruction"], "w+", encoding='utf-8')
 
     symbols = read_symbols()
     keys = ["date", "open", "high", "low", "price", "volume"]

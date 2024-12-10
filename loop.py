@@ -116,7 +116,7 @@ async def main():
                         #nb = await m.buy_swap(symbol)
                         #trade_logger.info(f"{nb} wallets bought {symbol}")
 
-        execution_logger.info(str(s["BTC/USDT"].candles[-1])+"\n"+str(s["BTC/USDT"].ma[-1]), str(s["BTC/USDT"].sd[-1]))
+        execution_logger.info(str(s["BTC/USDT"].candles[-1])+"\n"+str(s["BTC/USDT"].ma[-1])+"\n"+str(s["BTC/USDT"].sd[-1]))
 
         for symbol in symbols:
             if has_been_closed[symbol]:

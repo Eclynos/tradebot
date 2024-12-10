@@ -33,10 +33,15 @@ async def main():
         json.dump(data, f)
     """
 
-    candles = await mi.fetch_candles_amount(symbol, "5m", 3, time.time())
-    candle = await mi.before_last_candle(symbol, "5m", time.time())
-    print(candles)
-    print(candle)
+    """
+    while True:
+        candle = await mi.before_last_candle(symbol, "5m", time.time())
+        #print(candle)
+        print(time.time())
+        time.sleep(1)
+    """
+    wait_next_frame(1)
+    print(time.time())
 
 
     await mi.account.disconnect()

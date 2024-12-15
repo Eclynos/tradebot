@@ -107,7 +107,7 @@ async def main():
                     #candle = await m.mi.before_last_candle(symbol, "5m", time.time())
                     #print(candles)
                     #print(candle)
-                    for i in range(5):
+                    for i in range(1, 6):
                         print(s[symbol].candles[-i])
                 s[symbol].updateLists()
                 if is_open_since[symbol]:

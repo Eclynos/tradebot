@@ -85,6 +85,7 @@ async def main():
     wait_next_frame(timeLoop)
 
     while True:
+        time.sleep(1)
         start_time = time.time()
 
         is_open_since = {k: v + 1 if v > 0 else v for k, v in is_open_since.items()}
@@ -102,13 +103,6 @@ async def main():
             for i, symbol in enumerate(symbols):
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
-                if symbol == "BTC/USDT":
-                    #candles = await m.mi.fetch_candles_amount(symbol, "5m", 3, time.time())
-                    #candle = await m.mi.before_last_candle(symbol, "5m", time.time())
-                    #print(candles)
-                    #print(candle)
-                    for i in range(1, 6):
-                        print(s[symbol].candles[-i])
                 s[symbol].updateLists()
                 if is_open_since[symbol]:
                     if s[symbol].sellingEvaluation(is_open_since[symbol]):
@@ -123,7 +117,7 @@ async def main():
                         #nb = await m.buy_swap(symbol)
                         #trade_logger.info(f"{nb} wallets bought {symbol}")
 
-        execution_logger.info(f"{s['BTC/USDT'].candles[-1]}\n{s['BTC/USDT'].ma[-1]}\n{s['BTC/USDT'].sd[-1]}")
+        execution_logger.info(s['BTC/USDT'].candles[-1])
 
         for symbol in symbols:
             if has_been_closed[symbol]:

@@ -3,7 +3,7 @@ from tools import *
 import time
 
 class Strategy: 
-    def __init__(self, maSize=100, wAvgSize=2000, power1=0.995, power2=0.99, buyingBollinger=1.5, sellingBollinger1 = 0, sellingBollinger2=1) -> None:
+    def __init__(self, maSize=100, wAvgSize=2000, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1 = 0, sellingBollinger2=1, trendSize=100) -> None:
         self.dA = DataAnalysis()
         self.sd = []
         self.ma = []
@@ -15,6 +15,7 @@ class Strategy:
         self.buyingBollinger = buyingBollinger
         self.sellingBollinger1 = sellingBollinger1
         self.sellingBollinger2 = sellingBollinger2
+        self.trendSize = trendSize
 
         self.candles = [] # liste de dict de bougies
 
@@ -39,7 +40,7 @@ class Strategy:
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):
             if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] 
             and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] 
-            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == 1
+            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1
             and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]
             ):
                 buyTimes.append(self.candles[i]["date"])
@@ -52,7 +53,7 @@ class Strategy:
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 
-            and self.dA.trend(self.candles[-self.movingAverageSize:], 1/2) == 1
+            and self.dA.trend(self.candles[-self.trendSize:], 1/2) == 1
             and self.candles[-1]["price"] > bb[-1]["price"]
             ):
             return True

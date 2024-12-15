@@ -4,7 +4,12 @@ from tools import *
 import time
 
 if __name__ == "__main__":
-    coinCodes = ["ATOM", "BTC" , "DOGE", "DOT", "ETH", "ICP", "LINK", "ETH", "XRP"] 
+    coinCodes = [    "SHIB",
+    "ATOM",
+    "AVAX",
+    "BNB",
+    "LINK",
+    "SOL"] 
     allData = []
 
     for coinCode in coinCodes:
@@ -18,9 +23,9 @@ if __name__ == "__main__":
     
     da = DataAnalysis()
     currentDate = int(time.time())
-    startIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("18M"), "date")]
+    startIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("16M"), "date")]
                   for j in range(len(coinCodes))]
-    endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("6M"), "date")]
+    endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("4M"), "date")]
                  for j in range(len(coinCodes))]
     
     
@@ -54,40 +59,46 @@ if __name__ == "__main__":
         for index in range(len(startIndex[0])):
             avgHoldTime=0
             solList = []
+            wallet = 1
             if startIndex[cc][index] > 2100:
                 nbIndexBoughtAgo = -1
-                wallet = 1
-                s = Strategy(100, 2000, 0.995, 0.99, 1.5, 0,  1)
+                s = Strategy(100, 2000, 0.94, 0.94, 1.5, 0, 1, 100)
                 tradeList = []
+
+                s.candles = usableData[cc][startIndex[cc][index]-2104:startIndex[cc][index]+1]
+                s.createLists()
+
                 for i in range(startIndex[cc][index], endIndex[cc][index]-1):
-                    if (s.buyingEvaluation(usableData[cc][i-2000:i+1]) 
+                    s.candles = usableData[cc][i-2000:i+1]
+                    s.updateLists()
+                    if (s.buyingEvaluation() 
                         and (len(tradeList) == 0 or usableData[cc][i]["date"] > tradeList[-1]["date"] + time_frame_to_s("0m"))):
                         tradeList.append(usableData[cc][i])
                         nbIndexBoughtAgo = 0
                         s.clean()
-                        # print("bought : ", i)
+                        # print("bought : ", usableData[cc][i]["date"])
                     
                     
-                    if len(tradeList) >= 1 and s.sellingEvaluation(usableData[cc][i-2000:i+1], nbIndexBoughtAgo):
-                        wallet += 0.5*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0012)
+                    if len(tradeList) >= 1 and s.sellingEvaluation(nbIndexBoughtAgo):
+                        wallet += 0.5*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0008)
                         solList.append([tradeList[0]["date"], usableData[cc][i]["date"], usableData[cc][tradeList[0]["index"]]["price"], usableData[cc][i]["price"]])
                         tradeList.pop()
-                        # print("sold : ", i)
+                        # print("sold : ", usableData[cc][i]["date"])
                     
-                    if i%10000 == 0:
-                        print("buying progress :", 100*(i-startIndex[cc][index])/(endIndex[cc][index]-startIndex[cc][index]), "%")
+                    # if i%10000 == 0:
+                        # print("buying progress :", 100*(i-startIndex[cc][index])/(endIndex[cc][index]-startIndex[cc][index]), "%")
 
                     if nbIndexBoughtAgo != -1:
                         nbIndexBoughtAgo+=1
-              
-                # sell = s.batchSellingEvaluation(usableData[cc][startIndex[cc][index]: endIndex[cc][index]], tradeList)
-                for a in range(len(solList)):
-                    avgHoldTime += (solList[a][1]-solList[a][0])/len(solList)
+        
+            # sell = s.batchSellingEvaluation(usableData[cc][startIndex[cc][index]: endIndex[cc][index]], tradeList)
+            for a in range(len(solList)):
+                avgHoldTime += (solList[a][1]-solList[a][0])/len(solList)
 
-                print("wallet after coin :", wallet, "avg Hold Time :", avgHoldTime)
+            print(coinCodes[cc], "| wallet after coin :", wallet, "| avg Hold Time :", avgHoldTime)
 
-                nbOfTrades += len(solList)
-                som*=wallet
+            nbOfTrades += len(solList)
+            som*=wallet
 
     
     print(som, nbOfTrades)

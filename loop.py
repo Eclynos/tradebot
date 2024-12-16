@@ -44,7 +44,7 @@ async def main():
     instruction_file.truncate(0)
     instruction_file.seek(0)
 
-    symbols = read_symbols()
+    symbols = read_symbols() # nombre max de symboles : 21
     keys = ["date", "open", "high", "low", "price", "volume"]
     m = Manager(symbols, settings)
     s = {symbol: Strategy() for symbol in symbols}
@@ -86,7 +86,6 @@ async def main():
         s[symbol].createLists()
         s[symbol].candles = s[symbol].candles[-2001:]
 
-    last_frame_without_connection = False
     wait_next_frame(timeLoop)
 
     while True:
@@ -103,7 +102,11 @@ async def main():
                 new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
             except:
                 execution_logger.info("No connection")
-                last_frame_without_connection = True
+                time.sleep(timeLoop/5)
+                try:
+                    new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
+                except:
+                    execution_logger.info("Totally disconnected")
 
         if len(new_candles) == len(symbols):
             for i, symbol in enumerate(symbols):

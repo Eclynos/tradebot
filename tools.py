@@ -1,4 +1,5 @@
 import requests, csv, time
+from math import ceil
 
 def left(symbol):
     return symbol.split("/")[0]
@@ -86,4 +87,4 @@ def read_symbols():
 def wait_next_frame(timeLoop=5):
     """Wait for next time frame comparing to world time"""
     actual = time.time() % (60 * timeLoop)
-    time.sleep(60 * timeLoop - actual)
+    time.sleep(ceil(60 * timeLoop - actual))

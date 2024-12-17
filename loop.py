@@ -55,7 +55,7 @@ async def main():
 
     await m.start()
 
-    timeFrame = "1m" # in minutes
+    timeFrame = "5m" # in minutes
     timeLoop = int(timeFrame[:-1])
 
     has_been_closed = {symbol: False for symbol in symbols}

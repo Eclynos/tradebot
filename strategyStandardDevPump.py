@@ -48,35 +48,53 @@ class Strategy:
         return buyTimes
             
 
-    def buyingEvaluation(self):
-        bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], self.buyingBollinger)
+    def buyingEvaluation(self, buyType):
+        if buyType not in ["pump", "dip"]:
+            raise ValueError("buyType must me 'pump' or 'dip'")
+
+        if buyType=="pump":
+            bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], self.buyingBollinger)
+        elif buyType=="dip":
+            bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], -self.buyingBollinger)
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 
-            and self.dA.trend(self.candles[-self.trendSize:], 1/2) == 1
-            and self.candles[-1]["price"] > bb[-1]["price"]
+            and ((buyType=="pump"  and self.candles[-1]["price"] > bb[-1]["price"])
+              or (buyType=="dip" and self.candles[-1]["price"] < bb[-1]["price"]))
+
             ):
-            return True
+            if ((buyType=="pump"  and self.dA.trend(self.candles[-self.trendSize:], 1/2) == 1) 
+             or (buyType=="dip" and self.dA.trend(self.candles[-self.trendSize:], 1/2) == -1)):
+                return True
+
         return False
 
-    def sellingEvaluation(self, numberOfIndexBoughtAgo):
+    def sellingEvaluation(self, numberOfIndexBoughtAgo, boughtType):
+        if boughtType not in ["pump", "dip"]:
+            raise ValueError("buyType must me 'pump' or 'dip'")
+        
         if len(self.sd) < 2 or numberOfIndexBoughtAgo < 0:
             return False
         
-        bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sellingBollinger1)
-        bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
+        if boughtType=="pump":
+            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sellingBollinger1)
+            bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
+        elif boughtType=="dip":
+            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], -self.sellingBollinger1)
+            bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
 
         wentUnderLowBB = False
         for i in range(1, numberOfIndexBoughtAgo):
-            if self.candles[-i]["price"] < bbBas[-i]["price"]:
+            if ((boughtType=="pump" and self.candles[-i]["price"] < bbBas[-i]["price"])
+            or (boughtType=="dip" and self.candles[-i]["price"] > bbBas[-i]["price"])):
                 wentUnderLowBB = True 
         
         if (self.sd[-2]["price"] > self.sdWeightedAvg[-2]["price"]
             and self.sd[-1]["price"] < self.sdWeightedAvg[-1]["price"]
             or 
             wentUnderLowBB
-            and self.candles[-1]["price"] > bbHaut[-1]["price"]):
-
+            and ((boughtType=="pump"  and self.candles[-1]["price"] > bbHaut[-1]["price"])
+              or (boughtType=="dip" and self.candles[-1]["price"] > bbHaut[-1]["price"]))):
             return True
         
         else :

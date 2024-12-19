@@ -187,6 +187,22 @@ class MarketInformations:
             raise ValueError(f"Error fetching candle\n{e}")
 
 
+    async def two_before_last_candles(self, symbol, timeFrame, time): # time in ms
+        """Fetch before last candle to fill a list of candles"""
+        try:
+            candles = await self.exchange.fetch_ohlcv(symbol, timeFrame, floor(time * 1000) - 3*time_frame_to_ms(timeFrame))
+            if len(candles) == 2:
+                return candles
+            elif len(candles) == 3:
+                return candles[:-1]
+            elif len(candles) == 4:
+                return candles[1:-1]
+            else:
+                raise ValueError(candles, time)
+        except Exception as e:
+            raise ValueError(f"Error fetching candle\n{e}")
+
+
     
     async def curve_visualisation(self, symbol, timeFrame, since):
         """Affiche la courbe d'une timeFrame depuis un temps donné"""

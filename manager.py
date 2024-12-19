@@ -62,6 +62,7 @@ class Manager:
         except Exception as e:
             print(e)
 
+
     async def calculate_min_amounts(self):
         """Rempli le dictionnaire des montants de trading minimums:
         Avec l'amount si l'équivalent en USDT est supérieur à 5$
@@ -170,7 +171,7 @@ class Manager:
                     break
 
 
-    async def buy_swap(self, symbol):
+    async def long_swap(self, symbol):
         """Essaie d'acheter une crypto en swap sur tous les wallets
         Renvoie le nombre d'achats effectués avec succès"""
         purchases = 0
@@ -201,7 +202,7 @@ class Manager:
         return purchases
     
     
-    async def sell_swap(self, symbol):
+    async def close_swap(self, symbol):
         """Essaie de vendre une crypto en swap sur tous les wallets
         Renvoie le nombre de ventes effectués avec succès"""
         sales = 0

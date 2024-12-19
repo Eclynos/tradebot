@@ -14,6 +14,9 @@ for name in settings["file_names"].values():
     if path.exists(name):
         remove(name)
 
+with open(settings["file_names"]["instruction"], "a+", encoding="utf-8") as f:
+    f.write("")
+
 logging.basicConfig(level=logging.INFO)
 trade_logger = logging.getLogger('trade_logger')
 execution_logger = logging.getLogger('execution_logger')
@@ -37,10 +40,11 @@ execution_logger.addHandler(execution_handler)
 
 async def main():
     global settings
-    instruction_file = open(settings["file_names"]["instruction"], "w+", encoding='utf-8')
+    instruction_file = open(settings["file_names"]["instruction"], "r+", encoding='utf-8')
+    instruction_file.truncate(0)
     instruction_file.seek(0)
 
-    symbols = read_symbols()
+    symbols = read_symbols() # nombre max de symboles : 21
     keys = ["date", "open", "high", "low", "price", "volume"]
     m = Manager(symbols, settings)
     s = {symbol: Strategy() for symbol in symbols}
@@ -99,6 +103,11 @@ async def main():
                 new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
             except:
                 execution_logger.info("No connection")
+                time.sleep(timeLoop/5)
+                try:
+                    new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
+                except:
+                    execution_logger.info("Totally disconnected")
 
         if len(new_candles) == len(symbols):
             for i, symbol in enumerate(symbols):
@@ -109,7 +118,7 @@ async def main():
                     if s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
                         trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
                         has_been_closed[symbol] = True
-                        #nb = await m.sell_swap(symbol)
+                        #nb = await m.close_swap(symbol)
                         #trade_logger.info(f"{nb} wallets sold {symbol}")
                 else:
                     if s[symbol].buyingEvaluation("dip"):
@@ -145,10 +154,10 @@ async def main():
 
         #execution_logger.info(time.time() - start_time)
 
-        if instruction_file.read() == "stop":
+        instruction_file.seek(0)
+        if instruction_file.read().strip().lower() == "stop":
             execution_logger.info("Stopping bot")
             break
-        instruction_file.seek(0)
 
         wait_next_frame(timeLoop)
 
@@ -180,7 +189,7 @@ async def main():
                 if is_open_since[symbol] != 0 and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
                     trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
                     has_been_closed[symbol] = True
-                    #nb = await m.sell_swap(symbol)
+                    #nb = await m.close_swap(symbol)
                     #trade_logger.info(f"{nb} wallets sold {symbol}")
 
         opened = False
@@ -214,3 +223,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# demander les bougies à la frame d'après dans le cas où il y a "No connection"

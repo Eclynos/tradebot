@@ -14,6 +14,9 @@ for name in settings["file_names"].values():
     if path.exists(name):
         remove(name)
 
+with open(settings["file_names"]["instruction"], "a+", encoding="utf-8") as f:
+    f.write("")
+
 logging.basicConfig(level=logging.INFO)
 trade_logger = logging.getLogger('trade_logger')
 execution_logger = logging.getLogger('execution_logger')
@@ -37,9 +40,11 @@ execution_logger.addHandler(execution_handler)
 
 async def main():
     global settings
-    instruction_file = open(settings["file_names"]["instruction"], "a+", encoding='utf-8')
+    instruction_file = open(settings["file_names"]["instruction"], "r+", encoding='utf-8')
+    instruction_file.truncate(0)
+    instruction_file.seek(0)
 
-    symbols = read_symbols()
+    symbols = read_symbols() # nombre max de symboles : 21
     keys = ["date", "open", "high", "low", "price", "volume"]
     m = Manager(symbols, settings)
     s = {symbol: Strategy() for symbol in symbols}
@@ -67,6 +72,7 @@ async def main():
         s[symbol].candles = s[symbol].candles[:-1]
 
     is_open_since = {symbol: 0 for symbol in symbols}
+    bought_type = {symbol: "" for symbol in symbols}
     #is_open_since = await m.load_positions(timeLoop)
     #print(is_open_since)
 
@@ -84,36 +90,51 @@ async def main():
     wait_next_frame(timeLoop)
 
     while True:
+        time.sleep(1)
         start_time = time.time()
 
         is_open_since = {k: v + 1 if v > 0 else v for k, v in is_open_since.items()}
 
         try:
-            fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+            fetch_tasks = [m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
             new_candles = await asyncio.gather(*fetch_tasks)
         except:
             try:
-                new_candles = [await m.mi.before_last_candle(symbol, timeFrame, floor(start_time * 1000)) for symbol in symbols]
+                new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
             except:
                 execution_logger.info("No connection")
+                time.sleep(timeLoop/5)
+                try:
+                    new_candles = [await m.mi.before_last_candle(symbol, timeFrame, start_time) for symbol in symbols]
+                except:
+                    execution_logger.info("Totally disconnected")
 
-        if len(new_candles) != len(symbols):
+        if len(new_candles) == len(symbols):
             for i, symbol in enumerate(symbols):
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
                 s[symbol].updateLists()
-                if is_open_since[symbol]:
-                    if s[symbol].sellingEvaluation(is_open_since[symbol]):
-                        trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
+                if is_open_since[symbol] != 0:
+                    if s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
+                        trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
                         has_been_closed[symbol] = True
-                        #nb = await m.sell_swap(symbol)
+                        #nb = await m.close_swap(symbol)
                         #trade_logger.info(f"{nb} wallets sold {symbol}")
                 else:
-                    if s[symbol].buyingEvaluation():
-                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)}")
+                    if s[symbol].buyingEvaluation("dip"):
+                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)} | strategy used : dip")
                         is_open_since[symbol] = 1
+                        bought_type[symbol] = "dip"
                         #nb = await m.buy_swap(symbol)
                         #trade_logger.info(f"{nb} wallets bought {symbol}")
+                    elif s[symbol].buyingEvaluation("pump"):
+                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)} | strategy used : pump")
+                        is_open_since[symbol] = 1
+                        bought_type[symbol] = "pump"
+                        #nb = await m.buy_swap(symbol)
+                        #trade_logger.info(f"{nb} wallets bought {symbol}")
+
+        execution_logger.info(s['BTC/USDT'].candles[-1])
 
         for symbol in symbols:
             if has_been_closed[symbol]:
@@ -131,14 +152,10 @@ async def main():
 
         await m.update_cost_datas()
 
-        catVars = ""
-        for symbol in symbols:
-            if is_open_since[symbol]:
-                catVars += f"\n{symbol}: {is_open_since[symbol]} " 
+        #execution_logger.info(time.time() - start_time)
 
-        execution_logger.info(f"{time.time() - start_time}{catVars}")
-
-        if instruction_file.read() == "stop":
+        instruction_file.seek(0)
+        if instruction_file.read().strip().lower() == "stop":
             execution_logger.info("Stopping bot")
             break
 
@@ -169,10 +186,10 @@ async def main():
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
                 s[symbol].updateLists()
-                if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol]):
-                    trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)}")
+                if is_open_since[symbol] != 0 and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
+                    trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
                     has_been_closed[symbol] = True
-                    #nb = await m.sell_swap(symbol)
+                    #nb = await m.close_swap(symbol)
                     #trade_logger.info(f"{nb} wallets sold {symbol}")
 
         opened = False
@@ -206,3 +223,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# demander les bougies à la frame d'après dans le cas où il y a "No connection"

@@ -1,7 +1,7 @@
 from marketInfo import MarketInformations
 from wallet import Wallet
 from tools import *
-import asyncio, time, datetime
+import asyncio, time, datetime, json
 
 
 async def main():
@@ -12,12 +12,37 @@ async def main():
     if not ping_test():
         print("erreur")
         return
+    
+    symbol = "BTC/USDT"
 
     await mi.init()
     await w.init()
 
-    price = await mi.getPrice("POPCAT/USDT")
-    print(price)
+    """
+    with open('liste.json', 'r+') as f:
+        data = json.load(f)
+        f.seek(0)
+        if not 'liste' in data:
+            data['liste'] = []
+        price = await mi.getPrice("POPCAT/USDT")
+        data['liste'].append(price)
+        price = await mi.getPrice("BTC/USDT")
+        data['liste'].append(price)
+        price = await mi.getPrice("SOL/USDT")
+        data['liste'].append(price)
+        json.dump(data, f)
+    """
+
+    """
+    while True:
+        candle = await mi.before_last_candle(symbol, "5m", time.time())
+        #print(candle)
+        print(time.time())
+        time.sleep(1)
+    """
+    wait_next_frame(1)
+    print(time.time())
+
 
     await mi.account.disconnect()
     await w.account.disconnect()

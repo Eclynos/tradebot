@@ -22,7 +22,7 @@ with open("trade_logs.log", "r") as f:
                     trades_done += 1
                     last_price = float(buy_prices[match.group(1)])
                     new_price = float(match_price.group(1))
-                    percentage_difference = (new_price - last_price) / last_price / 4
+                    percentage_difference = (new_price - last_price) / last_price / 5
                     result_flat += percentage_difference
                     result_reinvested *= 1+percentage_difference
                     del buy_prices[match.group(1)]

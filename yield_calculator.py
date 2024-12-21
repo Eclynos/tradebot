@@ -22,9 +22,9 @@ with open("trade_logs.log", "r") as f:
                     trades_done += 1
                     last_price = float(buy_prices[match.group(1)])
                     new_price = float(match_price.group(1))
-                    percentage_difference = (new_price - last_price) / last_price * 100
+                    percentage_difference = (new_price - last_price) / last_price
                     result_flat += percentage_difference
-                    result_reinvested *= percentage_difference
+                    result_reinvested *= 1+percentage_difference
                     del buy_prices[match.group(1)]
                 else:
                     raise ValueError("Error of re")
@@ -36,5 +36,5 @@ with open("trade_logs.log", "r") as f:
 result_flat /= trades_done
 
 print(f"Nombre de trades effectués:{trades_done}")
-print(f"Pourcentage de gain flat sur la période testée: {result_flat}")
-print(f"Pourcentage de gain en réinvestissant sur la période testée: {result_reinvested}")
+print(f"Pourcentage de gain flat sur la période testée: {result_flat*100}%")
+print(f"Pourcentage de gain en réinvestissant sur la période testée: {result_reinvested*100}%")

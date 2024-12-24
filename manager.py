@@ -65,7 +65,7 @@ class Manager:
 
     async def calculate_min_amounts(self):
         """Rempli le dictionnaire des montants de trading minimums:
-        Avec l'amount si l'équivalent en USDT est supérieur à 5$
+        Avec l'amount si l'équivalent en USDT est supérieur à 5$ancienne
         avec None sinon
         """
         try:
@@ -107,15 +107,17 @@ class Manager:
 
     async def load_positions(self, timeLoop):
         is_open_since = {symbol: 0 for symbol in self.symbols}
+        bought_type = {symbol: "" for symbol in self.symbols}
 
         for key, w in self.wallets.items():
             positions = await w.exchange.fetch_positions()
             for p in positions:
                 symbol = p['symbol'].split(":")[0]
                 self.infos[key]['buyed?'][symbol] = True
+                bought_type[symbol] = "dip"
                 if is_open_since[symbol] < ((time.time() * 1000) - p['timestamp']) // (timeLoop * 60000):
                     is_open_since[symbol] = int(((time.time() * 1000) - p['timestamp']) // (timeLoop * 60000))
-        return is_open_since
+        return is_open_since, bought_type
 
 
     async def update_cost_datas(self):

@@ -142,7 +142,9 @@ async def main():
         if (start_time // 60) % 120 == 0:
             for symbol in symbols:
                 s[symbol].clean()
-            execution_logger.info("Lists cleaned")
+            with open('settings.json', 'r') as f:
+                await m.update_settings(json.load(f))
+            execution_logger.info("Lists cleaned and settings updated")
         elif (start_time // 60) % 120 == 60:
             await m.calculate_min_amounts()
             execution_logger.info("Min amounts updated")

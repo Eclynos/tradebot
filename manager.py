@@ -31,6 +31,7 @@ class Manager:
                 await w.init()
             await self.calculate_min_amounts()
             await self.update_cost_datas()
+            await self.leverage()
         except Exception as e:
             raise ValueError(e)
 
@@ -80,10 +81,10 @@ class Manager:
             print(e)
 
 
-    async def leverage(self, factor_list):
+    async def leverage(self):
         for key, w in self.wallets.items():
             for symbol in self.symbols:
-                await w.leverage(factor_list[key], symbol)
+                await w.leverage(self.infos[key]['factor'], symbol)
     
 
     async def update_settings(self, settings):

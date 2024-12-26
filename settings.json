@@ -2,7 +2,7 @@
     "wallets": {
         "nathael": {
             "key_file": "keys_nathael",
-            "cost": 0.25,
+            "cost": 0.4,
             "factor": 1
         }
     },

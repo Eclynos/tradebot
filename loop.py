@@ -113,7 +113,7 @@ async def main():
                 s[symbol].updateLists()
                 if is_open_since[symbol] != 0:
                     if s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
-                        trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
+                        trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
                         has_been_closed[symbol] = True
                         nb = await m.close_swap(symbol)
                         trade_logger.info(f"{nb} wallets closed {symbol}")
@@ -130,8 +130,6 @@ async def main():
                         bought_type[symbol] = "pump"
                         nb = await m.long_swap(symbol)
                         trade_logger.info(f"{nb} wallets bought {symbol}")
-
-        #execution_logger.info(s['BTC/USDT'].candles[-1])
 
         for symbol in symbols:
             if has_been_closed[symbol]:
@@ -192,7 +190,7 @@ async def main():
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
                 s[symbol].updateLists()
                 if is_open_since[symbol] != 0 and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
-                    trade_logger.info(f"Sell {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
+                    trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
                     has_been_closed[symbol] = True
                     nb = await m.close_swap(symbol)
                     trade_logger.info(f"{nb} wallets closed {symbol}")

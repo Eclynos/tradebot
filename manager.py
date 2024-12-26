@@ -125,11 +125,11 @@ class Manager:
         try:
             availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
             for key, cost in zip(self.wallets.keys(), availables):
-                self.infos[key]['available'] = cost * 0.99
+                self.infos[key]['available'] = cost * 0.995
             await asyncio.sleep(1)
             totals = await asyncio.gather(*(w.get_crossed_total_available() for w in self.wallets.values()))
             for key, cost in zip(self.wallets.keys(), totals):
-                self.infos[key]['total'] = cost * 0.99
+                self.infos[key]['total'] = cost * 0.995
         except Exception as e:
             print(e)
 
@@ -201,6 +201,8 @@ class Manager:
 
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à acheter en swap\n{e}")
+            else:
+                print("Insufficient amount")
             
         return purchases
     

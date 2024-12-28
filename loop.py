@@ -2,7 +2,6 @@ import logging, json
 from manager import Manager
 from strategyStandardDevPump import Strategy
 from tools import *
-from math import floor
 from os import remove, path
 import asyncio, time
 

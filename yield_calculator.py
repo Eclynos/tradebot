@@ -32,8 +32,11 @@ with open("trade_logs.log", "r") as f:
         except Exception as e:
             print(e)
 
-result_flat /= trades_done
+if trades_done > 0:
+    result_flat /= trades_done
 
-print(f"Nombre de trades effectués: {trades_done}")
-print(f"Pourcentage de gain flat sur la période testée: {result_flat*100}%")
-print(f"Pourcentage de gain en réinvestissant sur la période testée: {result_reinvested*100-100}%")
+    print(f"Nombre de trades effectués: {trades_done}")
+    print(f"Pourcentage de gain flat sur la période testée: {result_flat*100}%")
+    print(f"Pourcentage de gain en réinvestissant sur la période testée: {result_reinvested*100-100}%")
+else:
+    print("No trade detected")

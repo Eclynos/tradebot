@@ -16,11 +16,16 @@ async def main():
         print("erreur")
         return
     
-    symbol = "BTC/USDT"
+    symbol = "BGB/USDT"
 
     await m.start()
 
-    print(await m.last_trades(symbol))
+    positions = await m.wallets["nathael"].exchange.fetch_position_history(
+        symbol=symbol+':USDT',
+        limit=5
+    )
+
+    print(positions)
 
     await m.end()
     

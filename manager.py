@@ -260,7 +260,7 @@ class Manager:
 
     async def last_trades(self, symbol):
         #return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
-        return await self.wallets[0].positionsHistory(symbol, 1)
+        return await self.wallets["nathael"].positionsHistory(symbol, 1)
 
 
     async def balances(self):

@@ -22,7 +22,7 @@ async def main():
 
     positions = await m.wallets["nathael"].exchange.fetch_position_history(
         symbol=symbol+':USDT',
-        limit=5
+        limit=1
     )
 
     print(positions)

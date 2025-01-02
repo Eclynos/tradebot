@@ -4,11 +4,17 @@
             "key_file": "keys_nathael",
             "cost": 0.4,
             "factor": 1
-        }
+        },
+        "nicolas": {
+            "key_file": "keys_nicolas.txt",
+            "cost": 0.25,
+            "factor": 1
+	    }
     },
     "file_names": {
-        "execution": "execution_logs.log",
-        "trade": "trade_logs.log",
+        "execution": "executions.log",
+        "trade": "trades.log",
+        "percentage": "percentages.log",
         "instruction": "instruction"
     }
 }

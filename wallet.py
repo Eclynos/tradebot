@@ -408,7 +408,9 @@ class Wallet:
                 h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
                 h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n Funding fee: {p['info']['totalFunding']}"
 
-            percentage_pnl = (p['info']['closeAvgPrice'] - p['info']['openAvgPrice']) / p['info']['openAvgPrice'] - (p['info']['closeAvgPrice'] * p['info']['closeFee'] + p['info']['openAvgPrice'] * p['info']['openFee'])
+            open_price = int(p['info']['openAvgPrice'])
+            close_price = int(p['info']['closeAvgPrice'])
+            percentage_pnl = (close_price - open_price) / open_price - (close_price * int(p['info']['closeFee']) + open_price * int(p['info']['openFee']))
             return h, percentage_pnl
 
         except Exception as e:

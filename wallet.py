@@ -415,6 +415,7 @@ class Wallet:
 
         except Exception as e:
             print(f"Erreur lors de la récupération de la dernière position : {e}")
+            return "", 0
 
 
     async def transactionHistory(self, symbol, limit=None):

@@ -283,7 +283,8 @@ class Wallet:
                 type = 'market',
                 side = direction,
                 amount = amount,
-                params = {'type': 'swap'}
+                params = {'type': 'swap', 
+                          "oneWayMode": False}
             )
             return order
 

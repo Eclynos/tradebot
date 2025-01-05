@@ -18,7 +18,7 @@ class Account:
                 'password': self.passphrase,
                 'enableRateLimit': True,
                 'options': {
-                    'defaultType': 'swap',
+                    'defaultType': 'swap'
                 }
             })
         

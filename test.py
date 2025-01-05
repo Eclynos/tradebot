@@ -16,11 +16,25 @@ async def main():
         print("erreur")
         return
     
-    symbol = "BGB/USDT"
-
+    symbol = "SUI/USDT"
     await m.start()
+    who = "nicolas"
+    #await m.wallets[who].exchange.set_position_mode(hedged=True) 
 
-    positions = await m.wallets["nathael"].exchange.fetch_position_history(
+    amount = await m.mi.actual_currency_equivalence(symbol, 6)
+
+    order = await m.wallets[who].openp(symbol, amount, 'buy')
+
+    print(order)
+
+    time.sleep(18)
+
+    order = await m.wallets[who].closep(symbol)
+    print(order)
+
+    time.sleep(5)
+    
+    positions = await m.wallets[who].exchange.fetch_position_history(
         symbol=symbol+':USDT',
         limit=1
     )
@@ -32,3 +46,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+

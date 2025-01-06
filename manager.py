@@ -266,7 +266,7 @@ class Manager:
         for w in self.wallets:
             position, pnl = await self.wallets[w].last_position(symbol)
             positions += position + "\n"
-            pnls += pnl + "\n"
+            pnls += str(pnl) + "\n"
         if len(positions) > 0:
             positions = positions[:-1]
         if len(pnls) > 0:

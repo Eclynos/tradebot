@@ -16,7 +16,7 @@ async def main():
 
     await m.start()
 
-    print(await m.history(0, "POPCAT/USDT:USDT", 1))
+    print(await m.wallets["nicolas"].exchange.fetch_positions())
     
     await m.end()
     

@@ -198,6 +198,7 @@ class Manager:
                     if order != None:
                         purchases += 1
                         self.infos[key]['buyed?'][symbol] = True
+                        print(f"{key}: {self.infos[key]['buyed?'][symbol]}")
 
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à acheter en swap\n{e}")
@@ -215,6 +216,7 @@ class Manager:
             order = None
             
             if self.infos[key]['buyed?'][symbol]:
+                print("try to close")
                 try:
                     order = await w.closep(symbol)
 
@@ -261,17 +263,20 @@ class Manager:
     async def last_trades(self, symbol):
         #return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
         #return await self.wallets["nathael"].positionsHistory(symbol, 1)
-        positions = ""
-        pnls = ""
-        for w in self.wallets:
-            position, pnl = await self.wallets[w].last_position(symbol)
-            positions += position + "\n"
-            pnls += str(pnl) + "\n"
-        if len(positions) > 0:
-            positions = positions[:-1]
-        if len(pnls) > 0:
-            pnls = pnls[:-1]
-        return positions, pnls
+        try:
+            positions = ""
+            pnls = ""
+            for w in self.wallets:
+                position, pnl = await self.wallets[w].last_position(symbol)
+                positions += position + "\n"
+                pnls += str(pnl) + "\n"
+            if len(positions) > 0:
+                positions = positions[:-1]
+            if len(pnls) > 0:
+                pnls = pnls[:-1]
+            return positions, pnls
+        except Exception as e:
+            print(f"last trades error\n{e}")
 
 
     async def balances(self):

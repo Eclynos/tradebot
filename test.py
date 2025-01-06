@@ -16,7 +16,7 @@ async def main():
         print("erreur")
         return
     
-    symbol = "HNT/USDT"
+    symbol = "TIA/USDT"
     await m.start()
     who = "nicolas"
     #await m.wallets[who].exchange.set_position_mode(hedged=True) 

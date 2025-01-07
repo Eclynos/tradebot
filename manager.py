@@ -29,6 +29,7 @@ class Manager:
             await self.mi.init()
             for w in self.wallets.values():
                 await w.init()
+                await w.exchange.set_position_mode(hedged=True) 
             await self.calculate_min_amounts()
             await self.update_cost_datas()
             await self.leverage()
@@ -198,7 +199,6 @@ class Manager:
                     if order != None:
                         purchases += 1
                         self.infos[key]['buyed?'][symbol] = True
-                        print(f"{key}: {self.infos[key]['buyed?'][symbol]}")
 
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à acheter en swap\n{e}")
@@ -216,7 +216,6 @@ class Manager:
             order = None
             
             if self.infos[key]['buyed?'][symbol]:
-                print("try to close")
                 try:
                     order = await w.closep(symbol)
 
@@ -227,7 +226,7 @@ class Manager:
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à vendre\n{e}")
             
-            return sales
+        return sales
 
 
 # INFORMATIONS GIVERS

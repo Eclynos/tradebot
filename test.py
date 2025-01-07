@@ -18,7 +18,7 @@ async def main():
     
     symbol = "TIA/USDT"
     await m.start()
-    who = "nicolas"
+    #who = "nicolas"
     #await m.wallets[who].exchange.set_position_mode(hedged=True) 
 
     #amount = await m.mi.actual_currency_equivalence(symbol, 6)
@@ -29,17 +29,19 @@ async def main():
 
     #time.sleep(18)
 
-    order = await m.wallets[who].closep(symbol)
+    order = await m.close_swap(symbol)
     print(order)
 
-    time.sleep(3)
+    #time.sleep(3)
     
+    """
     positions = await m.wallets[who].exchange.fetch_position_history(
         symbol=symbol+':USDT',
         limit=1
     )
 
     print(positions)
+    """
 
     await m.end()
     

@@ -390,7 +390,7 @@ class Wallet:
             print(f"Erreur lors de la récupération de l'historique des positions : {e}")
 
 
-    async def last_position(self, symbol):
+    async def last_position(self, symbol, timestamp):
         """Retourne une position et son pnl %"""
 
         h = ""
@@ -401,7 +401,13 @@ class Wallet:
                 limit=1
             )
 
+            if positions == []:
+                return "", 0
+
             for p in positions:
+                if int(p['timestamp']) < timestamp - 300:
+                    print("too old position")
+                    return "", 0
                 h += f"{p['symbol']} {p['side']}\n"
                 #h += f"{p['datetime']}\n"
                 h += f"{p['info']['openTotalPos']} {symbol}\n"

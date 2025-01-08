@@ -178,7 +178,7 @@ class Manager:
     async def long_swap(self, symbol):
         """Essaie d'acheter une crypto en swap sur tous les wallets
         Renvoie le nombre d'achats effectués avec succès"""
-        purchases = 0
+        names = []
         price = await self.mi.getPrice(symbol)
 
         for key, w in self.wallets.items():
@@ -190,6 +190,7 @@ class Manager:
 
             if self.infos[key]["available"] > 5 and amount > self.min_amounts[symbol]:
                 order = None
+
                 try:
                     order = await w.openp(
                         symbol,
@@ -197,7 +198,7 @@ class Manager:
                         'buy')
                     
                     if order != None:
-                        purchases += 1
+                        names.append(key)
                         self.infos[key]['buyed?'][symbol] = True
 
                 except Exception as e:
@@ -205,13 +206,13 @@ class Manager:
             else:
                 print("Insufficient amount")
             
-        return purchases
+        return names
     
     
     async def close_swap(self, symbol):
         """Essaie de vendre une crypto en swap sur tous les wallets
         Renvoie le nombre de ventes effectués avec succès"""
-        sales = 0
+        names = []
         for key, w in self.wallets.items():
             order = None
             
@@ -220,13 +221,13 @@ class Manager:
                     order = await w.closep(symbol)
 
                     if order != None:
-                        sales += 1
+                        names.append(key)
                         self.infos[key]['buyed?'][symbol] = False
                 
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à vendre\n{e}")
             
-        return sales
+        return names
 
 
 # INFORMATIONS GIVERS
@@ -259,16 +260,18 @@ class Manager:
         print(await self.wallets[wallet].positionsHistory(symbol, limit))
 
 
-    async def last_trades(self, symbol):
+    async def last_trades(self, symbol, timestamp):
         #return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
         #return await self.wallets["nathael"].positionsHistory(symbol, 1)
         try:
             positions = ""
             pnls = ""
             for w in self.wallets:
-                position, pnl = await self.wallets[w].last_position(symbol)
-                positions += position + "\n"
-                pnls += str(pnl) + "\n"
+                position, pnl = await self.wallets[w].last_position(symbol, timestamp)
+                if position != "":
+                    positions += f"{w}\n{position}\n"
+                if pnl != 0:
+                    pnls += f"{w} {str(pnl)}\n"
             if len(positions) > 0:
                 positions = positions[:-1]
             if len(pnls) > 0:

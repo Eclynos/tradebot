@@ -15,8 +15,8 @@ async def main():
     
     symbol = "BTC/USDT"
 
-    await mi.init()
-    await w.init()
+    #await mi.init()
+    #await w.init()
 
     """
     with open('liste.json', 'r+') as f:
@@ -40,12 +40,13 @@ async def main():
         print(time.time())
         time.sleep(1)
     """
-    wait_next_frame(1)
+
+    print(time.time())
+    time.sleep(1)
     print(time.time())
 
-
-    await mi.account.disconnect()
-    await w.account.disconnect()
+    #await mi.account.disconnect()
+    #await w.account.disconnect()
 
 
 if __name__ == "__main__":

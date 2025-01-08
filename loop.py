@@ -116,17 +116,23 @@ async def main():
                 s[symbol].updateLists()
                 if is_open_since[symbol] != 0:
                     if s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
-                        trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
+                        trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)}")
                         has_been_closed[symbol] = True
-                        nb = await m.close_swap(symbol)
-                        trade_logger.info(f"{nb} wallets closed {symbol}")
+                        names = await m.close_swap(symbol)
+                        if names == []:
+                            trade_logger.info(f"Nobody closed {symbol}")
+                        else:
+                            trade_logger.info(f"{str(names)} wallets closed {symbol}")
                 else:
                     if s[symbol].buyingEvaluation("dip"):
-                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)} | strategy used : dip")
+                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)}")
                         is_open_since[symbol] = 1
                         bought_type[symbol] = "dip"
-                        nb = await m.long_swap(symbol)
-                        trade_logger.info(f"{nb} wallets bought {symbol}")
+                        names = await m.long_swap(symbol)
+                        if names == []:
+                            trade_logger.info(f"Nobody bought {symbol}")
+                        else:
+                            trade_logger.info(f"{str(names)} wallets bought {symbol}")
                     """
                     elif s[symbol].buyingEvaluation("pump"):
                         trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)} | strategy used : pump")
@@ -138,7 +144,7 @@ async def main():
 
         for symbol in symbols:
             if has_been_closed[symbol]:
-                trades, percentage = await m.last_trades(symbol)
+                trades, percentage = await m.last_trades(symbol, start_time)
                 trade_logger.info(trades)
                 percentage_logger.info(f"{symbol}\n{percentage}")
                 is_open_since[symbol] = 0
@@ -198,14 +204,16 @@ async def main():
                 s[symbol].updateLists()
                 if is_open_since[symbol] != 0 and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
                     trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
-                    has_been_closed[symbol] = True
-                    nb = await m.close_swap(symbol)
-                    trade_logger.info(f"{nb} wallets closed {symbol}")
+                    names = await m.close_swap(symbol)
+                    if names == []:
+                        trade_logger.info(f"Nobody closed {symbol}")
+                    else:
+                        trade_logger.info(f"{str(names)} wallets closed {symbol}")
 
         opened = False
         for symbol in symbols:
             if has_been_closed[symbol]:
-                trades, percentage = await m.last_trades(symbol)
+                trades, percentage = await m.last_trades(symbol, start_time)
                 trade_logger.info(trades)
                 percentage_logger.info(f"{symbol}\n{percentage}")
                 is_open_since[symbol] = 0

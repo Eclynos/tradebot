@@ -405,7 +405,7 @@ class Wallet:
                 return "", 0
 
             for p in positions:
-                if int(p['timestamp']) / 1000 < timestamp - 300:
+                if int(p['lastUpdateTimestamp']) / 1000 < timestamp - 300:
                     print("too old position")
                     return "", 0
                 h += f"{p['symbol']} {p['side']}\n"

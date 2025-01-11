@@ -415,10 +415,10 @@ class Wallet:
                 h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
                 h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n Funding fee: {p['info']['totalFunding']}"
 
-            open_price = float(p['info']['openAvgPrice'])
-            close_price = float(p['info']['closeAvgPrice'])
-            percentage_pnl = (close_price - open_price) / open_price - (close_price * float(p['info']['closeFee']) + open_price * float(p['info']['openFee']))
-            return h, percentage_pnl
+                open_price = float(p['info']['openAvgPrice'])
+                close_price = float(p['info']['closeAvgPrice'])
+                percentage_pnl = (close_price - open_price) / open_price - (close_price * float(p['info']['closeFee']) + open_price * float(p['info']['openFee']))
+                return h, percentage_pnl
 
         except Exception as e:
             print(f"Erreur lors de la récupération de la dernière position : {e}")

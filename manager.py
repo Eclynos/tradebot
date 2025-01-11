@@ -261,8 +261,6 @@ class Manager:
 
 
     async def last_trades(self, symbol, timestamp):
-        #return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
-        #return await self.wallets["nathael"].positionsHistory(symbol, 1)
         try:
             positions = ""
             pnls = ""
@@ -273,6 +271,7 @@ class Manager:
                 if pnl != 0:
                     pnls += f"{w} {str(pnl)}\n"
             if len(positions) > 0:
+                positions += position + "\n"
                 positions = positions[:-1]
             if len(pnls) > 0:
                 pnls = pnls[:-1]

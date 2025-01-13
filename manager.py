@@ -105,6 +105,9 @@ class Manager:
                 self.infos[key]['factor'] = w["factor"] # preset leverage factor
                 self.infos[key]['amounts'] = {symbol: 0 for symbol in self.symbols}
                 self.infos[key]['buyed?'] = {symbol: False for symbol in self.symbols}
+        
+        await self.update_cost_datas()
+        await self.leverage()
     
 
     async def load_positions(self, timeLoop):

@@ -6,6 +6,8 @@ import asyncio
 
 class Manager:
     def __init__(self, symbols, settings) -> None:
+        """Initialise l'instance de la classe
+        Initialise le grand dictionnaire à partir des données du fichier json"""
         self.mi = MarketInformations()
 
         self.symbols = symbols
@@ -25,6 +27,7 @@ class Manager:
 
 
     async def start(self):
+        """Connecte tous les comptes et initialise les paramètres généraux"""
         try:
             await self.mi.init()
             for w in self.wallets.values():
@@ -38,6 +41,7 @@ class Manager:
 
 
     async def end(self):
+        """Déconnecte tous les comptes"""
         try:
             await self.mi.account.disconnect()
             for w in self.wallets.values():
@@ -83,6 +87,7 @@ class Manager:
 
 
     async def leverage(self):
+        """Défini l'effet de levier sur un compte à partir de la donnée contenue dans le grand dictionnaire"""
         for key, w in self.wallets.items():
             for symbol in self.symbols:
                 await w.leverage(self.infos[key]['factor'], symbol)
@@ -111,6 +116,9 @@ class Manager:
     
 
     async def load_positions(self, timeLoop):
+        """Charge les positions ouvertes sur les comptes
+        Crée les dico is_open_since et bought_type
+        """
         is_open_since = {symbol: 0 for symbol in self.symbols}
         bought_type = {symbol: "" for symbol in self.symbols}
 
@@ -126,6 +134,7 @@ class Manager:
 
 
     async def update_cost_datas(self):
+        """Met à jour les coûts contenus dans le grand dictionnaire"""
         try:
             availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
             for key, cost in zip(self.wallets.keys(), availables):
@@ -142,7 +151,7 @@ class Manager:
 
 
     async def buy_spot(self, symbol):
-        
+        """Achète une crypto en spot sur tous les comptes"""
         await self.calculate_amounts(symbol)
         
         for key, w in self.wallets.items():
@@ -163,6 +172,7 @@ class Manager:
 
 
     async def sell_spot(self, symbol):
+        """Vend tout le montant possédé d'une crypto en spot sur tous les comptes"""
         for key, w in self.wallets.items():
             order = None
             
@@ -237,6 +247,7 @@ class Manager:
 
 
     async def tell_positions(self):
+        """Donne les positions actuelles ouvertes sur les wallets"""
         positions = [None] * len(self.wallets)
 
         try:
@@ -264,6 +275,11 @@ class Manager:
 
 
     async def last_trades(self, symbol, timestamp):
+        """
+        Renvoie deux chaînes de caractères :
+        - une contenant des informations sur le dernier trade effectué sur tous les comptes
+        - une contenant les pourcentages effectués lors de ce trade
+        """
         try:
             positions = ""
             pnls = ""

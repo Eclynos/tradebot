@@ -403,22 +403,21 @@ class Wallet:
 
             if positions == []:
                 return "", 0
+            p = positions[0]
+            
+            if int(p['lastUpdateTimestamp']) / 1000 < timestamp - 300:
+                print("too old position")
+                return "", 0
+            h += f"{p['symbol']} {p['side']}\n"
+            h += f"{p['info']['openTotalPos']} {symbol}\n"
+            h += f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}\n"
+            h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
+            h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n Funding fee: {p['info']['totalFunding']}"
 
-            for p in positions:
-                if int(p['lastUpdateTimestamp']) / 1000 < timestamp - 300:
-                    print("too old position")
-                    return "", 0
-                h += f"{p['symbol']} {p['side']}\n"
-                #h += f"{p['datetime']}\n"
-                h += f"{p['info']['openTotalPos']} {symbol}\n"
-                h += f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}\n"
-                h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
-                h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n Funding fee: {p['info']['totalFunding']}"
-
-                open_price = float(p['info']['openAvgPrice'])
-                close_price = float(p['info']['closeAvgPrice'])
-                percentage_pnl = (close_price - open_price) / open_price - (close_price * float(p['info']['closeFee']) + open_price * float(p['info']['openFee']))
-                return h, percentage_pnl
+            open_price = float(p['info']['openAvgPrice'])
+            close_price = float(p['info']['closeAvgPrice'])
+            percentage_pnl = (close_price - open_price) / open_price - (close_price * float(p['info']['closeFee']) + open_price * float(p['info']['openFee']))
+            return h, percentage_pnl
 
         except Exception as e:
             print(f"Erreur lors de la récupération de la dernière position : {e}")

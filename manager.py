@@ -32,7 +32,7 @@ class Manager:
             await self.mi.init()
             for w in self.wallets.values():
                 await w.init()
-                await w.exchange.set_position_mode(hedged=True) 
+                await w.exchange.set_position_mode(hedged=True)
             await self.calculate_min_amounts()
             await self.update_cost_datas()
             await self.leverage()

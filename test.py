@@ -16,30 +16,21 @@ async def main():
         print("erreur")
         return
     
-    symbol = "BNB/USDT"
+    symbol = "HNT/USDT"
     await m.start()
     who = "nathael"
-    #await m.wallets[who].exchange.set_position_mode(hedged=True) 
 
-    #amount = await m.mi.actual_currency_equivalence(symbol, 6)
+    amount = await m.mi.actual_currency_equivalence(symbol, 6)
 
-    #order = await m.wallets[who].openp(symbol, amount, 'buy')
+    order = await m.wallets[who].openp(symbol, amount, 'buy')
+    print(order)
 
-    #print(order)
+    time.sleep(18)
 
-    #time.sleep(18)
+    order = await m.wallets[who].closep(symbol)
+    print(order)
 
-    #order = await m.close_swap(symbol)
-    #print(order)
-
-    #time.sleep(3)
-    
-    positions = await m.wallets[who].exchange.fetch_position_history(
-        symbol=symbol+':USDT',
-        limit=1
-    )
-
-    print(positions)
+    time.sleep(3)
 
     await m.end()
     

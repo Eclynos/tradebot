@@ -117,11 +117,12 @@ async def main():
                 if is_open_since[symbol] != 0:
                     if s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
                         trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)}")
-                        has_been_closed[symbol] = True
                         names = await m.close_swap(symbol)
                         if names == []:
                             trade_logger.info(f"Nobody closed {symbol}")
+                            is_open_since[symbol] = 0
                         else:
+                            has_been_closed[symbol] = True
                             trade_logger.info(f"{str(names)} wallets closed {symbol}")
                 else:
                     if s[symbol].buyingEvaluation("dip"):
@@ -203,11 +204,13 @@ async def main():
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
                 s[symbol].updateLists()
                 if is_open_since[symbol] != 0 and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
-                    trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)} | strategy used : {bought_type[symbol]}")
+                    trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)}")
                     names = await m.close_swap(symbol)
                     if names == []:
                         trade_logger.info(f"Nobody closed {symbol}")
+                        is_open_since[symbol] = 0
                     else:
+                        has_been_closed[symbol] = True
                         trade_logger.info(f"{str(names)} wallets closed {symbol}")
 
         opened = False

@@ -20,18 +20,6 @@ async def main():
     await m.start()
     who = "nathael"
 
-    amount = await m.mi.actual_currency_equivalence(symbol, 6)
-
-    order = await m.wallets[who].openp(symbol, amount, 'buy')
-    print(order)
-
-    time.sleep(18)
-
-    order = await m.wallets[who].closep(symbol)
-    print(order)
-
-    time.sleep(3)
-
     await m.end()
     
 

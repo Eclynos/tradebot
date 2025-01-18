@@ -33,6 +33,7 @@ class Manager:
             for w in self.wallets.values():
                 await w.init()
                 await w.exchange.set_position_mode(hedged=True)
+                w.leverage_mode("isolated")
             await self.calculate_min_amounts()
             await self.update_cost_datas()
             await self.leverage()
@@ -290,7 +291,6 @@ class Manager:
                 if pnl != 0:
                     pnls += f"{w} {str(pnl)}\n"
             if len(positions) > 0:
-                positions += position + "\n"
                 positions = positions[:-1]
             if len(pnls) > 0:
                 pnls = pnls[:-1]

@@ -16,5 +16,7 @@
         "trade": "trades.log",
         "percentage": "percentages.log",
         "instruction": "instruction"
-    }
+
+    },
+    "margin_mode": "isolated"
 }

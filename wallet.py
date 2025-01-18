@@ -53,10 +53,14 @@ class Wallet:
             print("Wrong leverage mode")
    
 
-    async def leverage(self, factor, symbol):
+    async def leverage(self, factor, symbol, margin_mode):
         """Défini le taux d'effet de levier à utiliser"""
         try:
-            await self.exchange.set_leverage(factor, symbol, params={"marginCoin": "USDT"})
+            if margin_mode == "isolated":
+                params={"marginCoin": "USDT", "holdSide": "long"}
+            else:
+                params={"marginCoin": "USDT"}
+            await self.exchange.set_leverage(factor, symbol, params)
         except Exception as e:
             raise ValueError(e)
 

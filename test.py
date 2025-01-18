@@ -20,6 +20,8 @@ async def main():
     await m.start()
     who = "nathael"
 
+    await m.wallets[who].leverage(2, symbol, "isolated")
+
     await m.end()
     
 

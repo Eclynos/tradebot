@@ -14,6 +14,7 @@ class Manager:
         self.min_amounts = {}
         self.infos = {}
         self.wallets = {}
+        self.margin_mode = settings["margin_mode"]
 
         for key, w in settings["wallets"].items():
             self.infos[key] = {}
@@ -33,7 +34,7 @@ class Manager:
             for w in self.wallets.values():
                 await w.init()
                 await w.exchange.set_position_mode(hedged=True)
-                w.leverage_mode("isolated")
+                w.leverage_mode(self.margin_mode)
             await self.calculate_min_amounts()
             await self.update_cost_datas()
             await self.leverage()
@@ -91,7 +92,7 @@ class Manager:
         """Défini l'effet de levier sur un compte à partir de la donnée contenue dans le grand dictionnaire"""
         for key, w in self.wallets.items():
             for symbol in self.symbols:
-                await w.leverage(self.infos[key]['factor'], symbol)
+                await w.leverage(self.infos[key]['factor'], symbol, self.margin_mode)
     
 
     async def update_settings(self, settings):

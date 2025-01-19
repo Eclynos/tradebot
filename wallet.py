@@ -62,7 +62,7 @@ class Wallet:
                 params={"marginCoin": "USDT"}
             await self.exchange.set_leverage(factor, symbol, params)
         except Exception as e:
-            raise ValueError(e)
+            print(str(factor), symbol, str(params), e)
 
 
     async def position_mode(self, mode, symbol):

@@ -16,11 +16,11 @@ async def main():
         print("erreur")
         return
     
-    symbol = "HNT/USDT"
+    symbol = "BNB/USDT"
     await m.start()
     who = "nathael"
 
-    await m.wallets[who].leverage(2, symbol, "isolated")
+    await m.leverage()
 
     await m.end()
     

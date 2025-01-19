@@ -3,7 +3,7 @@
         "nathael": {
             "key_file": "keys_nathael",
             "cost": 0.25,
-            "factor": 2
+            "factor": 1
         },
         "nicolas": {
             "key_file": "keys_nicolas.txt",

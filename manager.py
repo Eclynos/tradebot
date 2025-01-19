@@ -37,7 +37,7 @@ class Manager:
                 w.leverage_mode(self.margin_mode)
             await self.calculate_min_amounts()
             await self.update_cost_datas()
-            await self.leverage()
+            #await self.leverage()
         except Exception as e:
             raise ValueError(e)
 
@@ -114,7 +114,7 @@ class Manager:
                 self.infos[key]['buyed?'] = {symbol: False for symbol in self.symbols}
         
         await self.update_cost_datas()
-        await self.leverage()
+        #await self.leverage()
     
 
     async def load_positions(self, timeLoop):

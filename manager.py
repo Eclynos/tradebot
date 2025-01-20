@@ -222,7 +222,45 @@ class Manager:
                 print("Insufficient amount")
             
         return names
-    
+
+
+    async def long_swap_secured(self, symbol, stopLoss):
+        """Essaie d'acheter une crypto en swap sur tous les wallets en fixant un stopLoss
+        Renvoie le nombre d'achats effectués avec succès"""
+        names = []
+        price = await self.mi.getPrice(symbol)
+        
+        for key, w in self.wallets.items():
+
+            if self.infos[key]['available'] > self.infos[key]['total'] * self.infos[key]['cost']:
+                amount = self.mi.currency_equivalence(self.infos[key]['cost'] * self.infos[key]['total'], price)
+            else:
+                amount = self.mi.currency_equivalence(self.infos[key]['available'], price)
+
+            if self.infos[key]["available"] > 5 and amount > self.min_amounts[symbol]:
+                order = None
+
+                try:
+                    order = await w.openp(
+                        symbol,
+                        amount,
+                        'buy')
+                    
+                    if order != None:
+                        names.append(key)
+                        self.infos[key]['buyed?'][symbol] = True
+                    
+                    order = await w.stopLoss(
+                        symbol,
+                        price * stopLoss
+                    )
+
+                except Exception as e:
+                    print(f"Le wallet {key} n'a pas réussi à acheter en swap\n{e}")
+            else:
+                print("Insufficient amount")
+            
+        return names
     
     async def close_swap(self, symbol):
         """Essaie de vendre une crypto en swap sur tous les wallets

@@ -16,17 +16,31 @@ async def main():
         print("erreur")
         return
     
-    symbol = "BNB/USDT"
+    symbol = "BGB/USDT"
     await m.start()
     who = "nathael"
+    price = await m.mi.getPrice(symbol)
+    print(price)
+    amount = m.wallets[who].currency_equivalence(6, price)
 
-    await m.leverage()
+    """
+    order = await m.wallets[who].openp(
+        symbol,
+        amount,
+        'buy')
+    
+    print(order)
+    """
+
+    order = await m.wallets[who].stopLoss(
+        symbol,
+        price * 0.95
+    )
+
+    print(order)
 
     await m.end()
     
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-

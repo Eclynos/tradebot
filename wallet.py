@@ -308,6 +308,20 @@ class Wallet:
             
         except Exception as e:
             print(f"Error closing swap position: {e}")
+    
+
+    async def stopLoss(self, symbol, price, amount):
+        """Set a stop loss limit order"""
+        try:
+            order = await self.exchange.create_order(
+                symbol = symbol + ':USDT',
+                type = 'limit',
+                side = 'buy',
+                amount = amount,
+                params = {'type': 'swap', 'stopLossPrice': price}
+            )
+        except Exception as e:
+            print(f"Error fixing stop loss:\n{e}")
 
 
     async def close_all_p(self):

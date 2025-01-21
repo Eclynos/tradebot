@@ -70,9 +70,6 @@ class Strategy:
         return False
 
     def sellingEvaluation(self, numberOfIndexBoughtAgo, boughtType):
-        if boughtType not in ["pump", "dip"]:
-            raise ValueError("buyType must me 'pump' or 'dip'")
-        
         if len(self.sd) < 2 or numberOfIndexBoughtAgo < 0:
             return False
         
@@ -82,16 +79,18 @@ class Strategy:
         elif boughtType=="dip":
             bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], -self.sellingBollinger1)
             bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
+        else:
+            raise ValueError("buyType must me 'pump' or 'dip'")
 
         wentUnderLowBB = False
         for i in range(1, numberOfIndexBoughtAgo):
             if ((boughtType=="pump" and self.candles[-i]["price"] < bbBas[-i]["price"])
             or (boughtType=="dip" and self.candles[-i]["price"] > bbBas[-i]["price"])):
-                wentUnderLowBB = True 
+                wentUnderLowBB = True
         
         if (self.sd[-2]["price"] > self.sdWeightedAvg[-2]["price"]
             and self.sd[-1]["price"] < self.sdWeightedAvg[-1]["price"]
-            or 
+            or
             wentUnderLowBB
             and ((boughtType=="pump"  and self.candles[-1]["price"] > bbHaut[-1]["price"])
               or (boughtType=="dip" and self.candles[-1]["price"] > bbHaut[-1]["price"]))):

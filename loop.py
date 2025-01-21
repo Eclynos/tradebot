@@ -134,14 +134,6 @@ async def main():
                             trade_logger.info(f"Nobody bought {symbol}")
                         else:
                             trade_logger.info(f"{str(names)} wallets bought {symbol}")
-                    """
-                    elif s[symbol].buyingEvaluation("pump"):
-                        trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)} | strategy used : pump")
-                        is_open_since[symbol] = 1
-                        bought_type[symbol] = "pump"
-                        nb = await m.long_swap(symbol)
-                        trade_logger.info(f"{nb} wallets bought {symbol}")
-                    """
 
         for symbol in symbols:
             if has_been_closed[symbol]:

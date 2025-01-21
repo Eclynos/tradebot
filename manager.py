@@ -261,7 +261,8 @@ class Manager:
                 print("Insufficient amount")
             
         return names
-    
+
+
     async def close_swap(self, symbol):
         """Essaie de vendre une crypto en swap sur tous les wallets
         Renvoie le nombre de ventes effectués avec succès"""
@@ -281,6 +282,15 @@ class Manager:
                     print(f"Le wallet {key} n'a pas réussi à vendre\n{e}")
             
         return names
+    
+
+    async def close_all_swap(self):
+        """Vend TOUTES les positions ouvertes"""
+        for w in self.wallets.values():
+            try:
+                w.close_all_p()
+            except Exception as e:
+                print(f"Le wallet {str(w)} n'a pas réussi à fermer toutes les positions\n{e}")
 
 
 # INFORMATIONS GIVERS

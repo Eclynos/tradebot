@@ -21,7 +21,8 @@ async def main():
     who = "nathael"
     price = await m.mi.getPrice(symbol)
     print(price)
-    amount = m.wallets[who].currency_equivalence(6, price)
+    amount = m.mi.currency_equivalence(8, price)
+    print(amount)
 
     """
     order = await m.wallets[who].openp(
@@ -32,11 +33,20 @@ async def main():
     print(order)
     """
 
+    """
     order = await m.wallets[who].stopLoss(
         symbol,
         price * 0.95
     )
+    """
 
+    """
+    order = await m.wallets[who].exchange.create_order(symbol + ':USDT', 'market', 'buy', amount, params = {'stopLossPrice': price * 0.95})
+    print(order)
+    """
+    #print(order[''])
+
+    order = await m.wallets[who].exchange.edit_order('1265584352184901633', symbol + ':USDT', 'market', 'buy', amount, price=price, params = {'stopLossPrice': price * 0.96})
     print(order)
 
     await m.end()

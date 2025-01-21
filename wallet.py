@@ -315,7 +315,7 @@ class Wallet:
         try:
             order = await self.exchange.create_order(
                 symbol = symbol + ':USDT',
-                type = 'limit',
+                type = 'market',
                 side = 'buy',
                 amount = amount,
                 params = {'type': 'swap', 'stopLossPrice': price}

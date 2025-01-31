@@ -5,18 +5,8 @@ import time
 
 if __name__ == "__main__":
     coinCodes = [    
-    "SHIB",
-    "ATOM",
-    "AVAX",
-    "BNB",
-    "LINK",
-    "SOL",
-    "ETH",
-    "BTC",
-    "LTC",
-    "XRP",
-    "DOGE"
-    ] 
+        "BTC"
+    ]
     allData = []
 
     for coinCode in coinCodes:
@@ -69,7 +59,7 @@ if __name__ == "__main__":
             wallet = 1
             if startIndex[cc][index] > 2100:
                 nbIndexBoughtAgo = -1
-                s = Strategy(100, 2000, 0.94, 0.94, 1.5, 0, 1, 100)
+                s = Strategy(100, 2000, 0.92, 0.92, 1.5, 0, 1, 100)
                 tradeList = []
 
                 s.candles = usableData[cc][startIndex[cc][index]-2104:startIndex[cc][index]+1]

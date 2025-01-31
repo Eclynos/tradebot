@@ -320,9 +320,11 @@ class Wallet:
                 amount = amount,
                 params = {'type': 'swap', 'stopLossPrice': price}
             )
+
+            return order
+
         except Exception as e:
             print(f"Error fixing stop loss:\n{e}")
-
 
     async def close_all_p(self):
         """Ferme toutes les positions existantes"""

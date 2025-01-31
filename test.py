@@ -16,13 +16,11 @@ async def main():
         print("erreur")
         return
     
-    symbol = "BGB/USDT"
+    symbol = "HNT/USDT"
     await m.start()
     who = "nathael"
     price = await m.mi.getPrice(symbol)
-    print(price)
     amount = m.mi.currency_equivalence(8, price)
-    print(amount)
 
     """
     order = await m.wallets[who].openp(
@@ -36,21 +34,33 @@ async def main():
     """
     order = await m.wallets[who].stopLoss(
         symbol,
-        price * 0.95
+        price * 0.95,
+        amount * 2
     )
     """
 
-    """
-    order = await m.wallets[who].exchange.create_order(symbol + ':USDT', 'market', 'buy', amount, params = {'stopLossPrice': price * 0.95})
-    print(order)
-    """
-    #print(order[''])
+    #orderid = order['orderId']
+    #print(order)
+    #'1266646161638887425'
+    #'1266645498068615180'
 
-    order = await m.wallets[who].exchange.edit_order('1265584352184901633', symbol + ':USDT', 'market', 'buy', amount, price=price, params = {'stopLossPrice': price * 0.96})
-    print(order)
+    #print(symbol + ':USDT', 'market', 'buy', amount, price, price * 0.97)
+    #order = await m.wallets[who].exchange.edit_order('1266646161638887425', symbol + ':USDT', 'market', 'buy', amount, price=price, params = {'stopLossPrice': price * 0.97})
+    #print(order)
+
+    try:
+        order = await m.wallets[who].exchange.cancel_order('1266646161638887425', symbol + ':USDT')
+        print(order)
+    except Exception as e:
+        print(e)
+
+    orderbook = await m.wallets[who].exchange.fetch_orders(symbol + ':USDT')
+    print(orderbook)
 
     await m.end()
     
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+#createOrdersssss

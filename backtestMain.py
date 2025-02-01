@@ -1,16 +1,27 @@
 from strategyStandardDevPump import *
 from dataAnalysis import *
 from tools import *
-import time
+import time, itertools, threading, sys
 
 if __name__ == "__main__":
     coinCodes = [    
-        "BTC"
+        "SHIB",
+        "ATOM",
+        "AVAX",
+        "BNB",
+        "LINK",
+        "SOL",
+        "ETH",
+        "BTC",
+        "LTC",
+        "XRP",
+        "DOGE"
     ]
+
     allData = []
 
     for coinCode in coinCodes:
-        allData.append(readFile(coinCode))
+        allData.append(readFile(coinCode, "bitget"))
 
     usableData = []
     for j in range(len(coinCodes)):
@@ -79,7 +90,7 @@ if __name__ == "__main__":
                         buyType = "pump"
                     
                     if nbIndexBoughtAgo != -1 and s.sellingEvaluation(nbIndexBoughtAgo, buyType):
-                        wallet += 0.5*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0008)
+                        wallet += 0.25*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0008)
                         solList.append([tradeList[0]["date"], usableData[cc][i]["date"], usableData[cc][tradeList[0]["index"]]["price"], usableData[cc][i]["price"]])
                         tradeList.pop()
                         nbIndexBoughtAgo = -1

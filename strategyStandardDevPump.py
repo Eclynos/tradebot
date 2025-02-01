@@ -19,6 +19,13 @@ class Strategy:
 
         self.candles = [] # liste de dict de bougies
 
+    def modifyParams(self, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1 = 0, sellingBollinger2=1):
+        self.power1 = power1 
+        self.power2 = power2
+        self.buyingBollinger = buyingBollinger
+        self.sellingBollinger1 = sellingBollinger1
+        self.sellingBollinger2 = sellingBollinger2
+
     def createLists(self):
         self.ma = self.dA.exponentialMovingAverage(self.candles, self.movingAverageSize, self.power1)
         self.sd = self.dA.expoStandardDeviation(self.candles, self.ma, self.movingAverageSize, self.power2)

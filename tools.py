@@ -1,6 +1,7 @@
 import requests, csv, time
 from math import ceil
 
+
 def left(symbol):
     return symbol.split("/")[0]
 
@@ -9,8 +10,8 @@ def right(symbol):
     return symbol.split("/")[1]
 
 
-def readFile(coinCode) -> list:
-    with open(f"./data/{coinCode}-USDT-USDT.csv", 'r') as file_csv:
+def readFile(coinCode, exchange) -> list:
+    with open(f"./data/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
         allData = csv.DictReader(file_csv)
         allData = list(allData)
 
@@ -94,20 +95,20 @@ def wait_next_frame(timeLoop=5):
 def getDataIndex(time, start, end, data):
     start = time - time_frame_to_ms(start)
     end = time - time_frame_to_ms(end)
-    print(start, end)
     if start < int(data[0]["date"]):
         raise ValueError(f"Start date too old for coinData. start :{start} dataStart :{data[0]["date"]}")
     if end > int(data[-1]["date"]):
         raise ValueError(f"End date too young for coinData. end :{end} dataEnd :{data[-1]["date"]}")
+    return int((start - int(data[0]["date"])) / 300000), int((end - int(data[0]["date"])) / 300000)
+    """
     startIndex = int((start - int(data[0]["date"])) / 300000)
     endIndex = int((end - int(data[0]["date"])) / 300000)
-    print(start - int(data[0]["date"]), end - int(data[0]["date"]))
-    print(startIndex, endIndex)
-    if int(data[startIndex]["date"]) != start:
-        print(int(data[startIndex]["date"]), start)
-    if int(data[endIndex]["date"]) != end:
-        print(int(data[endIndex]["date"]), end)
+    if int(data[startIndex]["date"]) - start > 300000:
+        print(int(data[startIndex]["date"]) - start)
+    if int(data[endIndex]["date"]) - end > 300000:
+        print(int(data[endIndex]["date"]) - end)
     return startIndex, endIndex
+    """
 
 
 def AreAnyCandlesMissing(data):
@@ -115,7 +116,7 @@ def AreAnyCandlesMissing(data):
     amount_missing = 0
     for i in range(len(data)):
         if int(data[i]["date"]) != startStamp + i * 300000:
-            print(f"A candle is missing at {startStamp + i * 300000}\nIndex : {i}")
+            #print(f"A candle is missing at {startStamp + i * 300000}\nIndex : {i}")
             startStamp += 300000
             amount_missing += 1
     print(f"{amount_missing} candles are missing on this database")

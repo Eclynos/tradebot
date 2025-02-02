@@ -1,21 +1,11 @@
 from strategyStandardDevPump import *
 from dataAnalysis import *
 from tools import *
-import time, itertools, threading, sys
+import time
 
 if __name__ == "__main__":
-    coinCodes = [    
-        "SHIB",
-        "ATOM",
-        "AVAX",
-        "BNB",
-        "LINK",
-        "SOL",
-        "ETH",
-        "BTC",
-        "LTC",
-        "XRP",
-        "DOGE"
+    coinCodes = [
+        "SOL"
     ]
 
     allData = []

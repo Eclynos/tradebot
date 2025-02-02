@@ -1,4 +1,4 @@
-import requests, csv, time
+import requests, csv, time, itertools, sys
 from math import ceil
 
 
@@ -92,23 +92,14 @@ def wait_next_frame(timeLoop=5):
     time.sleep(ceil(60 * timeLoop - actual))
 
 
-def getDataIndex(time, start, end, data):
+def getDataIndex(time, start, end, data, launch_sample_size):
     start = time - time_frame_to_ms(start)
     end = time - time_frame_to_ms(end)
-    if start < int(data[0]["date"]):
+    if start < int(data[0]["date"]) + launch_sample_size * 300000:
         raise ValueError(f"Start date too old for coinData. start :{start} dataStart :{data[0]["date"]}")
     if end > int(data[-1]["date"]):
         raise ValueError(f"End date too young for coinData. end :{end} dataEnd :{data[-1]["date"]}")
     return int((start - int(data[0]["date"])) / 300000), int((end - int(data[0]["date"])) / 300000)
-    """
-    startIndex = int((start - int(data[0]["date"])) / 300000)
-    endIndex = int((end - int(data[0]["date"])) / 300000)
-    if int(data[startIndex]["date"]) - start > 300000:
-        print(int(data[startIndex]["date"]) - start)
-    if int(data[endIndex]["date"]) - end > 300000:
-        print(int(data[endIndex]["date"]) - end)
-    return startIndex, endIndex
-    """
 
 
 def AreAnyCandlesMissing(data):
@@ -120,3 +111,13 @@ def AreAnyCandlesMissing(data):
             startStamp += 300000
             amount_missing += 1
     print(f"{amount_missing} candles are missing on this database")
+
+
+def spinner(stop_event):
+    global done
+    for c in itertools.cycle(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]):
+        if stop_event.is_set():
+            break
+        sys.stdout.write(f"\r{c}")
+        sys.stdout.flush()
+        time.sleep(0.1)

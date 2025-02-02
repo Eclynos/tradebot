@@ -56,13 +56,12 @@ class Strategy:
             
 
     def buyingEvaluation(self, buyType):
-        if buyType not in ["pump", "dip"]:
-            raise ValueError("buyType must me 'pump' or 'dip'")
-
         if buyType=="pump":
             bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], self.buyingBollinger)
         elif buyType=="dip":
             bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], -self.buyingBollinger)
+        else:
+            raise ValueError("buyType must me 'pump' or 'dip'")
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 
@@ -139,10 +138,8 @@ class Strategy:
 
                 if (hasPassedUnder0 and
                     self.candles[j]["date"] > tradeList[0]["date"] and
-                    self.candles[j]["price"] > bb2[j]["price"]
-                    ):
+                    self.candles[j]["price"] > bb2[j]["price"]):
 
-                    # print("- SL")
                     sellIndex = j
                     break
             

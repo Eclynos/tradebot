@@ -53,12 +53,16 @@ class Wallet:
             print("Wrong leverage mode")
    
 
-    async def leverage(self, factor, symbol):
+    async def leverage(self, factor, symbol, margin_mode):
         """Défini le taux d'effet de levier à utiliser"""
         try:
-            await self.exchange.set_leverage(factor, symbol, params={"marginCoin": "USDT"})
+            if margin_mode == "isolated":
+                params={"marginCoin": "USDT", "holdSide": "long"}
+            else:
+                params={"marginCoin": "USDT"}
+            await self.exchange.set_leverage(factor, symbol, params)
         except Exception as e:
-            raise ValueError(e)
+            print(str(factor), symbol, str(params), e)
 
 
     async def position_mode(self, mode, symbol):
@@ -283,7 +287,8 @@ class Wallet:
                 type = 'market',
                 side = direction,
                 amount = amount,
-                params = {'type': 'swap'}
+                params = {'type': 'swap', 
+                          "oneWayMode": False}
             )
             return order
 
@@ -303,7 +308,23 @@ class Wallet:
             
         except Exception as e:
             print(f"Error closing swap position: {e}")
+    
 
+    async def stopLoss(self, symbol, price, amount):
+        """Set a stop loss limit order"""
+        try:
+            order = await self.exchange.create_order(
+                symbol = symbol + ':USDT',
+                type = 'market',
+                side = 'buy',
+                amount = amount,
+                params = {'type': 'swap', 'stopLossPrice': price}
+            )
+
+            return order
+
+        except Exception as e:
+            print(f"Error fixing stop loss:\n{e}")
 
     async def close_all_p(self):
         """Ferme toutes les positions existantes"""
@@ -388,6 +409,39 @@ class Wallet:
         except Exception as e:
             print(f"Erreur lors de la récupération de l'historique des positions : {e}")
 
+
+    async def last_position(self, symbol, timestamp):
+        """Retourne une position et son pnl %"""
+
+        h = ""
+
+        try:
+            positions = await self.exchange.fetch_position_history(
+                symbol=symbol+':USDT',
+                limit=1
+            )
+
+            if positions == []:
+                return "", 0
+            p = positions[0]
+            
+            if int(p['lastUpdateTimestamp']) / 1000 < timestamp - 300:
+                print("too old position")
+                return "", 0
+            h += f"{p['symbol']} {p['side']}\n"
+            h += f"{p['info']['openTotalPos']} {symbol}\n"
+            h += f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}\n"
+            h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
+            h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n Funding fee: {p['info']['totalFunding']}"
+
+            open_price = float(p['info']['openAvgPrice'])
+            close_price = float(p['info']['closeAvgPrice'])
+            percentage_pnl = (close_price - open_price) / open_price - (close_price * float(p['info']['closeFee']) + open_price * float(p['info']['openFee']))
+            return h, percentage_pnl
+
+        except Exception as e:
+            print(f"Erreur lors de la récupération de la dernière position : {e}")
+            return "", 0
 
 
     async def transactionHistory(self, symbol, limit=None):

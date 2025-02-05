@@ -6,12 +6,15 @@ import asyncio
 
 class Manager:
     def __init__(self, symbols, settings) -> None:
+        """Initialise l'instance de la classe
+        Initialise le grand dictionnaire à partir des données du fichier json"""
         self.mi = MarketInformations()
 
         self.symbols = symbols
         self.min_amounts = {}
         self.infos = {}
         self.wallets = {}
+        self.margin_mode = settings["margin_mode"]
 
         for key, w in settings["wallets"].items():
             self.infos[key] = {}
@@ -25,18 +28,22 @@ class Manager:
 
 
     async def start(self):
+        """Connecte tous les comptes et initialise les paramètres généraux"""
         try:
             await self.mi.init()
             for w in self.wallets.values():
                 await w.init()
+                await w.exchange.set_position_mode(hedged=True)
+                w.leverage_mode(self.margin_mode)
             await self.calculate_min_amounts()
             await self.update_cost_datas()
-            await self.leverage()
+            #await self.leverage()
         except Exception as e:
             raise ValueError(e)
 
 
     async def end(self):
+        """Déconnecte tous les comptes"""
         try:
             await self.mi.account.disconnect()
             for w in self.wallets.values():
@@ -82,9 +89,10 @@ class Manager:
 
 
     async def leverage(self):
+        """Défini l'effet de levier sur un compte à partir de la donnée contenue dans le grand dictionnaire"""
         for key, w in self.wallets.items():
             for symbol in self.symbols:
-                await w.leverage(self.infos[key]['factor'], symbol)
+                await w.leverage(self.infos[key]['factor'], symbol, self.margin_mode)
     
 
     async def update_settings(self, settings):
@@ -104,9 +112,15 @@ class Manager:
                 self.infos[key]['factor'] = w["factor"] # preset leverage factor
                 self.infos[key]['amounts'] = {symbol: 0 for symbol in self.symbols}
                 self.infos[key]['buyed?'] = {symbol: False for symbol in self.symbols}
+        
+        await self.update_cost_datas()
+        #await self.leverage()
     
 
     async def load_positions(self, timeLoop):
+        """Charge les positions ouvertes sur les comptes
+        Crée les dico is_open_since et bought_type
+        """
         is_open_since = {symbol: 0 for symbol in self.symbols}
         bought_type = {symbol: "" for symbol in self.symbols}
 
@@ -122,6 +136,7 @@ class Manager:
 
 
     async def update_cost_datas(self):
+        """Met à jour les coûts contenus dans le grand dictionnaire"""
         try:
             availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
             for key, cost in zip(self.wallets.keys(), availables):
@@ -138,7 +153,7 @@ class Manager:
 
 
     async def buy_spot(self, symbol):
-        
+        """Achète une crypto en spot sur tous les comptes"""
         await self.calculate_amounts(symbol)
         
         for key, w in self.wallets.items():
@@ -159,6 +174,7 @@ class Manager:
 
 
     async def sell_spot(self, symbol):
+        """Vend tout le montant possédé d'une crypto en spot sur tous les comptes"""
         for key, w in self.wallets.items():
             order = None
             
@@ -177,7 +193,7 @@ class Manager:
     async def long_swap(self, symbol):
         """Essaie d'acheter une crypto en swap sur tous les wallets
         Renvoie le nombre d'achats effectués avec succès"""
-        purchases = 0
+        names = []
         price = await self.mi.getPrice(symbol)
 
         for key, w in self.wallets.items():
@@ -189,6 +205,7 @@ class Manager:
 
             if self.infos[key]["available"] > 5 and amount > self.min_amounts[symbol]:
                 order = None
+
                 try:
                     order = await w.openp(
                         symbol,
@@ -196,7 +213,7 @@ class Manager:
                         'buy')
                     
                     if order != None:
-                        purchases += 1
+                        names.append(key)
                         self.infos[key]['buyed?'][symbol] = True
 
                 except Exception as e:
@@ -204,13 +221,52 @@ class Manager:
             else:
                 print("Insufficient amount")
             
-        return purchases
-    
-    
+        return names
+
+
+    async def long_swap_secured(self, symbol, stopLoss):
+        """Essaie d'acheter une crypto en swap sur tous les wallets en fixant un stopLoss
+        Renvoie le nombre d'achats effectués avec succès"""
+        names = []
+        price = await self.mi.getPrice(symbol)
+        
+        for key, w in self.wallets.items():
+
+            if self.infos[key]['available'] > self.infos[key]['total'] * self.infos[key]['cost']:
+                amount = self.mi.currency_equivalence(self.infos[key]['cost'] * self.infos[key]['total'], price)
+            else:
+                amount = self.mi.currency_equivalence(self.infos[key]['available'], price)
+
+            if self.infos[key]["available"] > 5 and amount > self.min_amounts[symbol]:
+                order = None
+
+                try:
+                    order = await w.openp(
+                        symbol,
+                        amount,
+                        'buy')
+                    
+                    if order != None:
+                        names.append(key)
+                        self.infos[key]['buyed?'][symbol] = True
+                    
+                    order = await w.stopLoss(
+                        symbol,
+                        price * stopLoss
+                    )
+
+                except Exception as e:
+                    print(f"Le wallet {key} n'a pas réussi à acheter en swap\n{e}")
+            else:
+                print("Insufficient amount")
+            
+        return names
+
+
     async def close_swap(self, symbol):
         """Essaie de vendre une crypto en swap sur tous les wallets
         Renvoie le nombre de ventes effectués avec succès"""
-        sales = 0
+        names = []
         for key, w in self.wallets.items():
             order = None
             
@@ -219,19 +275,29 @@ class Manager:
                     order = await w.closep(symbol)
 
                     if order != None:
-                        sales += 1
+                        names.append(key)
                         self.infos[key]['buyed?'][symbol] = False
                 
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à vendre\n{e}")
             
-            return sales
+        return names
+    
+
+    async def close_all_swap(self):
+        """Vend TOUTES les positions ouvertes"""
+        for w in self.wallets.values():
+            try:
+                w.close_all_p()
+            except Exception as e:
+                print(f"Le wallet {str(w)} n'a pas réussi à fermer toutes les positions\n{e}")
 
 
 # INFORMATIONS GIVERS
 
 
     async def tell_positions(self):
+        """Donne les positions actuelles ouvertes sur les wallets"""
         positions = [None] * len(self.wallets)
 
         try:
@@ -258,9 +324,28 @@ class Manager:
         print(await self.wallets[wallet].positionsHistory(symbol, limit))
 
 
-    async def last_trades(self, symbol):
-        #return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
-        return await self.wallets["nathael"].positionsHistory(symbol, 1)
+    async def last_trades(self, symbol, timestamp):
+        """
+        Renvoie deux chaînes de caractères :
+        - une contenant des informations sur le dernier trade effectué sur tous les comptes
+        - une contenant les pourcentages effectués lors de ce trade
+        """
+        try:
+            positions = ""
+            pnls = ""
+            for w in self.wallets:
+                position, pnl = await self.wallets[w].last_position(symbol, timestamp)
+                if position != "":
+                    positions += f"{w}\n{position}\n"
+                if pnl != 0:
+                    pnls += f"{w} {str(pnl)}\n"
+            if len(positions) > 0:
+                positions = positions[:-1]
+            if len(pnls) > 0:
+                pnls = pnls[:-1]
+            return positions, pnls
+        except Exception as e:
+            print(f"last trades error\n{e}")
 
 
     async def balances(self):

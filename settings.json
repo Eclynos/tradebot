@@ -1,8 +1,8 @@
 {
     "wallets": {
         "nathael": {
-            "key_file": "keys_nico.txt",
-            "cost": 0.5,
+            "key_file": "keys_nathael",
+            "cost": 0.4,
             "factor": 1
         }
     },

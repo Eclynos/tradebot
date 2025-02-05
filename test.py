@@ -15,18 +15,17 @@ async def main():
     if not ping_test():
         print("erreur")
         return
+    
+    symbol = "BGB/USDT"
 
     await m.start()
 
-    start_time = time.time()
-    try:
-        fetch_tasks = [m.mi.before_last_candle(symbol, "5m", start_time) for symbol in symbols]
-        new_candles = await asyncio.gather(*fetch_tasks)
-        print(time.time() - start_time)
-    except Exception as e:
-        print(e)
+    positions = await m.wallets["nathael"].exchange.fetch_position_history(
+        symbol=symbol+':USDT',
+        limit=5
+    )
 
-    time.sleep(3)
+    print(positions)
 
     await m.end()
     

@@ -377,11 +377,11 @@ class Wallet:
 
             for p in positions:
                 h += f"{p['symbol']} {p['side']}\n"
-                h += f"{p['datetime']}\n"
-                h += f"{p['info']['openTotalPos']}\n"
+                #h += f"{p['datetime']}\n"
+                h += f"{p['info']['openTotalPos']} {symbol}\n"
                 h += f"Open: {p['info']['openAvgPrice']} Close: {p['info']['closeAvgPrice']}\n"
                 h += f"Pnl: {p['info']['pnl']} netProfit: {p['info']['netProfit']}\n"
-                h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n"
+                h += f"Openfee: {p['info']['openFee']} Closefee: {p['info']['closeFee']}\n Funding fee: {p['info']['totalFunding']}"
 
             return h
 

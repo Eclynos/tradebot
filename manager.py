@@ -31,6 +31,7 @@ class Manager:
                 await w.init()
             await self.calculate_min_amounts()
             await self.update_cost_datas()
+            await self.leverage()
         except Exception as e:
             raise ValueError(e)
 
@@ -65,7 +66,7 @@ class Manager:
 
     async def calculate_min_amounts(self):
         """Rempli le dictionnaire des montants de trading minimums:
-        Avec l'amount si l'équivalent en USDT est supérieur à 5$
+        Avec l'amount si l'équivalent en USDT est supérieur à 5$ancienne
         avec None sinon
         """
         try:
@@ -80,10 +81,10 @@ class Manager:
             print(e)
 
 
-    async def leverage(self, factor_list):
+    async def leverage(self):
         for key, w in self.wallets.items():
             for symbol in self.symbols:
-                await w.leverage(factor_list[key], symbol)
+                await w.leverage(self.infos[key]['factor'], symbol)
     
 
     async def update_settings(self, settings):
@@ -107,26 +108,28 @@ class Manager:
 
     async def load_positions(self, timeLoop):
         is_open_since = {symbol: 0 for symbol in self.symbols}
+        bought_type = {symbol: "" for symbol in self.symbols}
 
         for key, w in self.wallets.items():
             positions = await w.exchange.fetch_positions()
             for p in positions:
                 symbol = p['symbol'].split(":")[0]
                 self.infos[key]['buyed?'][symbol] = True
+                bought_type[symbol] = "dip"
                 if is_open_since[symbol] < ((time.time() * 1000) - p['timestamp']) // (timeLoop * 60000):
                     is_open_since[symbol] = int(((time.time() * 1000) - p['timestamp']) // (timeLoop * 60000))
-        return is_open_since
+        return is_open_since, bought_type
 
 
     async def update_cost_datas(self):
         try:
             availables = await asyncio.gather(*(w.get_crossed_max_available() for w in self.wallets.values()))
             for key, cost in zip(self.wallets.keys(), availables):
-                self.infos[key]['available'] = cost * 0.99
+                self.infos[key]['available'] = cost * 0.995
             await asyncio.sleep(1)
             totals = await asyncio.gather(*(w.get_crossed_total_available() for w in self.wallets.values()))
             for key, cost in zip(self.wallets.keys(), totals):
-                self.infos[key]['total'] = cost * 0.99
+                self.infos[key]['total'] = cost * 0.995
         except Exception as e:
             print(e)
 
@@ -198,6 +201,8 @@ class Manager:
 
                 except Exception as e:
                     print(f"Le wallet {key} n'a pas réussi à acheter en swap\n{e}")
+            else:
+                print("Insufficient amount")
             
         return purchases
     
@@ -254,7 +259,8 @@ class Manager:
 
 
     async def last_trades(self, symbol):
-        return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
+        #return '\n'.join([await self.wallets[w].positionsHistory(symbol, 1) for w in self.wallets])
+        return await self.wallets["nathael"].positionsHistory(symbol, 1)
 
 
     async def balances(self):

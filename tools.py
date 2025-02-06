@@ -11,6 +11,7 @@ def right(symbol):
 
 
 def readFile(coinCode, exchange) -> list:
+    """Lit les fichiers csv et retourne une liste de dictionnaires de bougie"""
     with open(f"./data/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
         allData = csv.DictReader(file_csv)
         allData = list(allData)
@@ -56,7 +57,7 @@ def ping_test(url="https://www.google.com", timeout=2):
 
 
 def binarySearch(data, value, key=None):
-    """"""
+    """Effectue une recherche binaire dans une liste de données"""
     a = 0
     b = len(data)-1
     while a != b:
@@ -93,6 +94,10 @@ def wait_next_frame(timeLoop=5):
 
 
 def getDataIndex(time, start, end, data, launch_sample_size):
+    """
+    Trouve les indices de début et de fin correspondant à la période donnée
+    dans la liste des bougies
+    """
     start = time - time_frame_to_ms(start)
     end = time - time_frame_to_ms(end)
     if start < int(data[0]["date"]) + launch_sample_size * 300000:
@@ -103,6 +108,10 @@ def getDataIndex(time, start, end, data, launch_sample_size):
 
 
 def AreAnyCandlesMissing(data):
+    """
+    Regarde si il y a des espaces dans la liste des bougies
+    renvoie le nombre d'espace correspondant au nombre de bougies manquantes
+    """
     startStamp = int(data[0]["date"])
     amount_missing = 0
     for i in range(len(data)):
@@ -114,6 +123,9 @@ def AreAnyCandlesMissing(data):
 
 
 def spinner(stop_event):
+    """
+    Affiche une jolie animation de chargement
+    """
     global done
     for c in itertools.cycle(["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]):
         if stop_event.is_set():

@@ -15,6 +15,8 @@ data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 currentDate = time.time() * 1000
 SEindex = [getDataIndex(currentDate, "18M", "6M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
 
+print(SEindex)
+
 data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
 
@@ -50,7 +52,7 @@ for cc in range(len(coinCodes)):
                         s.modifyParams(power1, power2, buyingBollinger, sellingBollinger1, sellingBollinger2)
 
                         s.candles = data[cc]
-                        tradeTimeList = s.batchBuyingEvaluation()
+                        tradeTimeList = s.batchBuyingEvaluation("dip")
 
                         tradeList = []
                         j = 0
@@ -69,6 +71,6 @@ for cc in range(len(coinCodes)):
                             best_yield = result[1]
 
                         print(len(tradeTimeList))
-                        print(time.time() - execution_time)
+                        print(time.time() - execution_time, "s")
                     
     print(f"The best params for {coinCodes[cc]} are:\n{str(best_params)}\nyield: {best_yield}\nCalculation time: {time.time() - start_time}")

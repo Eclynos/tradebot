@@ -37,18 +37,27 @@ class Strategy:
         if len(self.sd) > self.weightedAvgSize:
             self.sdWeightedAvg += self.dA.simpleWeightedAverage(self.sd[-self.weightedAvgSize-1:], self.weightedAvgSize)
         
-    def batchBuyingEvaluation(self):
+    def batchBuyingEvaluation(self, buyType):
         self.ma = self.dA.exponentialMovingAverage(self.candles, self.movingAverageSize, self.power1)
         self.sd = self.dA.fastExponentialStandardDeviation(self.candles, self.movingAverageSize, self.power1, self.power2)
         self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
-        bb = self.dA.bollinger(self.ma, self.sd, self.buyingBollinger)
+        if buyType == "pump":
+            bb = self.dA.bollinger(self.ma, self.sd, self.buyingBollinger)
+        elif buyType == "dip":
+            bb = self.dA.bollinger(self.ma, self.sd, -self.buyingBollinger)
+        else:
+            raise ValueError("buytype must be 'pump' or 'dip'")
+
         
         buyTimes = []
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):
+
             if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] 
             and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] 
-            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1
-            and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]
+            and ((buyType == "dip" and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1)
+              or (buyType == "pump" and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == 1))
+            and ((buyType == "dip" and self.candles[i]["price"] < bb[i-self.movingAverageSize]["price"])
+              or (buyType == "pump" and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]))
             ):
                 buyTimes.append(self.candles[i]["date"])
 
@@ -63,7 +72,7 @@ class Strategy:
         elif buyType=="dip":
             bb = self.dA.bollinger([self.ma[-1]], [self.sd[-1]], -self.buyingBollinger)
         else:
-            raise ValueError("buyType must me 'pump' or 'dip'")
+            raise ValueError("buyType must be 'pump' or 'dip'")
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 

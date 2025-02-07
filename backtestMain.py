@@ -26,6 +26,7 @@ if __name__ == "__main__":
     endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("6M"), "date")]
                  for j in range(len(coinCodes))]
     
+    print(startIndex, endIndex)
     
     # resultList = []
     # for i in range(100, 101, 10):
@@ -37,9 +38,11 @@ if __name__ == "__main__":
     #                 s = Strategy(i, j, 0.995, 0.99, 1.5, k/10, l/10)
     #                 for index in range(len(startIndex[0])):
     #                     for cc in range(len(coinCodes)):
+    #                         s.candles = usableData[cc]
+
     #                         if startIndex[cc][index] > i+j:
                             
-    #                             tradeTimeList = s.batchBuyingEvaluation(usableData[cc][startIndex[cc][index]-i:endIndex[cc][index]])
+    #                             tradeTimeList = s.batchBuyingEvaluation()
     #                             tradeList = [usableData[cc][binarySearch(usableData[cc], tradeTimeList[k], "date")] for k in range(len(tradeTimeList))]
                                 
     #                             sell = s.batchSellingEvaluation(usableData[cc][startIndex[cc][index]: endIndex[cc][index]], tradeList)
@@ -74,10 +77,10 @@ if __name__ == "__main__":
                         tradeList.append(usableData[cc][i])
                         nbIndexBoughtAgo = 0
                         buyType = "dip"
-                    elif (s.buyingEvaluation("pump") and nbIndexBoughtAgo == -1):
-                        tradeList.append(usableData[cc][i])
-                        nbIndexBoughtAgo = 0
-                        buyType = "pump"
+                    # elif (s.buyingEvaluation("pump") and nbIndexBoughtAgo == -1):
+                    #     tradeList.append(usableData[cc][i])
+                    #     nbIndexBoughtAgo = 0
+                    #     buyType = "pump"
                     
                     if nbIndexBoughtAgo != -1 and s.sellingEvaluation(nbIndexBoughtAgo, buyType):
                         wallet += 0.25*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0008)
@@ -99,7 +102,7 @@ if __name__ == "__main__":
     
     print(som, nbOfTrades)
     exit()
-    # som=0
+    som=0
     
     # for cc in range(len(coinCodes)):
     #     for index in range(len(startIndex[0])):
@@ -108,7 +111,7 @@ if __name__ == "__main__":
     #             tradeList = []
     #             print(startIndex[cc][index])
     #             for i in range(startIndex[cc][index], endIndex[cc][index]-1):
-    #                 if (s.buyingEvaluation(usableData[cc][i-2000:i+1]) 
+    #                 if (s.buyingEvaluation(usableData[cc][i-2000:i+1], "dip") 
     #                     and (len(tradeList) == 0 or usableData[cc][i]["date"] > tradeList[-1]["date"] + time_frame_to_s("0m"))):
     #                     tradeList.append(usableData[cc][i])
     #                     # print("bought : ", i)
@@ -126,7 +129,7 @@ if __name__ == "__main__":
     # print(som)
 
 
-    # exit(0)
+    exit(0)
     mp = da.minPrice(usableData[-1][startIndex[-1][0]:endIndex[-1][0]])
     bb15 = da.bollinger(s.ma, s.sd, 1.5)
     showsd = [{"date":s.sd[i]["date"], "price": mp + s.sd[i]["price"]} for i in range(len(s.sd))]

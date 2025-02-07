@@ -75,7 +75,8 @@ for cc in range(len(coinCodes)):
                             s.updateLists()
                             if is_open_since:
                                 if s.sellingEvaluation(is_open_since, STRATEGY_NAME):
-                                    profit += PERCENTAGE_TRADED * (s.candles[-1]["price"] - data[cc][-is_open_since]["price"]) / (data[cc][-is_open_since]["price"] - 0.0008)
+                                    profit += profit * PERCENTAGE_TRADED * ((s.candles[-1]["price"] - data[cc][-is_open_since]["price"]) / (data[cc][-is_open_since]["price"] - 0.0008))
+                                    print(s.candles[-1]["price"], data[cc][-is_open_since]["price"], data[cc][-is_open_since]["price"] - 0.0008)
                                     is_open_since = 0
                                     nbTrades += 1
                                 else:

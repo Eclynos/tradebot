@@ -1,0 +1,1 @@
+def average(liste):

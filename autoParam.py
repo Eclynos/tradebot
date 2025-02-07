@@ -18,7 +18,7 @@ SEindex = [getDataIndex(currentDate, "18M", "6M", coinData, LAUNCH_SAMPLE_SIZE) 
 data = [data[i][SEindex[i][0]-LAUNCH_SAMPLE_SIZE:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
 
-NB_INSTANCES_PER_PARAM = 9
+NB_INSTANCES_PER_PARAM = 1
 NB_PARAMS = 5
 STRATEGY_NAME = "dip"
 PERCENTAGE_TRADED = 0.5
@@ -27,12 +27,22 @@ CANDLES_IN_PERIOD = SEindex[0][1] - SEindex[0][0]
 s = Strategy(100, SAMPLE_SIZE, 0.92, 0.92, 1.5, 0, 1, 100)
 
 INSTANCES = {
+    "power1": [0.94],
+    "power2": [0.94],
+    "buyingBollinger": [1.5],
+    "sellingBollinger1": [0],
+    "sellingBollinger2": [1]
+}
+
+"""
+INSTANCES = {
     "power1": [0.936, 0.937, 0.938, 0.939, 0.94, 0.941, 0.942, 0.943, 0.944],
     "power2": [0.936, 0.937, 0.938, 0.939, 0.94, 0.941, 0.942, 0.943, 0.944],
     "buyingBollinger": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9],
     "sellingBollinger1": [0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08],
     "sellingBollinger2": [0.996, 0.997, 0.998, 0.999, 1, 1.01, 1.02, 1.03, 1.04]
 }
+"""
 
 for cc in range(len(coinCodes)):
 
@@ -42,7 +52,7 @@ for cc in range(len(coinCodes)):
     start_time = time.time()
 
     best_params = {}
-    best_yield = 0
+    best_yield = -1000000000000
 
     for power1 in INSTANCES["power1"]:
         for power2 in INSTANCES["power2"]:
@@ -55,7 +65,7 @@ for cc in range(len(coinCodes)):
                         s.createLists()
                         s.candles = s.candles[-2001:]
 
-                        wallet = 1
+                        profit = 1
                         nbTrades = 0
                         is_open_since = 0
 
@@ -65,16 +75,20 @@ for cc in range(len(coinCodes)):
                             s.updateLists()
                             if is_open_since:
                                 if s.sellingEvaluation(is_open_since, STRATEGY_NAME):
-                                    wallet += wallet * PERCENTAGE_TRADED * (s.candles[-1]["price"] - data[cc][-is_open_since]["price"]) / (data[cc][-is_open_since]["price"] - 0.0008)
+                                    profit += PERCENTAGE_TRADED * (s.candles[-1]["price"] - data[cc][-is_open_since]["price"]) / (data[cc][-is_open_since]["price"] - 0.0008)
                                     is_open_since = 0
+                                    nbTrades += 1
                                 else:
                                     is_open_since += 1
                             elif s.buyingEvaluation(STRATEGY_NAME):
                                     is_open_since = 1
                         
-                        if wallet > best_yield:
+                        if profit > best_yield:
                             best_params = {"power1": power1, "power2": power2, "buyingBollinger": buyingBollinger, "sellingBollinger1" : sellingBollinger1, "sellingBollinger2": sellingBollinger2}
-                            best_yield = wallet
+                            best_yield = profit
+                        
+                        #print(profit)
+                        print(nbTrades)
                         print(time.time() - execution_time)
 
     stop_event.set()

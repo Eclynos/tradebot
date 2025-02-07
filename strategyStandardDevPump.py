@@ -52,6 +52,8 @@ class Strategy:
             ):
                 buyTimes.append(self.candles[i]["date"])
 
+        # tester si plus opti en compréhension
+
         return buyTimes
             
 
@@ -107,7 +109,7 @@ class Strategy:
 
 
 
-    def batchSellingEvaluation(self, tradeList):
+    def batchSellingEvaluation(self, tradeList, percentage_traded):
         numberOfTrades = len(tradeList)
         sellRes = []
         numberOfPositive = 0
@@ -147,7 +149,7 @@ class Strategy:
             sellRes.append([tradeList[0]['date'], self.candles[sellIndex]['date'], tradeList[0]['price'], self.candles[sellIndex]['price']])
             increase = self.candles[sellIndex]["price"] / tradeList[0]["price"] -1
 
-            profit += profit/2 * (increase - 0.0012)
+            profit += profit * percentage_traded * (increase - 0.0012)
 
             if increase > 0:
                 numberOfPositive += 1
@@ -155,7 +157,7 @@ class Strategy:
             
         if numberOfTrades == 0:
             return (sellRes, profit, 0, 0)
-        return (sellRes, profit, numberOfPositive/numberOfTrades, numberOfTrades)  
+        return (sellRes, profit, numberOfPositive / numberOfTrades, numberOfTrades)  
     
     def clean(self):
         if len(self.ma) > 5000:

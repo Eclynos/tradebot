@@ -133,3 +133,10 @@ def spinner(stop_event):
         sys.stdout.write(f"\r{c}")
         sys.stdout.flush()
         time.sleep(0.1)
+
+def timeStampToIndex(data, timeStamp):
+    """
+    Renvoie l'indice de la case de data où l'entrée date est égale à timeStamp
+    """
+    tailleBougie = data[1]["date"] - data[0]["date"]
+    return (timeStamp-data[0]["date"]) // tailleBougie

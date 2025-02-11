@@ -25,9 +25,9 @@ if __name__ == "__main__":
                   for j in range(len(coinCodes))]
     endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("6M"), "date")]
                  for j in range(len(coinCodes))]
+        
     
-    print(startIndex, endIndex)
-    
+
     # resultList = []
     # for i in range(100, 101, 10):
     #     for j in range(2000, 2001, 100):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
             wallet = 1
             if startIndex[cc][index] > 2100:
                 nbIndexBoughtAgo = -1
-                s = Strategy(100, 2000, 0.92, 0.92, 1.5, 0, 1, 100)
+                s = Strategy(100, 2000, 0.94, 0.94, 1.5, 0, 1, 100)
                 tradeList = []
 
                 s.candles = usableData[cc][startIndex[cc][index]-2104:startIndex[cc][index]+1]
@@ -82,7 +82,7 @@ if __name__ == "__main__":
                     #     nbIndexBoughtAgo = 0
                     #     buyType = "pump"
                     
-                    if nbIndexBoughtAgo != -1 and s.sellingEvaluation(nbIndexBoughtAgo, buyType):
+                    if nbIndexBoughtAgo != -1 and s.sellingEvaluation(nbIndexBoughtAgo, "pump"):
                         wallet += 0.25*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0008)
                         solList.append([tradeList[0]["date"], usableData[cc][i]["date"], usableData[cc][tradeList[0]["index"]]["price"], usableData[cc][i]["price"]])
                         tradeList.pop()
@@ -99,7 +99,7 @@ if __name__ == "__main__":
             nbOfTrades += len(solList)
             som*=wallet
 
-    
+    print([solList[a][0] for a in range(len(solList))])
     print(som, nbOfTrades)
     exit()
     som=0

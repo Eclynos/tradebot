@@ -47,9 +47,7 @@ class Strategy:
             bb = self.dA.bollinger(self.ma, self.sd, -self.buyingBollinger)
         else:
             raise ValueError("buytype must be 'pump' or 'dip'")
-
         
-        """
         buyTimes = []
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):
 
@@ -61,9 +59,9 @@ class Strategy:
               or (buyType == "pump" and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]))
             ):
                 buyTimes.append(self.candles[i]["date"])
-        """
+        
 
-        buyTimes = [self.candles[i]["date"] for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2) if self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1 and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]]
+        # buyTimes = [self.candles[i]["date"] for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2) if self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1 and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]]
 
         return buyTimes
             
@@ -78,11 +76,11 @@ class Strategy:
         
         if (len(self.sdWeightedAvg) > 2 and
             self.sd[-1]["price"] > self.sdWeightedAvg[-1]["price"] and self.sd[-2]["price"] < self.sdWeightedAvg[-2]["price"] 
-            and ((buyType=="pump"  and self.candles[-1]["price"] > bb[-1]["price"])
+            and ((buyType=="pump" and self.candles[-1]["price"] > bb[-1]["price"])
               or (buyType=="dip" and self.candles[-1]["price"] < bb[-1]["price"]))
 
             ):
-            if ((buyType=="pump"  and self.dA.trend(self.candles[-self.trendSize:], 1/2) == 1) 
+            if ((buyType=="pump" and self.dA.trend(self.candles[-self.trendSize:], 1/2) == 1) 
              or (buyType=="dip" and self.dA.trend(self.candles[-self.trendSize:], 1/2) == -1)):
                 return True
 
@@ -126,7 +124,7 @@ class Strategy:
         numberOfPositive = 0
         profit = 1
 
-        bb = self.dA.bollinger(self.ma, self.sd, self.sellingBollinger1)
+        bb = self.dA.bollinger(self.ma, self.sd, -self.sellingBollinger1)
         bb2 = self.dA.bollinger(self.ma, self.sd, self.sellingBollinger2)
 
         for i in range(numberOfTrades):
@@ -137,7 +135,7 @@ class Strategy:
                     sellIndex = j
                     break
                 if (self.candles[j]["date"] > tradeList[0]["date"] and
-                    self.candles[j]["price"] < bb[j]["price"]):
+                    self.candles[j]["price"] > bb[j]["price"]):
                     hasPassedUnder0 = True
                 if (j-self.weightedAvgSize > 0 and
                     self.candles[j]["date"] > tradeList[0]["date"] and
@@ -160,7 +158,7 @@ class Strategy:
             sellRes.append([tradeList[0]['date'], self.candles[sellIndex]['date'], tradeList[0]['price'], self.candles[sellIndex]['price']])
             increase = self.candles[sellIndex]["price"] / tradeList[0]["price"] - 1
 
-            profit += profit * percentage_traded * (increase - 0.008)
+            profit += profit * percentage_traded * (increase - 0.0008)
 
             if increase > 0:
                 numberOfPositive += 1

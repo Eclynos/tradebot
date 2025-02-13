@@ -5,7 +5,11 @@ import time
 
 if __name__ == "__main__":
     coinCodes = [
-        "SOL"
+        "BNB",
+        "SOL",
+        "DOGE",
+        "ATOM",
+        "SHIB"
     ]
 
     allData = []
@@ -21,9 +25,9 @@ if __name__ == "__main__":
     
     da = DataAnalysis()
     currentDate = int(time.time())
-    startIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("18M"), "date")]
+    startIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("16M"), "date")]
                   for j in range(len(coinCodes))]
-    endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("6M"), "date")]
+    endIndex = [[binarySearch(usableData[j], currentDate-time_frame_to_s("4M"), "date")]
                  for j in range(len(coinCodes))]
         
     
@@ -82,7 +86,7 @@ if __name__ == "__main__":
                     #     nbIndexBoughtAgo = 0
                     #     buyType = "pump"
                     
-                    if nbIndexBoughtAgo != -1 and s.sellingEvaluation(nbIndexBoughtAgo, "pump"):
+                    if nbIndexBoughtAgo != -1 and s.sellingEvaluation(nbIndexBoughtAgo, "dip"):
                         wallet += 0.25*wallet * ((usableData[cc][i]["price"] - tradeList[0]["price"]) / tradeList[0]["price"] - 0.0008)
                         solList.append([tradeList[0]["date"], usableData[cc][i]["date"], usableData[cc][tradeList[0]["index"]]["price"], usableData[cc][i]["price"]])
                         tradeList.pop()

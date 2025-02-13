@@ -91,10 +91,10 @@ class Strategy:
             return False
         
         if boughtType=="pump":
-            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sellingBollinger1)
+            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger1)
             bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
         elif boughtType=="dip":
-            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], self.sd[-numberOfIndexBoughtAgo-numberOfIndexBoughtAgo:], -self.sellingBollinger1)
+            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], -self.sellingBollinger1)
             bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo-1:], self.sd[-numberOfIndexBoughtAgo-1:], self.sellingBollinger2)
         else:
             raise ValueError("buyType must me 'pump' or 'dip'")
@@ -131,6 +131,7 @@ class Strategy:
             hasPassedUnder0 = False
             for j in range(tradeList[0]["index"]-self.candles[0]["index"], len(self.candles)):
                 # print(self.candles[j], self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize])
+                print(self.candles[j]["date"], bb[j]["date"])
                 if j == len(self.candles)-1:
                     sellIndex = j
                     break

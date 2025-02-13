@@ -7,13 +7,17 @@ SAMPLE_SIZE = 2000
 LAUNCH_SAMPLE_SIZE = 2104
 
 coinCodes = [
-    "SOL",
+        # "BNB",
+        "SOL",
+        "DOGE",
+        # "ATOM",
+        # "SHIB"
 ]
 
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getDataIndex(currentDate, "18M", "6M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
+SEindex = [getDataIndex(currentDate, "16M", "4M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
 
 data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
@@ -50,20 +54,20 @@ for cc in range(len(coinCodes)):
                         execution_time = time.time()
                         s.modifyParams(power1, power2, buyingBollinger, sellingBollinger1, sellingBollinger2)
 
-                        # s.candles = data[cc]
+                        s.candles = data[cc]
                         tradeTimeList = s.batchBuyingEvaluation("dip")
 
                         tradeList = [data[cc][timeStampToIndex(data[cc], timeStamp)] for timeStamp in tradeTimeList]
 
-                        # s.candles = data[cc][100:]
+                        s.candles = data[cc][100:]
                         result = s.batchSellingEvaluation(tradeList, PERCENTAGE_TRADED)
 
                         if result[1] > best_yield:
                             best_params = {"power1": power1, "power2": power2, "buyingBollinger": buyingBollinger, "sellingBollinger1" : sellingBollinger1, "sellingBollinger2": sellingBollinger2}
                             best_yield = result[1]
 
-                        print([result[0][a][0] for a in range(len(result[0]))] )
-                        print(len(tradeTimeList))
+                        print(result)
+                        # print(len(tradeTimeList))
                         times.append(time.time() - execution_time)
 
     print(f"Average time: {sum(times) / len(times)}")      

@@ -131,7 +131,6 @@ class Strategy:
             hasPassedUnder0 = False
             for j in range(tradeList[0]["index"]-self.candles[0]["index"], len(self.candles)):
                 # print(self.candles[j], self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize])
-                print(self.candles[j]["date"], bb[j]["date"])
                 if j == len(self.candles)-1:
                     sellIndex = j
                     break

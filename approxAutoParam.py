@@ -31,8 +31,8 @@ CANDLES_IN_PERIOD = SEindex[0][1] - SEindex[0][0]
 s = Strategy(100, SAMPLE_SIZE, 0.92, 0.92, 1.5, 0, 1, 100)
 
 INSTANCES = {
-    "power1": [0.94],
-    "power2": [0.94],
+    "power1": [0.9+0.01*i for i in range(11)],
+    "power2": [0.9+0.01*i for i in range(11)],
     "buyingBollinger": [1.5],
     "sellingBollinger1": [0],
     "sellingBollinger2": [1]
@@ -66,7 +66,7 @@ for cc in range(len(coinCodes)):
                             best_params = {"power1": power1, "power2": power2, "buyingBollinger": buyingBollinger, "sellingBollinger1" : sellingBollinger1, "sellingBollinger2": sellingBollinger2}
                             best_yield = result[1]
 
-                        print(result)
+                        # print(result)
                         # print(len(tradeTimeList))
                         times.append(time.time() - execution_time)
 

@@ -13,7 +13,7 @@ coinCodes = [
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getDataIndex(currentDate, "16M", "4M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
+SEindex = [getDataIndex(currentDate, "8M", "4M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
 
 data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
@@ -36,11 +36,11 @@ INSTANCES = {
 """
 
 INSTANCES_BOUNDS = {
-    "power1" : (0.9, 1.1),
-    "power2" : (0.8, 1.1),
-    "buyingBollinger": (0, 3),
-    "sellingBollinger1": (-1, 1),
-    "sellingBollinger2": (0, 3)
+    "power1" : [0.8, 1],
+    "power2" : [0.8, 1],
+    "buyingBollinger": [0, 3],
+    "sellingBollinger1": [-1, 1],
+    "sellingBollinger2": [0, 3]
 }
 
 NB_POINTS_TESTES_ENTRE_BORNES = 3
@@ -81,14 +81,12 @@ for cc in range(len(coinCodes)):
 
     bounds_copy = INSTANCES_BOUNDS.copy()
     for _ in range(NB_RECURSIONS):
-        meilleurPoint = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy)
-        meilleurParam = meilleurPoint[0]
-        meilleurYield = meilleurPoint[1]
-        for param in meilleurPoint:
+        meilleurParam, meilleurYield = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy)
+        for param in meilleurParam:
             bounds_copy[param][0] = meilleurParam[param] - REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
             bounds_copy[param][1] = meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
     
-    print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurPoint)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
+    print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurParam)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
 
 
 """

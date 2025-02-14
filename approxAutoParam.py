@@ -41,7 +41,7 @@ INSTANCES_BOUNDS = {
     "sellingBollinger2": (0, 3)
 }
 
-NB_POINTS_ENTRE_BORNES = 4
+NB_POINTS_TESTES_ENTRE_BORNES = 4
 NB_RECURSIONS = 5
 REDUCTION_PAR_ETAPE = 0.25
 
@@ -50,7 +50,7 @@ for cc in range(len(coinCodes)):
 
     bounds_copy = INSTANCES_BOUNDS.copy()
     for _ in range(NB_RECURSIONS):
-        meilleurPoint = bestPoint(cc, NB_POINTS_ENTRE_BORNES, bounds_copy)
+        meilleurPoint = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy)
         meilleurParam = meilleurPoint[0]
         meilleurYield = meilleurPoint[1]
         for param in meilleurPoint:

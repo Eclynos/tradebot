@@ -25,6 +25,7 @@ CANDLES_IN_PERIOD = SEindex[0][1] - SEindex[0][0]
 
 s = Strategy(100, SAMPLE_SIZE, 0.92, 0.92, 1.5, 0, 1, 100)
 
+"""
 INSTANCES = {
     "power1": [0.936, 0.937, 0.938, 0.939, 0.94, 0.941, 0.942, 0.943, 0.944],
     "power2": [0.936, 0.937, 0.938, 0.939, 0.94, 0.941, 0.942, 0.943, 0.944],
@@ -32,6 +33,7 @@ INSTANCES = {
     "sellingBollinger1": [0, 0.01, 0.02, 0.03],
     "sellingBollinger2": [0.998, 0.999, 1, 1.01, 1.02]
 }
+"""
 
 INSTANCES_BOUNDS = {
     "power1" : (0.9, 1.1),
@@ -41,42 +43,22 @@ INSTANCES_BOUNDS = {
     "sellingBollinger2": (0, 3)
 }
 
-NB_POINTS_TESTES_ENTRE_BORNES = 4
+NB_POINTS_TESTES_ENTRE_BORNES = 3
 NB_RECURSIONS = 5
 REDUCTION_PAR_ETAPE = 0.25
 
-for cc in range(len(coinCodes)):
-    st = time.time()
-
-    bounds_copy = INSTANCES_BOUNDS.copy()
-    for _ in range(NB_RECURSIONS):
-        meilleurPoint = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy)
-        meilleurParam = meilleurPoint[0]
-        meilleurYield = meilleurPoint[1]
-        for param in meilleurPoint:
-            bounds_copy[param][0] = meilleurParam[param] - REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
-            bounds_copy[param][1] = meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
-    
-    print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurPoint)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
-
-
-
-for cc in range(len(coinCodes)):
-
+def bestPoint(cc, nb_points_testes, bornes):
+    """Renvoyer best_params et best_yield"""
     best_params = {}
     best_yield = -1000
-    times = []
 
-    count = 0
-
-    start_time = time.time()
     s.candles = data[cc]
-    for power1 in INSTANCES["power1"]:
-        for power2 in INSTANCES["power2"]:
-            for buyingBollinger in INSTANCES["buyingBollinger"]:
-                for sellingBollinger1 in INSTANCES["sellingBollinger1"]:
-                    for sellingBollinger2 in INSTANCES["sellingBollinger2"]:
-                        execution_time = time.time()
+    for power1 in [bornes["power1"][0] + (bornes["power1"][1] - bornes["power1"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
+        for power2 in [bornes["power2"][0] + (bornes["power2"][1] - bornes["power2"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
+            for buyingBollinger in [bornes["buyingBollinger"][0] + (bornes["buyingBollinger"][1] - bornes["buyingBollinger"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
+                for sellingBollinger1 in [bornes["sellingBollinger1"][0] + (bornes["sellingBollinger1"][1] - bornes["sellingBollinger1"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
+                    for sellingBollinger2 in [bornes["sellingBollinger2"][0] + (bornes["sellingBollinger2"][1] - bornes["sellingBollinger2"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
+
                         s.modifyParams(power1, power2, buyingBollinger, sellingBollinger1, sellingBollinger2)
 
                         s.candles = data[cc]
@@ -91,12 +73,22 @@ for cc in range(len(coinCodes)):
                             best_params = {"power1": power1, "power2": power2, "buyingBollinger": buyingBollinger, "sellingBollinger1" : sellingBollinger1, "sellingBollinger2": sellingBollinger2}
                             best_yield = result[1]
 
-                        # print(result)
-                        # print(len(tradeTimeList))
-                        times.append(time.time() - execution_time)
+    return best_params, best_yield
 
-    print(f"Average time: {sum(times) / len(times)}")      
-    print(f"The best params for {coinCodes[cc]} are:\n{str(best_params)}\nyield: {best_yield}\nCalculation time: {time.time() - start_time}")
+
+for cc in range(len(coinCodes)):
+    st = time.time()
+
+    bounds_copy = INSTANCES_BOUNDS.copy()
+    for _ in range(NB_RECURSIONS):
+        meilleurPoint = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy)
+        meilleurParam = meilleurPoint[0]
+        meilleurYield = meilleurPoint[1]
+        for param in meilleurPoint:
+            bounds_copy[param][0] = meilleurParam[param] - REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
+            bounds_copy[param][1] = meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
+    
+    print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurPoint)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
 
 
 """

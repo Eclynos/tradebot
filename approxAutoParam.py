@@ -36,8 +36,8 @@ INSTANCES = {
 """
 
 INSTANCES_BOUNDS = {
-    "power1" : (0.9, 1.1),
-    "power2" : (0.8, 1.1),
+    "power1" : (0.9, 1),
+    "power2" : (0.8, 1),
     "buyingBollinger": (0, 3),
     "sellingBollinger1": (-1, 1),
     "sellingBollinger2": (0, 3)

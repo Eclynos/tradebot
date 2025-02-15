@@ -1,7 +1,5 @@
-import numpy
-import matplotlib.pyplot as plt
-import copy
-import math
+import numpy, copy, math
+#import matplotlib.pyplot as plt
 sqrt = math.sqrt
 
 class DataAnalysis:
@@ -177,18 +175,18 @@ class DataAnalysis:
         nf1 = 0
         nf2 = 0
         for i in range(popSize):
-            s1 += power1**(popSize-i-1) * data[i]["price"] ** 2
-            s2 += power1**(popSize-i-1) * data[i]["price"]
-            s3 += power2**(popSize-i-1) * data[i]["price"]
-            nf1 += power1**(popSize-i-1)
-            nf2 += power2**(popSize-i-1)
+            s1 += power1 ** (popSize-i-1) * data[i]["price"] ** 2
+            s2 += power1 ** (popSize-i-1) * data[i]["price"]
+            s3 += power2 ** (popSize-i-1) * data[i]["price"]
+            nf1 += power1 ** (popSize-i-1)
+            nf2 += power2 ** (popSize-i-1)
         
         sd.append({"date": data[popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2*nf2) * s3*s3})
-        for i in range(1, len(data)-popSize):
-            s1 = power1*s1 - power1**popSize * data[i-1]["price"]*data[i-1]["price"] + data[i+popSize-1]["price"]*data[i+popSize-1]["price"]
-            s2 = power1*s2 - power1**popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
-            s3 = power2*s3 - power2**popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
-            sd.append({"date": data[i+popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1/(nf2*nf2) * s3*s3})
+        for i in range(1, len(data) - popSize):
+            s1 = power1*s1 - power1 ** popSize * data[i-1]["price"]*data[i-1]["price"] + data[i+popSize-1]["price"]*data[i+popSize-1]["price"]
+            s2 = power1*s2 - power1 ** popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
+            s3 = power2*s3 - power2 ** popSize * data[i-1]["price"] + data[i+popSize-1]["price"]
+            sd.append({"date": data[i + popSize-1]["date"], "price":s1 - 2/nf2 * s2 * s3 + nf1 / (nf2*nf2) * s3*s3})
 
         for i in range(len(sd)):
             sd[i]["price"] = sqrt(sd[i]["price"]/nf1)
@@ -199,7 +197,7 @@ class DataAnalysis:
         sd = []
         normalisationFactor = 0
         for i in range(popSize):
-            normalisationFactor += powerMultiplier**i 
+            normalisationFactor += powerMultiplier ** i 
 
         for i in range(len(MA)):
             seum = 0
@@ -293,6 +291,7 @@ class DataAnalysis:
     def bollinger(self, ma, sd, standardDevFactor):
         return [{"date" : ma[i]["date"], "price" : ma[i]["price"] + standardDevFactor * sd[i]["price"]} for i in range(len(ma))]
 
+    """
     def visualisation(self, coinCode, *args):
         plt.figure(figsize=(500,100), dpi=80)
         plt.xticks(range(args[0][0]["date"], args[0][-1]["date"], (args[0][-1]["date"] - args[0][0]["date"]) // 500))
@@ -307,7 +306,7 @@ class DataAnalysis:
                     plt.plot([args[i][j][0], args[i][j][1]], [args[i][j][2], args[i][j][3]], color=("green" if args[i][j][2] < args[i][j][3] else "red"), lw=3)
         plt.grid()
         plt.savefig(f"backtest-images/{coinCode}.jpg")
-            
+    """
 
 
 

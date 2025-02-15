@@ -123,7 +123,7 @@ async def main():
                             is_open_since[symbol] = 0
                         else:
                             has_been_closed[symbol] = True
-                            trade_logger.info(f"{str(names)} wallets closed {symbol}")
+                            trade_logger.info(f"{" and ".join(names)} wallets closed {symbol}")
                 else:
                     if s[symbol].buyingEvaluation("dip"):
                         trade_logger.info(f"Buy {symbol} at {await m.mi.getPrice(symbol)}")
@@ -133,7 +133,7 @@ async def main():
                         if names == []:
                             trade_logger.info(f"Nobody bought {symbol}")
                         else:
-                            trade_logger.info(f"{str(names)} wallets bought {symbol}")
+                            trade_logger.info(f"{" and ".join(names)} wallets bought {symbol}")
 
         for symbol in symbols:
             if has_been_closed[symbol]:
@@ -240,3 +240,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+# donner une instance de params par crypto

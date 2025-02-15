@@ -1,39 +1,49 @@
 from strategyStandardDevPump import *
 from dataAnalysis import *
 from tools import *
-import time, threading, sys
+import time
+from multiprocessing import Pool
 
 SAMPLE_SIZE = 2000
 LAUNCH_SAMPLE_SIZE = 2104
 
 coinCodes = [
-    "SOL",
+    "SOL"
 ]
+
+"""
+coinCodes = [
+    "BTC",
+    "ETH",
+    "SOL",
+    "DOGE",
+    "DOT",
+    "BNB",
+    "PEPE",
+    "SUI",
+    "DOGE",
+    "DOT",
+    "TRX",
+    "LTC",
+    "AVAX",
+    "ADA",
+    "XRP",
+    "APE",
+    "FET"
+]
+"""
 
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getDataIndex(currentDate, "8M", "4M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
+SEindex = [getDataIndex(currentDate, "8M", "6M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
 
 data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
 
-
 STRATEGY_NAME = "dip"
 PERCENTAGE_TRADED = 0.25
 CANDLES_IN_PERIOD = SEindex[0][1] - SEindex[0][0]
-
-s = Strategy(100, SAMPLE_SIZE, 0.92, 0.92, 1.5, 0, 1, 100)
-
-"""
-INSTANCES = {
-    "power1": [0.936, 0.937, 0.938, 0.939, 0.94, 0.941, 0.942, 0.943, 0.944],
-    "power2": [0.936, 0.937, 0.938, 0.939, 0.94, 0.941, 0.942, 0.943, 0.944],
-    "buyingBollinger": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9],
-    "sellingBollinger1": [0, 0.01, 0.02, 0.03],
-    "sellingBollinger2": [0.998, 0.999, 1, 1.01, 1.02]
-}
-"""
 
 INSTANCES_BOUNDS = {
     "power1" : [0.8, 1],
@@ -44,30 +54,32 @@ INSTANCES_BOUNDS = {
 }
 
 NB_POINTS_TESTES_ENTRE_BORNES = 3
-NB_RECURSIONS = 5
+NB_RECURSIONS = 2
 REDUCTION_PAR_ETAPE = 0.25
 
-def bestPoint(cc, nb_points_testes, bornes):
+s = {cc: None for cc in coinCodes}
+
+def bestPoint(cc, nb_points_testes, bornes, s, data):
     """Renvoyer best_params et best_yield"""
     best_params = {}
     best_yield = -1000
 
-    s.candles = data[cc]
+    s[cc].candles = data[cc]
     for power1 in [bornes["power1"][0] + (bornes["power1"][1] - bornes["power1"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
         for power2 in [bornes["power2"][0] + (bornes["power2"][1] - bornes["power2"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
             for buyingBollinger in [bornes["buyingBollinger"][0] + (bornes["buyingBollinger"][1] - bornes["buyingBollinger"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
                 for sellingBollinger1 in [bornes["sellingBollinger1"][0] + (bornes["sellingBollinger1"][1] - bornes["sellingBollinger1"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
                     for sellingBollinger2 in [bornes["sellingBollinger2"][0] + (bornes["sellingBollinger2"][1] - bornes["sellingBollinger2"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:
 
-                        s.modifyParams(power1, power2, buyingBollinger, sellingBollinger1, sellingBollinger2)
+                        s[cc].modifyParams(power1, power2, buyingBollinger, sellingBollinger1, sellingBollinger2)
 
-                        s.candles = data[cc]
-                        tradeTimeList = s.batchBuyingEvaluation("dip")
+                        s[cc].candles = data[cc]
+                        tradeTimeList = s[cc].batchBuyingEvaluation()
 
                         tradeList = [data[cc][timeStampToIndex(data[cc], timeStamp)] for timeStamp in tradeTimeList]
 
-                        s.candles = data[cc][100:]
-                        result = s.batchSellingEvaluation(tradeList, PERCENTAGE_TRADED)
+                        s[cc].candles = data[cc][100:]
+                        result = s[cc].batchSellingEvaluation(tradeList, PERCENTAGE_TRADED)
 
                         if result[1] > best_yield:
                             best_params = {"power1": power1, "power2": power2, "buyingBollinger": buyingBollinger, "sellingBollinger1" : sellingBollinger1, "sellingBollinger2": sellingBollinger2}
@@ -76,28 +88,23 @@ def bestPoint(cc, nb_points_testes, bornes):
     return best_params, best_yield
 
 
-for cc in range(len(coinCodes)):
+def process_function(cc):
     st = time.time()
-
     bounds_copy = INSTANCES_BOUNDS.copy()
-    for _ in range(NB_RECURSIONS):
-        meilleurParam, meilleurYield = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy)
+    s[cc] = Strategy(100, SAMPLE_SIZE)
+    for recursion in range(NB_RECURSIONS):
+        meilleurParam, meilleurYield = bestPoint(cc, NB_POINTS_TESTES_ENTRE_BORNES, bounds_copy, s, data)
         for param in meilleurParam:
             bounds_copy[param][0] = meilleurParam[param] - REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
             if param in ["power1", "power2"]:
                 bounds_copy[param][1] = min(1, meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0]))
             else:
                 bounds_copy[param][1] = meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
-    
+        #print(recursion)
+
     print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurParam)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
 
 
-"""
-Test SOL 18M 6M 14/02/2025-12:38 (fin)
-14580 instances of params
-Average time: 0.29249216257626465
-The best params for SOL are:
-{'power1': 0.936, 'power2': 0.936, 'buyingBollinger': 1.2, 'sellingBollinger1': 0, 'sellingBollinger2': 0.998}
-yield: 1.096746777979021
-Calculation time: 4264.564913272858
-"""
+if __name__ == "__main__":
+    with Pool(processes=len(coinCodes)) as pool:
+        pool.map(process_function, range(len(coinCodes)))

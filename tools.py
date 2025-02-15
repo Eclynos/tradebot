@@ -1,5 +1,6 @@
 import requests, csv, time, itertools, sys
 from math import ceil
+from datetime import datetime
 
 
 def left(symbol):
@@ -12,7 +13,7 @@ def right(symbol):
 
 def readFile(coinCode, exchange) -> list:
     """Lit les fichiers csv et retourne une liste de dictionnaires de bougie"""
-    with open(f"./data/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
+    with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
         allData = csv.DictReader(file_csv)
         allData = list(allData)
 
@@ -140,3 +141,7 @@ def timeStampToIndex(data, timeStamp):
     """
     tailleBougie = data[1]["date"] - data[0]["date"]
     return (timeStamp-data[0]["date"]) // tailleBougie
+
+def ms_to_gmt_date(ms):
+    """Convert milliseconds since Unix epoch to GMT date."""
+    return datetime.utcfromtimestamp(ms / 1000.0).strftime('%Y-%m-%d %H:%M:%S')

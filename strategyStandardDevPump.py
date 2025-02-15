@@ -38,31 +38,22 @@ class Strategy:
         if len(self.sd) > self.weightedAvgSize:
             self.sdWeightedAvg += self.dA.simpleWeightedAverage(self.sd[-self.weightedAvgSize-1:], self.weightedAvgSize)
         
-    def batchBuyingEvaluation(self, buyType):
+    def batchBuyingEvaluation(self):
         self.ma = self.dA.exponentialMovingAverage(self.candles, self.movingAverageSize, self.power1)
         self.sd = self.dA.fastExponentialStandardDeviation(self.candles, self.movingAverageSize, self.power1, self.power2)
         self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
-        if buyType == "pump":
-            bb = self.dA.bollinger(self.ma, self.sd, self.buyingBollinger)
-        elif buyType == "dip":
-            bb = self.dA.bollinger(self.ma, self.sd, -self.buyingBollinger)
-        else:
-            raise ValueError("buytype must be 'pump' or 'dip'")
+        bb = self.dA.bollinger(self.ma, self.sd, -self.buyingBollinger)
         
         buyTimes = []
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):
-
             if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] 
             and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] 
-            and ((buyType == "dip" and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1)
-              or (buyType == "pump" and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == 1))
-            and ((buyType == "dip" and self.candles[i]["price"] < bb[i-self.movingAverageSize]["price"])
-              or (buyType == "pump" and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]))
+            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1
+            and self.candles[i]["price"] < bb[i-self.movingAverageSize]["price"]
             ):
                 buyTimes.append(self.candles[i]["date"])
-        
 
-        # buyTimes = [self.candles[i]["date"] for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2) if self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1 and self.candles[i]["price"] > bb[i-self.movingAverageSize]["price"]]
+        #buyTimes = [self.candles[i]["date"] for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2) if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1 and self.candles[i]["price"] < bb[i-self.movingAverageSize]["price"])]
 
         return buyTimes
             

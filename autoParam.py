@@ -13,7 +13,7 @@ coinCodes = [
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getDataIndex(currentDate, "18M", "6M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
+SEindex = [getDataIndexFromPeriod(currentDate, "18M", "6M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
 
 data = [data[i][SEindex[i][0]-LAUNCH_SAMPLE_SIZE:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]

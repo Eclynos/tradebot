@@ -1,5 +1,6 @@
 import requests, csv, time, itertools, sys
 from math import ceil
+from os import sched_setaffinity
 from datetime import datetime
 
 
@@ -94,7 +95,7 @@ def wait_next_frame(timeLoop=5):
     time.sleep(ceil(60 * timeLoop - actual))
 
 
-def getDataIndex(time, start, end, data, launch_sample_size):
+def getDataIndexFromPeriod(time, start, end, data, launch_sample_size):
     """
     Trouve les indices de début et de fin correspondant à la période donnée
     dans la liste des bougies
@@ -106,6 +107,24 @@ def getDataIndex(time, start, end, data, launch_sample_size):
     if end > int(data[-1]["date"]):
         raise ValueError(f"End date too young for coinData. end :{end} dataEnd :{data[-1]["date"]}")
     return int((start - int(data[0]["date"])) / 300000), int((end - int(data[0]["date"])) / 300000)
+
+
+def getDataIndexFromIndex(time, start_index, end_index, data, launch_sample_size):
+    """
+    Trouve les indices de début et de fin correspondant aux index donnés
+    dans la liste des bougies
+    """
+    if start_index - launch_sample_size < 0:
+        raise ValueError("Too low start index or launch_sample_size too big")
+    if end_index > len(data) - 1:
+        raise ValueError(f"Too big end index, end index corresponds to {timestamp_to_gmt_date(time // 1000)}")
+    return start_index - launch_sample_size, end_index
+
+def getMaxDataIndex(data):
+    """
+    Donne les indices de début et de fin de la liste des bougies
+    """
+    return 0, len(data) - 1
 
 
 def AreAnyCandlesMissing(data):
@@ -135,6 +154,7 @@ def spinner(stop_event):
         sys.stdout.flush()
         time.sleep(0.1)
 
+
 def timeStampToIndex(data, timeStamp):
     """
     Renvoie l'indice de la case de data où l'entrée date est égale à timeStamp
@@ -142,6 +162,7 @@ def timeStampToIndex(data, timeStamp):
     tailleBougie = data[1]["date"] - data[0]["date"]
     return (timeStamp-data[0]["date"]) // tailleBougie
 
-def ms_to_gmt_date(ms):
+
+def timestamp_to_gmt_date(ms):
     """Convert milliseconds since Unix epoch to GMT date."""
     return datetime.utcfromtimestamp(ms / 1000.0).strftime('%Y-%m-%d %H:%M:%S')

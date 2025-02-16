@@ -1,49 +1,59 @@
 from strategyStandardDevPump import *
 from dataAnalysis import *
 from tools import *
-import time
-from multiprocessing import Pool
+import time, os
+from multiprocessing import Pool, cpu_count
+from platform import system
 
 SAMPLE_SIZE = 2000
 LAUNCH_SAMPLE_SIZE = 2104
+
+NB_THREADS = 8
+NB_POINTS_TESTES_ENTRE_BORNES = 4
+NB_RECURSIONS = 2
+REDUCTION_PAR_ETAPE = 0.25
+START_TIME = "8M"
+END_TIME = "6M"
+
+
+if (NB_THREADS > cpu_count()):
+    raise ValueError(f"Can't process on {NB_THREADS} threads, cpu has only {cpu_count()} threads")
+
 
 coinCodes = [
     "SOL"
 ]
 
-"""
-coinCodes = [
-    "BTC",
-    "ETH",
-    "SOL",
-    "DOGE",
-    "DOT",
-    "BNB",
-    "PEPE",
-    "SUI",
-    "DOGE",
-    "DOT",
-    "TRX",
-    "LTC",
-    "AVAX",
-    "ADA",
-    "XRP",
-    "APE",
-    "FET"
-]
-"""
+# coinCodes = [
+#     "BTC",
+#     "ETH",
+#     "SOL",
+#     "DOGE",
+#     "DOT",
+#     "BNB",
+#     "PEPE",
+#     "SUI",
+#     "DOGE",
+#     "DOT",
+#     "TRX",
+#     "LTC",
+#     "AVAX",
+#     "ADA",
+#     "XRP",
+#     "APE",
+#     "FET"
+# ]
 
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getDataIndex(currentDate, "8M", "6M", coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
+SEindex = [getMaxDataIndex(coinData) for coinData in data]
 
 data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
 
 STRATEGY_NAME = "dip"
 PERCENTAGE_TRADED = 0.25
-CANDLES_IN_PERIOD = SEindex[0][1] - SEindex[0][0]
 
 INSTANCES_BOUNDS = {
     "power1" : [0.8, 1],
@@ -52,10 +62,6 @@ INSTANCES_BOUNDS = {
     "sellingBollinger1": [-1, 1],
     "sellingBollinger2": [0, 3]
 }
-
-NB_POINTS_TESTES_ENTRE_BORNES = 3
-NB_RECURSIONS = 2
-REDUCTION_PAR_ETAPE = 0.25
 
 s = {cc: None for cc in coinCodes}
 
@@ -100,11 +106,11 @@ def process_function(cc):
                 bounds_copy[param][1] = min(1, meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0]))
             else:
                 bounds_copy[param][1] = meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds_copy[param][1]-bounds_copy[param][0])
-        #print(recursion)
+        print(recursion)
 
     print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurParam)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
 
 
 if __name__ == "__main__":
-    with Pool(processes=len(coinCodes)) as pool:
+    with Pool(processes=int(NB_THREADS)) as pool:
         pool.map(process_function, range(len(coinCodes)))

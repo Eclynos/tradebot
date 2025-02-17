@@ -1,9 +1,8 @@
 from strategyStandardDevPump import *
 from dataAnalysis import *
 from tools import *
-import time, os
+import time
 from multiprocessing import Pool, cpu_count
-from platform import system
 
 SAMPLE_SIZE = 2000
 LAUNCH_SAMPLE_SIZE = 2104

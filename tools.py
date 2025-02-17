@@ -1,6 +1,5 @@
 import requests, csv, time, itertools, sys
 from math import ceil
-from os import sched_setaffinity
 from datetime import datetime
 
 

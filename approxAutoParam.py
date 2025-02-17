@@ -9,9 +9,9 @@ SAMPLE_SIZE = 2000
 LAUNCH_SAMPLE_SIZE = 2104
 
 NB_THREADS = 8
-NB_POINTS_TESTES_ENTRE_BORNES = 4
+NB_POINTS_TESTES_ENTRE_BORNES = 2
 NB_RECURSIONS = 2
-REDUCTION_PAR_ETAPE = 0.25
+REDUCTION_PAR_ETAPE = 0.5
 START_TIME = "8M"
 END_TIME = "6M"
 
@@ -47,7 +47,7 @@ coinCodes = [
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getMaxDataIndex(coinData) for coinData in data]
+SEindex = [getDataIndexFromPeriod(currentDate, START_TIME, END_TIME, coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
 
 data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]

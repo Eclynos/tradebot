@@ -36,6 +36,7 @@ INSTANCES_BOUNDS = {
     "sellingBollinger2": [0, 3]
 }
 
+
 s = {cc: None for cc in coinCodes}
 
 
@@ -46,21 +47,18 @@ def bestPoint(cc, nb_points_testes, bornes, s, data):
 
     s[cc].candles = data[cc]
 
-    # Define the parameters as TensorFlow variables
     power1 = tf.Variable(bornes["power1"][0], dtype=tf.float32)
     power2 = tf.Variable(bornes["power2"][0], dtype=tf.float32)
     buyingBollinger = tf.Variable(bornes["buyingBollinger"][0], dtype=tf.float32)
     sellingBollinger1 = tf.Variable(bornes["sellingBollinger1"][0], dtype=tf.float32)
     sellingBollinger2 = tf.Variable(bornes["sellingBollinger2"][0], dtype=tf.float32)
 
-    # Create a grid of parameter values
     power1_values = tf.linspace(bornes["power1"][0], bornes["power1"][1], nb_points_testes)
     power2_values = tf.linspace(bornes["power2"][0], bornes["power2"][1], nb_points_testes)
     buyingBollinger_values = tf.linspace(bornes["buyingBollinger"][0], bornes["buyingBollinger"][1], nb_points_testes)
     sellingBollinger1_values = tf.linspace(bornes["sellingBollinger1"][0], bornes["sellingBollinger1"][1], nb_points_testes)
     sellingBollinger2_values = tf.linspace(bornes["sellingBollinger2"][0], bornes["sellingBollinger2"][1], nb_points_testes)
 
-    # Iterate over the grid of parameter values
     for p1 in power1_values:
         for p2 in power2_values:
             for bb in buyingBollinger_values:

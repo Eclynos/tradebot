@@ -28,6 +28,7 @@ data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["cl
 STRATEGY_NAME = "dip"
 PERCENTAGE_TRADED = 0.25
 
+"""
 INSTANCES_BOUNDS = {
     "power1" : [0.8, 1],
     "power2" : [0.8, 1],
@@ -35,6 +36,17 @@ INSTANCES_BOUNDS = {
     "sellingBollinger1": [-1, 1],
     "sellingBollinger2": [0, 3]
 }
+"""
+
+
+INSTANCES_BOUNDS = {
+    "power1": [tf.constant(0.8, dtype=tf.float32), tf.constant(1.0, dtype=tf.float32)],
+    "power2": [tf.constant(0.8, dtype=tf.float32), tf.constant(1.0, dtype=tf.float32)],
+    "buyingBollinger": [tf.constant(0.0, dtype=tf.float32), tf.constant(3.0, dtype=tf.float32)],
+    "sellingBollinger1": [tf.constant(-1.0, dtype=tf.float32), tf.constant(1.0, dtype=tf.float32)],
+    "sellingBollinger2": [tf.constant(0.0, dtype=tf.float32), tf.constant(3.0, dtype=tf.float32)]
+}
+
 
 
 s = {cc: None for cc in coinCodes}
@@ -64,11 +76,11 @@ def bestPoint(cc, nb_points_testes, bornes, s, data):
             for bb in buyingBollinger_values:
                 for sb1 in sellingBollinger1_values:
                     for sb2 in sellingBollinger2_values:
-                        power1.assign(tf.cast(p1, tf.float32))
-                        power2.assign(tf.cast(p2, tf.float32))
-                        buyingBollinger.assign(tf.cast(bb, tf.float32))
-                        sellingBollinger1.assign(tf.cast(sb1, tf.float32))
-                        sellingBollinger2.assign(tf.cast(sb2, tf.float32))
+                        power1.assign(p1)
+                        power2.assign(p2)
+                        buyingBollinger.assign(bb)
+                        sellingBollinger1.assign(sb1)
+                        sellingBollinger2.assign(sb2)
 
                         s[cc].modifyParams(power1.numpy(), power2.numpy(), buyingBollinger.numpy(), sellingBollinger1.numpy(), sellingBollinger2.numpy())
 

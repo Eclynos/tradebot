@@ -1,7 +1,7 @@
 import torch
 import time
-from strategyStandardDevPump import *
-from dataAnalysis import *
+from ptStrategyStandardDevPump import *
+from ptDataAnalysis import *
 from tools import *
 
 SAMPLE_SIZE = 2000

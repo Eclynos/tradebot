@@ -46,24 +46,13 @@ def bestPoint(cc, nb_points_testes, bornes, s, data):
 
     s[cc].candles = data[cc]
 
-    power1 = torch.tensor(bornes["power1"][0], dtype=FLOAT_TYPE, requires_grad=True)
-    power2 = torch.tensor(bornes["power2"][0], dtype=FLOAT_TYPE, requires_grad=True)
-    buyingBollinger = torch.tensor(bornes["buyingBollinger"][0], dtype=FLOAT_TYPE, requires_grad=True)
-    sellingBollinger1 = torch.tensor(bornes["sellingBollinger1"][0], dtype=FLOAT_TYPE, requires_grad=True)
-    sellingBollinger2 = torch.tensor(bornes["sellingBollinger2"][0], dtype=FLOAT_TYPE, requires_grad=True)
-
     for p1 in torch.linspace(bornes["power1"][0], bornes["power1"][1], nb_points_testes):
         for p2 in torch.linspace(bornes["power2"][0], bornes["power2"][1], nb_points_testes):
             for bb in torch.linspace(bornes["buyingBollinger"][0], bornes["buyingBollinger"][1], nb_points_testes):
                 for sb1 in torch.linspace(bornes["sellingBollinger1"][0], bornes["sellingBollinger1"][1], nb_points_testes):
                     for sb2 in torch.linspace(bornes["sellingBollinger2"][0], bornes["sellingBollinger2"][1], nb_points_testes):
-                        power1.data = p1
-                        power2.data = p2
-                        buyingBollinger.data = bb
-                        sellingBollinger1.data = sb1
-                        sellingBollinger2.data = sb2
 
-                        s[cc].modifyParams(power1.item(), power2.item(), buyingBollinger.item(), sellingBollinger1.item(), sellingBollinger2.item())
+                        s[cc].modifyParams(p1.item(), p2.item(), bb.item(), sb1.item(), sb2.item())
 
                         s[cc].candles = data[cc]
                         tradeTimeList = s[cc].batchBuyingEvaluation()

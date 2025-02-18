@@ -108,6 +108,17 @@ def getDataIndexFromPeriod(time, start, end, data, launch_sample_size):
     return int((start - int(data[0]["date"])) / 300000), int((end - int(data[0]["date"])) / 300000)
 
 
+def getDataIndexUntil(time, end, data):
+    """
+    Trouve l'indice de fin correspondant à la période partant
+    du début des données à la fin donnée en argument
+    """
+    end = time - time_frame_to_ms(end)
+    if end > int(data[-1]["date"]):
+        raise ValueError(f"End date too young for coinData. end :{end} dataEnd :{data[-1]["date"]}")
+    return 0, int((end - int(data[0]["date"])) / 300000)
+
+
 def getDataIndexFromIndex(time, start_index, end_index, data, launch_sample_size):
     """
     Trouve les indices de début et de fin correspondant aux index donnés

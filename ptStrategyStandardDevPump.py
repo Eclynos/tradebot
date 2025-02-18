@@ -76,14 +76,11 @@ class Strategy:
         if len(self.sd) < 2 or numberOfIndexBoughtAgo < 0:
             return False
 
-        if boughtType == "pump":
-            bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo - 1:], self.sd[-numberOfIndexBoughtAgo - 1:], self.sellingBollinger1)
-            bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo - 1:], self.sd[-numberOfIndexBoughtAgo - 1:], self.sellingBollinger2)
-        elif boughtType == "dip":
+        if boughtType == "dip":
             bbBas = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo - 1:], self.sd[-numberOfIndexBoughtAgo - 1:], -self.sellingBollinger1)
             bbHaut = self.dA.bollinger(self.ma[-numberOfIndexBoughtAgo - 1:], self.sd[-numberOfIndexBoughtAgo - 1:], self.sellingBollinger2)
         else:
-            raise ValueError("buyType must be 'pump' or 'dip'")
+            raise ValueError("buyType must be 'dip'")
 
         wentUnderLowBB = False
         for i in range(1, numberOfIndexBoughtAgo):

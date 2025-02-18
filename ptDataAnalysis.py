@@ -38,10 +38,10 @@ class DataAnalysis:
         minList = []
 
         for x in interestingMins:
-            dropMax = 0
+            dropMax = torch.tensor(0.0)
             for y in totalMins:
-                if int(x["key"]) - int(y["key"]) > 0 and int(x["key"]) - int(y["key"]) < minFrame and dropMax < 1 - x["price"] / y["price"]:
-                    dropMax = 1 - x["price"] / y["price"]
+                if int(x["key"]) - int(y["key"]) > 0 and int(x["key"]) - int(y["key"]) < minFrame:
+                    dropMax = torch.max(dropMax, torch.tensor(1.0) - x["price"] / y["price"])
 
             minList.append({"key": x["key"], "price": x["price"], "drop": dropMax})
         return minList
@@ -50,7 +50,7 @@ class DataAnalysis:
         total = torch.tensor(0.0)
         numberOfEntries = len(data)
         for i in range(numberOfEntries):
-            total += float(data[i]["price"])
+            total += data[i]["price"]
 
         return total / numberOfEntries
 
@@ -72,7 +72,7 @@ class DataAnalysis:
 
         for i in range(numberOfEntries):
             for l in range(degree + 1):
-                B[l] += (int(data[i]["date"]) - minX) ** (degree - l) * float(data[i]["price"])
+                B[l] += (int(data[i]["date"]) - minX) ** (degree - l) * data[i]["price"]
 
         X = torch.linalg.solve(A, B)
         return X

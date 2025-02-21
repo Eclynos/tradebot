@@ -110,6 +110,8 @@ class DataAnalysis:
         for i in range(MAsize):
             normalisationFactor += powerMultiplier ** i
 
+        normalisationFactor = (1-powerMultiplier ** (MAsize))/(1-powerMultiplier)
+
         avgPrice = torch.tensor(0.0)
         for i in range(len(data)):
             if i >= MAsize:

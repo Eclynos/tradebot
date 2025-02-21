@@ -44,8 +44,6 @@ def bestPoint(cc, nb_points_testes, bornes, s, data):
     best_params = {}
     best_yield = -1000
 
-    s[cc].candles = data[cc]
-
     for p1 in torch.linspace(bornes["power1"][0], bornes["power1"][1], nb_points_testes):
         for p2 in torch.linspace(bornes["power2"][0], bornes["power2"][1], nb_points_testes):
             for bb in torch.linspace(bornes["buyingBollinger"][0], bornes["buyingBollinger"][1], nb_points_testes):

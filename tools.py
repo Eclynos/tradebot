@@ -176,8 +176,7 @@ def timeStampToIndex(data, timeStamp):
     """
     Renvoie l'indice de la case de data où l'entrée date est égale à timeStamp
     """
-    tailleBougie = data[1]["date"] - data[0]["date"]
-    return (timeStamp-data[0]["date"]) // tailleBougie
+    return (timeStamp-data[0]["date"]) // (data[1]["date"] - data[0]["date"])
 
 
 def timestamp_to_gmt_date(ms):

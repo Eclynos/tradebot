@@ -7,6 +7,7 @@ DEVICE = torch.device("cpu")
 class Strategy:
     def __init__(self, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1=0, sellingBollinger2=1):
         self.MA_SIZE = 100
+        self.wAvgSize = 2000
         self.power1 = power1
         self.power2 = power2
         self.buyingBollinger = buyingBollinger
@@ -21,28 +22,78 @@ class Strategy:
         self.sellingBollinger1 = sellingBollinger1
         self.sellingBollinger2 = sellingBollinger2
 
-    def exponentialMovingAverage(self):
-        # comprendre pour remplacer par des matrices
-        ma = torch.zeros(len(self.candles) - self.MA_SIZE, dtype=FLOAT_TYPE)
-        normalisationFactor = (1 - torch.pow(self.power1, self.MA_SIZE)) / (1 - self.power1)
 
-        avgPrice = torch.zeros((len(self.candles)), dtype=FLOAT_TYPE)
-        for torch.pow()
+    def trend(self, data, cutoff=1 / 2):
+        milieu = int(len(data) * cutoff)
+        hh1 = torch.max(data[:milieu])
+        hh2 = torch.max(data[milieu:])
+        ll1 = torch.min(data[:milieu])
+        ll2 = torch.min(data[milieu:])
 
-
-        # for i in range(len(self.candles)):
-        #     if i >= self.MA_SIZE:
-        #         ma.append((avgPrice / normalisationFactor).item())
-        #         avgPrice -= torch.pow(self.power1, self.MA_SIZE - 1) * self.candles[i - self.MA_SIZE]
-        #     avgPrice *= self.power1 + self.candles[i]
-
-        return ma
-
+        if hh2 > hh1 and ll2 > ll1:
+            return 1
+        elif hh2 < hh1 and ll2 < ll1:
+            return -1
+        else:
+            return 0
 
 
     def batchBuyingEvaluation(self):
-        pass
-        #la bollinger peut être fait tellement + vite
+        normalisationFactor = (1 - torch.pow_(self.power1, self.MA_SIZE)) / (1 - self.power1)
+
+        self.ma = torch.empty(len(self.candles) - self.MA_SIZE + 1, dtype=FLOAT_TYPE)
+        self.sd = torch.zeros(len(self.candles) - self.MA_SIZE + 1, dtype=FLOAT_TYPE)
+        self.avg = torch.empty(len(self.candles) - self.MA_SIZE + 1, dtype=FLOAT_TYPE)
+        sdc = torch.zeros(5, dtype=FLOAT_TYPE) # sd coefficients
+        wac = torch.zeros(2, dtype=FLOAT_TYPE) # WeightedAverage coefficients
+        avgPrice = torch.tensor(0.0, dtype=FLOAT_TYPE)
+
+        for i in range(len(self.candles)):
+            if i >= 100:
+                self.ma[i] = avgPrice / normalisationFactor
+                avgPrice -= 0.95 * (100 - 1) * self.candles[i - 100]
+            avgPrice = avgPrice * 0.95 + self.candles[i]
+
+        for i in range(self.MA_SIZE-1, -1, -1):
+            sdc.add_(
+                self.power1 ** i * self.candles[i] ** 2,
+                self.power1 ** i * self.candles[i],
+                self.power2 ** i * self.candles[i],
+                self.power1 ** i,
+                self.power2 ** i
+            )
+            wac.add_(torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize + 1), torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize))
+
+        self.sd[0] = sdc[0] - 2 / sdc[1] * sdc[2] * sdc[4] + sdc[3] / (torch.square_(sdc[4]) * torch.square_(sdc[2]))
+        for i in range(len(self.candles) - self.MA_SIZE):
+            sdc[0] = self.power1 * sdc[0] - self.power1 ** self.MA_SIZE * torch.square_(self.candles[i]) + torch.square_(self.candles[i + self.MA_SIZE])
+            sdc[1] = self.power1 * sdc[1] - self.power1 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
+            sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
+            self.sd[i+1] = sdc[0] - 2 / sdc[1] * sdc[2] * sdc[4] + sdc[3] / (torch.square_(sdc[4]) * torch.square_(sdc[2]))
+            self.avg[i] = wac[0] / wac[1]
+            wac.add_(
+                torch.pow(self.candles[i + self.MA_SIZE], self.wAvgSize+1) - torch.pow(self.candles[i-1], self.wAvgSize+1),
+                torch.pow(self.candles[i + self.MA_SIZE], self.wAvgSize) - torch.pow(self.candles[i-1], self.wAvgSize)
+            )
+        
+        self.avg[len(self.candles) - self.MA_SIZE] = wac[0] / wac[1]
+        torch.sqrt_(self.sd)
+        torch.div_(self.sd, sdc[3])
+
+        self.bb = torch.add(self.ma, torch.mul(self.sd, -self.buyingBollinger))
+
+        # buyIndices
+        return [i for i in range(self.wAvgSize + self.MA_SIZE, len(self.candles) - 2) if ((self.sd[i - self.MA_SIZE] > self.avg[i - self.wAvgSize - self.MA_SIZE + 1] and self.sd[i - self.MA_SIZE - 1] < self.avg[i - self.avg - self.wAvgSize] and self.trend(self.candles[i - self.wAvgSize + 1:i + 1], 1 / 2) == -1 and self.candles[i] < self.bb[i - self.wAvgSize]))]
+
+
+    def batchSellingEvaluation(self, buyIndices, percentage_traded):
+        profit = torch.tensor(1.0)
+
+        bb2 = torch.add(self.ma, torch.mul(self.sd, self.buyingBollinger))
+
+        for index in buyIndices:
+            pass
+
     
 
 SAMPLE_SIZE = 2000
@@ -76,3 +127,9 @@ s = {cc: None for cc in coinCodes}
 st = time.time()
 for cc in range(len(coinCodes)):
     s[cc] = Strategy()
+
+
+ # regarder sur nvtop si les calculs se font pas mal sur la cg
+ # sinon, plusieurs options pour forcer les calculs sur la cg (ex : ajouter .cuda entre tous les tensors)
+ # Tensor.is_cuda   Is True if the Tensor is stored on the GPU, False otherwise.
+ # ajouter un underscore à la plupart des fonctions de calcul permet de les mettre en "in-place" -> plus opti en temps et (surtout) en mémoire

@@ -20,6 +20,14 @@ def readFile(coinCode, exchange) -> list:
     return allData
 
 
+def readFileToList(coinCode, exchange) -> list:
+    """Lit les fichiers csv et retourne une liste des prix de fermetures des bougies"""
+    with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
+        allData = csv.DictReader(file_csv)
+        allData = list(allData)
+    return [float(candle["close"]) for candle in allData]
+
+
 def readFileToTensor(coinCode, exchange, float_type):
     """Lit les fichiers csv et retourne un tenseur PyTorch de bougies (uniquement le prix de fermeture)"""
     with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:

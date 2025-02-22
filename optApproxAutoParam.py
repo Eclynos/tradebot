@@ -69,7 +69,7 @@ class Strategy:
                 self.power1 ** i,
                 self.power2 ** i
             ]))
-            wac.add(torch.tensor([torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize + 1), torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize)]))
+            wac.add(torch.tensor([torch.pow(self.candles[self.MA_SIZE - i - 1], 3), torch.pow(self.candles[self.MA_SIZE - i - 1], 2)]))
 
         for i in range(len(self.candles) - self.MA_SIZE):
             self.sd[i] = sdc[0] - 2 / sdc[1] * sdc[2] * sdc[4] + sdc[3] / (torch.square_(sdc[4]) * torch.square_(sdc[2]))
@@ -78,8 +78,8 @@ class Strategy:
             sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
             self.avg[i] = wac[0] / wac[1]
             wac.add(torch.tensor([
-                torch.pow(self.candles[i + self.MA_SIZE], self.wAvgSize+1) - torch.pow(self.candles[i-1], self.wAvgSize+1),
-                torch.pow(self.candles[i + self.MA_SIZE], self.wAvgSize) - torch.pow(self.candles[i-1], self.wAvgSize)
+                torch.pow(self.candles[i + self.MA_SIZE], 3) - torch.pow(self.candles[i-1], 3),
+                torch.pow(self.candles[i + self.MA_SIZE], 2) - torch.pow(self.candles[i-1], 2)
             ]))
         
         torch.sqrt(self.sd)
@@ -95,7 +95,6 @@ class Strategy:
         profit = torch.tensor(1.0)
 
         bb2 = torch.add(self.ma, torch.mul(self.sd, self.buyingBollinger))
-        unclosed_trades = 0
 
         for index in buyIndexes:
             has_passed_under_0 = False 
@@ -105,12 +104,7 @@ class Strategy:
                 if (j - self.wAvgSize > 0 and self.sd[j] < self.avg[j - self.wAvgSize] and self.sd[j - 1] > self.avg[j - self.wAvgSize - 1]) or (has_passed_under_0 and self.candles[j] > bb2[j]):
                     break
 
-            if j == len(self.candles) - 1:
-                unclosed_trades += 1
-
             torch.add_(profit * percentage_traded * (self.candles[j] / self.candles[index] - 1) - 0.0008)
-
-        print(unclosed_trades)
 
         return profit
 
@@ -174,7 +168,8 @@ for cc in range(len(coinCodes)):
                 bounds[param][1] = min(1, best_params[param] + REDUCTION_PAR_ETAPE) * (bounds[param][1] - bounds[param][0])
             else:
                 bounds[param][1] = best_params[param] + REDUCTION_PAR_ETAPE * (bounds[param][1] - bounds[param][0])
-    
+        print(recursion)
+
     print(f"The best params for {coinCodes[cc]} are:\n{str(best_params)}\nyield: {profit}\nCalculation time: {time.time() - st}")
 
 

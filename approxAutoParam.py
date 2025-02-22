@@ -18,30 +18,25 @@ END_TIME = "6M"
 if (NB_THREADS > cpu_count()):
     raise ValueError(f"Can't process on {NB_THREADS} threads, cpu has only {cpu_count()} threads")
 
-
 coinCodes = [
-    "SOL"
+    "BTC",
+    "ETH",
+    "SOL",
+    "DOGE",
+    "DOT",
+    "BNB",
+    "PEPE",
+    "SUI",
+    "DOGE",
+    "DOT",
+    "TRX",
+    "LTC",
+    "AVAX",
+    "ADA",
+    "XRP",
+    "APE",
+    "FET"
 ]
-
-# coinCodes = [
-#     "BTC",
-#     "ETH",
-#     "SOL",
-#     "DOGE",
-#     "DOT",
-#     "BNB",
-#     "PEPE",
-#     "SUI",
-#     "DOGE",
-#     "DOT",
-#     "TRX",
-#     "LTC",
-#     "AVAX",
-#     "ADA",
-#     "XRP",
-#     "APE",
-#     "FET"
-# ]
 
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 

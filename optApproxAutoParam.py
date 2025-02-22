@@ -2,7 +2,8 @@ import torch, time
 from tools import *
 
 FLOAT_TYPE = torch.float32
-DEVICE = torch.device("cpu")
+if torch.cuda.is_available():
+    torch.set_default_device("cuda")
 
 class Strategy:
     def __init__(self, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1=0, sellingBollinger2=1):

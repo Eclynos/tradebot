@@ -122,9 +122,10 @@ class DataAnalysis:
 
     def exponentialMovingAverage(self, data, MAsize, powerMultiplier=0.95):
         ma = []
-        normalisationFactor = 0
-        for i in range(MAsize):
-            normalisationFactor += powerMultiplier**i 
+        if powerMultiplier == 1:
+            normalisationFactor = MAsize
+        else:
+            normalisationFactor = (1 - powerMultiplier**MAsize) / (1 - powerMultiplier)
 
         avgPrice = 0
         for i in range(len(data)):

@@ -106,11 +106,10 @@ class DataAnalysis:
 
     def exponentialMovingAverage(self, data, MAsize, powerMultiplier=0.95):
         ma = []
-        normalisationFactor = torch.tensor(0.0)
-        for i in range(MAsize):
-            normalisationFactor += powerMultiplier ** i
-
-        normalisationFactor = (1-powerMultiplier ** (MAsize))/(1-powerMultiplier)
+        if powerMultiplier == 1:
+            normalisationFactor = MAsize
+        else:
+            normalisationFactor =  (1 - powerMultiplier**MAsize) / (1 - powerMultiplier)
 
         avgPrice = torch.tensor(0.0)
         for i in range(len(data)):

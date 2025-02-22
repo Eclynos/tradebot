@@ -1,7 +1,7 @@
 import torch, time
 from tools import *
 
-FLOAT_TYPE = torch.float64
+FLOAT_TYPE = torch.float32
 DEVICE = torch.device("cpu")
 
 class Strategy:
@@ -42,7 +42,10 @@ class Strategy:
 
 
     def batchBuyingEvaluation(self):
-        normalisationFactor = (1 - self.power1 ** self.MA_SIZE) / (1 - self.power1)
+        if self.power1 == 1:
+            normalisationFactor = self.MA_SIZE
+        else:
+            normalisationFactor = (1 - self.power1 ** self.MA_SIZE) / (1 - self.power1)
 
         self.ma = torch.empty(len(self.candles) - self.MA_SIZE, dtype=FLOAT_TYPE)
         self.sd = torch.zeros(len(self.candles) - self.MA_SIZE, dtype=FLOAT_TYPE)
@@ -58,14 +61,14 @@ class Strategy:
             avgPrice = avgPrice * 0.95 + self.candles[i]
 
         for i in range(self.MA_SIZE-1, -1, -1):
-            sdc.add_(torch.tensor([
+            sdc.add(torch.tensor([
                 self.power1 ** i * self.candles[i] ** 2,
                 self.power1 ** i * self.candles[i],
                 self.power2 ** i * self.candles[i],
                 self.power1 ** i,
                 self.power2 ** i
             ]))
-            wac.add_(torch.tensor([torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize + 1), torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize)]))
+            wac.add(torch.tensor([torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize + 1), torch.pow(self.candles[self.MA_SIZE - i - 1], self.wAvgSize)]))
 
         for i in range(len(self.candles) - self.MA_SIZE):
             self.sd[i] = sdc[0] - 2 / sdc[1] * sdc[2] * sdc[4] + sdc[3] / (torch.square_(sdc[4]) * torch.square_(sdc[2]))
@@ -73,12 +76,12 @@ class Strategy:
             sdc[1] = self.power1 * sdc[1] - self.power1 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
             sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
             self.avg[i] = wac[0] / wac[1]
-            wac.add_(torch.tensor([
+            wac.add(torch.tensor([
                 torch.pow(self.candles[i + self.MA_SIZE], self.wAvgSize+1) - torch.pow(self.candles[i-1], self.wAvgSize+1),
                 torch.pow(self.candles[i + self.MA_SIZE], self.wAvgSize) - torch.pow(self.candles[i-1], self.wAvgSize)
             ]))
         
-        torch.sqrt_(self.sd)
+        torch.sqrt(self.sd)
         torch.div(self.sd, sdc[3], out=self.sd)
 
         self.bb = torch.add(self.ma, torch.mul(self.sd, -self.buyingBollinger))

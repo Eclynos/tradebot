@@ -16,6 +16,7 @@ class Strategy:
         self.ma = []
         self.sd = []
         self.avg = []
+        self.bb = []
 
     def modifyParams(self, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1=0, sellingBollinger2=1):
         self.power1 = power1
@@ -44,30 +45,26 @@ class Strategy:
         else:
             normalisationFactor = (1 - self.power1 ** self.MA_SIZE) / (1 - self.power1)
 
-        self.ma = [0] * (len(self.candles) - self.MA_SIZE)
+        
         self.sd = [0] * (len(self.candles) - self.MA_SIZE)
         self.avg = [0] * (len(self.candles) - self.MA_SIZE)
         sdc = [0] * 5  # sd coefficients
         wac = [0] * 2  # WeightedAverage coefficients
         avgPrice = 0
 
-        for i in range(len(self.candles)):
-            if i >= self.MA_SIZE:
-                self.ma[i - self.MA_SIZE] = avgPrice / normalisationFactor
-                avgPrice -= 0.95 * (100 - 1) * self.candles[i - 100]
-            avgPrice = avgPrice * 0.95 + self.candles[i]
+        self.ma = [(avgPrice := avgPrice * 0.95 + self.candles[i]) / normalisationFactor if i >= self.MA_SIZE else (avgPrice := avgPrice * 0.95 + self.candles[i]) for i in range(len(self.candles))]
 
-        for i in range(self.MA_SIZE-1, -1, -1):
-            sdc[0] += self.power1 ** i * self.candles[i] ** 2
-            sdc[1] += self.power1 ** i * self.candles[i]
-            sdc[2] += self.power2 ** i * self.candles[i]
-            sdc[3] += self.power1 ** i
-            sdc[4] += self.power2 ** i
-            wac[0] += self.candles[self.MA_SIZE - i - 1] ** 3
-            wac[1] += self.candles[self.MA_SIZE - i - 1] ** 2
+        for i in range(self.MA_SIZE):
+            sdc[0] += self.power1 ** (self.MA_SIZE-i-1) * self.candles[i] ** 2
+            sdc[1] += self.power1 ** (self.MA_SIZE-i-1) * self.candles[i]
+            sdc[2] += self.power2 ** (self.MA_SIZE-i-1) * self.candles[i]
+            sdc[3] += self.power1 ** (self.MA_SIZE-i-1)
+            sdc[4] += self.power2 ** (self.MA_SIZE-i-1)
+            wac[0] += self.candles[i] ** 3
+            wac[1] += self.candles[i] ** 2
 
-        for i in range(len(self.candles) - self.MA_SIZE):
-            self.sd[i] = sdc[0] - 2 * sdc[1] * sdc[2] * sdc[4] + sdc[3] / (sdc[4] ** 2 * sdc[2] ** 2)
+        for i in range(1, len(self.candles) - self.MA_SIZE):
+            self.sd[i] = sdc[0] - 2 / sdc[1] * sdc[2] * sdc[4] + sdc[3] / (sdc[4] ** 2 * sdc[2] ** 2)
             sdc[0] = self.power1 * sdc[0] - self.power1 ** self.MA_SIZE * self.candles[i] ** 2 + self.candles[i + self.MA_SIZE] ** 2
             sdc[1] = self.power1 * sdc[1] - self.power1 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
             sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
@@ -76,13 +73,12 @@ class Strategy:
             wac[1] += self.candles[i + self.MA_SIZE] ** 2 - self.candles[i - 1] ** 2
 
         self.sd = [sqrt(x / sdc[3]) for x in self.sd]
-
         self.bb = [x + y * -self.buyingBollinger for x, y in zip(self.ma, self.sd)]
 
         # buyIndexes
         return [i for i in range(self.wAvgSize + self.MA_SIZE, len(self.candles) - 2) if (
             self.sd[i - self.MA_SIZE] > self.avg[i - self.wAvgSize - self.MA_SIZE + 1] and
-            self.sd[i - self.MA_SIZE - 1] < self.avg[i - self.avg - self.wAvgSize] and
+            self.sd[i - self.MA_SIZE - 1] < self.avg[i - self.wAvgSize - self.MA_SIZE] and
             self.trend(self.candles[i - self.wAvgSize + 1:i + 1], 1 / 2) == -1 and
             self.candles[i] < self.bb[i - self.wAvgSize]
         )]
@@ -94,7 +90,7 @@ class Strategy:
 
         for index in buyIndexes:
             has_passed_under_0 = False
-            for j in range(index, len(self.candles)):
+            for j in range(index, len(self.candles[self.MA_SIZE:])):
                 if self.candles[j] > self.bb[j]:
                     has_passed_under_0 = True
                 if (j - self.wAvgSize > 0 and self.sd[j] < self.avg[j - self.wAvgSize] and self.sd[j - 1] > self.avg[j - self.wAvgSize - 1]) or (has_passed_under_0 and self.candles[j] > bb2[j]):

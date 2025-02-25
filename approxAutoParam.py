@@ -19,31 +19,35 @@ if (NB_THREADS > cpu_count()):
     raise ValueError(f"Can't process on {NB_THREADS} threads, cpu has only {cpu_count()} threads")
 
 coinCodes = [
-    "BTC",
-    "ETH",
-    "SOL",
-    "DOGE",
-    "DOT",
-    "BNB",
-    "PEPE",
-    "SUI",
-    "DOGE",
-    "DOT",
-    "TRX",
-    "LTC",
-    "AVAX",
-    "ADA",
-    "XRP",
-    "APE",
-    "FET"
+    "HNT"
 ]
+
+# coinCodes = [
+#     "BTC",
+#     "ETH",
+#     "SOL",
+#     "DOGE",
+#     "DOT",
+#     "BNB",
+#     "PEPE",
+#     "SUI",
+#     "DOGE",
+#     "DOT",
+#     "TRX",
+#     "LTC",
+#     "AVAX",
+#     "ADA",
+#     "XRP",
+#     "APE",
+#     "FET"
+# ]
 
 data = [readFile(coinCode, "bitget") for coinCode in coinCodes]
 
 currentDate = time.time() * 1000
-SEindex = [getDataIndexFromPeriod(currentDate, START_TIME, END_TIME, coinData, LAUNCH_SAMPLE_SIZE) for coinData in data]
+SEindex = [getMaxDataIndex(coinData) for coinData in data]
 
-data = [data[i][SEindex[i][0]:SEindex[i][1]] for i in range(len(coinCodes))]
+data = [data[i][SEindex[i][0]:SEindex[i][1]+1] for i in range(len(coinCodes))]
 data = [[{"date": int(data[i][j]["date"]) // 1000, "price": float(data[i][j]["close"]), "index" :j} for j in range(len(data[i]))] for i in range(len(coinCodes))]
 
 STRATEGY_NAME = "dip"
@@ -62,7 +66,7 @@ s = {cc: None for cc in coinCodes}
 def bestPoint(cc, nb_points_testes, bornes, s, data):
     """Renvoyer best_params et best_yield"""
     best_params = {}
-    best_yield = -1000
+    best_yield = -100
 
     s[cc].candles = data[cc]
     for power1 in [bornes["power1"][0] + (bornes["power1"][1] - bornes["power1"][0]) / (nb_points_testes - 1) * i for i in range(nb_points_testes)]:

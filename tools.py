@@ -14,17 +14,14 @@ def right(symbol):
 def readFile(coinCode, exchange) -> list:
     """Lit les fichiers csv et retourne une liste de dictionnaires de bougie"""
     with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
-        allData = csv.DictReader(file_csv)
-        allData = list(allData)
-
+        allData = list(csv.DictReader(file_csv))
     return allData
 
 
 def readFileToList(coinCode, exchange) -> list:
     """Lit les fichiers csv et retourne une liste des prix de fermetures des bougies"""
     with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
-        allData = csv.DictReader(file_csv)
-        allData = list(allData)
+        allData = list(csv.DictReader(file_csv))
     return [float(candle["close"]) for candle in allData]
 
 

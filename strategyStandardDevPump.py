@@ -43,6 +43,10 @@ class Strategy:
         self.sd = self.dA.fastExponentialStandardDeviation(self.candles, self.movingAverageSize, self.power1, self.power2)
         self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
         bb = self.dA.bollinger(self.ma, self.sd, -self.buyingBollinger)
+
+        print(self.ma[-1]["price"], bb[-1]["price"], self.sd[-1]["price"], self.sdWeightedAvg[-1]["price"])
+        print(self.ma[-2]["price"], bb[-2]["price"], self.sd[-2]["price"], self.sdWeightedAvg[-2]["price"])
+        exit()
         
         buyTimes = []
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):

@@ -45,14 +45,18 @@ class Strategy:
         else:
             normalisationFactor = (1 - self.power1 ** self.MA_SIZE) / (1 - self.power1)
 
-        
-        self.sd = [0] * (len(self.candles) - self.MA_SIZE)
-        self.avg = [0] * (len(self.candles) - self.MA_SIZE)
+        self.ma = []
+        self.sd = []
+        self.avg = []
         sdc = [0] * 5  # sd coefficients
-        wac = [0] * 2  # WeightedAverage coefficients
+        total = 0  # WeightedAverage coefficients
+        denom = 0
         avgPrice = 0
-
-        self.ma = [(avgPrice := avgPrice * 0.95 + self.candles[i]) / normalisationFactor if i >= self.MA_SIZE else (avgPrice := avgPrice * 0.95 + self.candles[i]) for i in range(len(self.candles))]
+        for i in range(len(self.candles)):
+            if i >= self.MA_SIZE:
+                self.ma.append(avgPrice / normalisationFactor)
+                avgPrice -= self.power1 ** (self.MA_SIZE-1) * self.candles[i-self.MA_SIZE]
+            avgPrice = avgPrice * self.power1 + self.candles[i]
 
         for i in range(self.MA_SIZE):
             sdc[0] += self.power1 ** (self.MA_SIZE-i-1) * self.candles[i] ** 2
@@ -60,21 +64,35 @@ class Strategy:
             sdc[2] += self.power2 ** (self.MA_SIZE-i-1) * self.candles[i]
             sdc[3] += self.power1 ** (self.MA_SIZE-i-1)
             sdc[4] += self.power2 ** (self.MA_SIZE-i-1)
-            wac[0] += self.candles[i] ** 3
-            wac[1] += self.candles[i] ** 2
 
+        self.sd.append(sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2])
         for i in range(1, len(self.candles) - self.MA_SIZE):
-            self.sd[i] = sdc[0] - 2 / sdc[1] * sdc[2] * sdc[4] + sdc[3] / (sdc[4] ** 2 * sdc[2] ** 2)
-            sdc[0] = self.power1 * sdc[0] - self.power1 ** self.MA_SIZE * self.candles[i] ** 2 + self.candles[i + self.MA_SIZE] ** 2
-            sdc[1] = self.power1 * sdc[1] - self.power1 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
-            sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i] + self.candles[i + self.MA_SIZE]
-            self.avg[i] = wac[0] / wac[1]
-            wac[0] += self.candles[i + self.MA_SIZE] ** 3 - self.candles[i - 1] ** 3
-            wac[1] += self.candles[i + self.MA_SIZE] ** 2 - self.candles[i - 1] ** 2
+            sdc[0] = self.power1 * sdc[0] - self.power1 ** self.MA_SIZE * self.candles[i-1] ** 2 + self.candles[i + self.MA_SIZE - 1] ** 2
+            sdc[1] = self.power1 * sdc[1] - self.power1 ** self.MA_SIZE * self.candles[i-1] + self.candles[i + self.MA_SIZE - 1]
+            sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i-1] + self.candles[i + self.MA_SIZE - 1]
+            self.sd.append(sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2])
 
-        self.sd = [sqrt(x / sdc[3]) for x in self.sd]
+        for i in range(len(self.sd)):
+            try:
+                self.sd[i] = sqrt(self.sd[i]/sdc[3])
+            except Exception as e:
+                print(self.sd[i], e)
+                exit()
+
         self.bb = [x + y * -self.buyingBollinger for x, y in zip(self.ma, self.sd)]
 
+        for i in range(self.MA_SIZE):
+            total += self.sd[i] ** 3
+            denom += self.sd[i] ** 2
+        self.avg.append(total / denom)
+        for i in range(1, len(self.sd) - self.MA_SIZE):
+            total += self.sd[i + self.MA_SIZE] ** 3 - self.sd[i - 1] ** 3
+            denom += self.sd[i + self.MA_SIZE] ** 2 - self.sd[i - 1] ** 2
+            self.avg.append(total / denom)
+
+        print(self.ma[-1], self.bb[-1], self.sd[-1], self.avg[-1])
+        print(self.ma[-2], self.bb[-2], self.sd[-2], self.avg[-2])
+        exit()
         # buyIndexes
         return [i for i in range(self.wAvgSize + self.MA_SIZE, len(self.candles) - 2) if (
             self.sd[i - self.MA_SIZE] > self.avg[i - self.wAvgSize - self.MA_SIZE + 1] and
@@ -88,15 +106,16 @@ class Strategy:
 
         bb2 = [x + y * self.buyingBollinger for x, y in zip(self.ma, self.sd)]
 
+        bougies = self.candles[self.MA_SIZE:]
+
         for index in buyIndexes:
             has_passed_under_0 = False
-            for j in range(index, len(self.candles[self.MA_SIZE:])):
-                if self.candles[j] > self.bb[j]:
+            for j in range(index - self.MA_SIZE, len(bougies)):
+                if bougies[j] > self.bb[j]:
                     has_passed_under_0 = True
-                if (j - self.wAvgSize > 0 and self.sd[j] < self.avg[j - self.wAvgSize] and self.sd[j - 1] > self.avg[j - self.wAvgSize - 1]) or (has_passed_under_0 and self.candles[j] > bb2[j]):
+                if (j - self.wAvgSize > 0 and self.sd[j] < self.avg[j - self.wAvgSize] and self.sd[j - 1] > self.avg[j - self.wAvgSize - 1]) or (has_passed_under_0 and bougies[j] > bb2[j]):
                     break
-
-            profit += profit * percentage_traded * (self.candles[j] / self.candles[index] - 1) - 0.0008
+            profit += profit * percentage_traded * (bougies[j] / self.candles[index] - 1) - 0.0008
 
         return profit
 
@@ -107,11 +126,9 @@ NB_THREADS = 8
 NB_POINTS_TESTES = 2
 NB_RECURSIONS = 2
 REDUCTION_PAR_ETAPE = 0.5
-START_TIME = "8M"
-END_TIME = "6M"
 
 coinCodes = [
-    "SOL"
+    "HNT"
 ]
 
 data = [readFileToList(coinCode, "bitget") for coinCode in coinCodes]

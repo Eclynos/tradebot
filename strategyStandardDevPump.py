@@ -43,16 +43,15 @@ class Strategy:
         self.sd = self.dA.fastExponentialStandardDeviation(self.candles, self.movingAverageSize, self.power1, self.power2)
         self.sdWeightedAvg = self.dA.simpleWeightedAverage(self.sd, self.weightedAvgSize)
         bb = self.dA.bollinger(self.ma, self.sd, -self.buyingBollinger)
-        
+
         buyTimes = []
         for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2):
             if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] 
             and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] 
-            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1
+            and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 0.5) == -1
             and self.candles[i]["price"] < bb[i-self.movingAverageSize]["price"]
             ):
                 buyTimes.append(self.candles[i]["date"])
-
         #buyTimes = [self.candles[i]["date"] for i in range(self.weightedAvgSize+self.movingAverageSize, len(self.candles)-2) if (self.sd[i-self.movingAverageSize]["price"] > self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize+1]["price"] and self.sd[i-self.movingAverageSize-1]["price"] < self.sdWeightedAvg[i-self.weightedAvgSize-self.movingAverageSize]["price"] and self.dA.trend(self.candles[i-self.movingAverageSize+1:i+1], 1/2) == -1 and self.candles[i]["price"] < bb[i-self.movingAverageSize]["price"])]
 
         return buyTimes
@@ -123,32 +122,27 @@ class Strategy:
             hasPassedUnder0 = False
             for j in range(tradeList[0]["index"]-self.candles[0]["index"], len(self.candles)):
                 # print(self.candles[j], self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize])
-                if j == len(self.candles)-1:
-                    sellIndex = j
-                    break
-                if (self.candles[j]["date"] > tradeList[0]["date"] and
-                    self.candles[j]["price"] > bb[j]["price"]):
-                    hasPassedUnder0 = True
-                if (j-self.weightedAvgSize > 0 and
-                    self.candles[j]["date"] > tradeList[0]["date"] and
-                    self.sd[j]["price"] < self.sdWeightedAvg[j-self.weightedAvgSize]["price"]
-                    and self.sd[j-1]["price"] > self.sdWeightedAvg[j-self.weightedAvgSize-1]["price"]):
+                if self.candles[j]["date"] > tradeList[0]["date"]:
+                    if j == len(self.candles)-1:
+                        break
+                    if self.candles[j]["price"] > bb[j]["price"]:
+                        hasPassedUnder0 = True
+                    if (j-self.weightedAvgSize > 0 and
+                        self.sd[j]["price"] < self.sdWeightedAvg[j-self.weightedAvgSize]["price"]
+                        and self.sd[j-1]["price"] > self.sdWeightedAvg[j-self.weightedAvgSize-1]["price"]):
 
-                    # print(self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize], "- normal")
-                    sellIndex = j
-                    break
-                
+                        # print(self.sd[j], self.sdWeightedAvg[j-self.weightedAvgSize], "- normal")
+                        break
+                    
 
-                if (hasPassedUnder0 and
-                    self.candles[j]["date"] > tradeList[0]["date"] and
-                    self.candles[j]["price"] > bb2[j]["price"]):
+                    if (hasPassedUnder0 and
+                        self.candles[j]["price"] > bb2[j]["price"]):
 
-                    sellIndex = j
-                    break
+                        break
             
 
-            sellRes.append([tradeList[0]['date'], self.candles[sellIndex]['date'], tradeList[0]['price'], self.candles[sellIndex]['price']])
-            increase = self.candles[sellIndex]["price"] / tradeList[0]["price"] - 1
+            sellRes.append([tradeList[0]['date'], self.candles[j]['date'], tradeList[0]['price'], self.candles[j]['price']])
+            increase = self.candles[j]["price"] / tradeList[0]["price"] - 1
 
             profit += profit * percentage_traded * (increase - 0.0008)
 

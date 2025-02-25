@@ -5,11 +5,7 @@ import time
 
 if __name__ == "__main__":
     coinCodes = [
-        "BNB",
-        "SOL",
-        "DOGE",
-        "ATOM",
-        "SHIB"
+        "SUI"
     ]
 
     allData = []

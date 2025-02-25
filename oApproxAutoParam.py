@@ -81,18 +81,15 @@ class Strategy:
 
         self.bb = [x + y * -self.buyingBollinger for x, y in zip(self.ma, self.sd)]
 
-        for i in range(self.MA_SIZE):
+        for i in range(self.wAvgSize):
             total += self.sd[i] ** 3
             denom += self.sd[i] ** 2
         self.avg.append(total / denom)
-        for i in range(1, len(self.sd) - self.MA_SIZE):
-            total += self.sd[i + self.MA_SIZE] ** 3 - self.sd[i - 1] ** 3
-            denom += self.sd[i + self.MA_SIZE] ** 2 - self.sd[i - 1] ** 2
+        for i in range(1, len(self.sd) - self.wAvgSize):
+            total += self.sd[i + self.wAvgSize] ** 3 - self.sd[i - 1] ** 3
+            denom += self.sd[i + self.wAvgSize] ** 2 - self.sd[i - 1] ** 2
             self.avg.append(total / denom)
 
-        print(self.ma[-1], self.bb[-1], self.sd[-1], self.avg[-1])
-        print(self.ma[-2], self.bb[-2], self.sd[-2], self.avg[-2])
-        exit()
         # buyIndexes
         return [i for i in range(self.wAvgSize + self.MA_SIZE, len(self.candles) - 2) if (
             self.sd[i - self.MA_SIZE] > self.avg[i - self.wAvgSize - self.MA_SIZE + 1] and
@@ -128,7 +125,10 @@ NB_RECURSIONS = 2
 REDUCTION_PAR_ETAPE = 0.5
 
 coinCodes = [
-    "HNT"
+    "HNT",
+    "PEPE",
+    "SUI",
+    "FET"
 ]
 
 data = [readFileToList(coinCode, "bitget") for coinCode in coinCodes]

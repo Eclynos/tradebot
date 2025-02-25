@@ -19,7 +19,10 @@ if (NB_THREADS > cpu_count()):
     raise ValueError(f"Can't process on {NB_THREADS} threads, cpu has only {cpu_count()} threads")
 
 coinCodes = [
-    "HNT"
+    "HNT",
+    "PEPE",
+    "SUI",
+    "FET"
 ]
 
 # coinCodes = [

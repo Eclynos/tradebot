@@ -3,6 +3,9 @@ from multiprocessing import Pool, cpu_count
 from tools import *
 from math import sqrt
 
+sqrt_error1 = 0
+sqrt_error2 = 0
+
 class Strategy:
     def __init__(self, candles, ma_size=100, wAvgSize=2000, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1=0, sellingBollinger2=1):
         self.MA_SIZE = ma_size
@@ -40,6 +43,7 @@ class Strategy:
             return 0
 
     def batchBuyingEvaluation(self):
+        global sqrt_error1, sqrt_error2
         normalisationFactor = self.MA_SIZE if self.power1 == 1 else round((1 - self.power1 ** self.MA_SIZE) / (1 - self.power1), 6)
         sdc = [0] * 5  # sd coefficients
         avgPrice = 0
@@ -57,13 +61,21 @@ class Strategy:
             avgPrice -= self.power1 ** (self.MA_SIZE-1) * self.candles[i-self.MA_SIZE]
             avgPrice = avgPrice * self.power1 + self.candles[i]
 
-        self.sd[0] = sqrt((sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2]) / sdc[3])
+        try:
+            self.sd[0] = sqrt((sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2]) / sdc[3])
+        except:
+            sqrt_error1 += 1
+            return []
         self.bbb[0] = self.ma[0] + self.sd[0] * -self.buyingBollinger
         for i in range(1, len(self.candles) - self.MA_SIZE):
             sdc[0] = self.power1 * sdc[0] - self.power1 ** self.MA_SIZE * self.candles[i-1] ** 2 + self.candles[i + self.MA_SIZE - 1] ** 2
             sdc[1] = self.power1 * sdc[1] - self.power1 ** self.MA_SIZE * self.candles[i-1] + self.candles[i + self.MA_SIZE - 1]
             sdc[2] = self.power2 * sdc[2] - self.power2 ** self.MA_SIZE * self.candles[i-1] + self.candles[i + self.MA_SIZE - 1]
-            self.sd[i] = sqrt((sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2]) / sdc[3])
+            try:
+                self.sd[i] = sqrt((sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2]) / sdc[3])
+            except:
+                sqrt_error2 += 1
+                return []
             self.bbb[i] = self.ma[i] + self.sd[i] * -self.buyingBollinger
         
         total, denom = map(sum, zip(*[(self.sd[i] ** 3, self.sd[i] ** 2) for i in range(self.wAvgSize)]))
@@ -101,12 +113,18 @@ SAMPLE_SIZE = 2000
 LAUNCH_SAMPLE_SIZE = 2104
 
 NB_THREADS = 8
-NB_POINTS_TESTES = 2
-NB_RECURSIONS = 2
-REDUCTION_PAR_ETAPE = 0.5
+NB_POINTS_TESTES = 4
+NB_RECURSIONS = 20
+REDUCTION_PAR_ETAPE = 0.25
 
 coinCodes = [
-    "HNT"
+    "DOGE",
+    "TRX",
+    "LTC",
+    "DOT",
+    "BNB",
+    "ADA",
+    "AVAX"
 ]
 
 data = [readFileToList(coinCode, "bitget") for coinCode in coinCodes]
@@ -157,7 +175,7 @@ def process_function(cc):
                 bounds[param][1] = min(1, meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds[param][1]-bounds[param][0]))
             else:
                 bounds[param][1] = meilleurParam[param] + REDUCTION_PAR_ETAPE * (bounds[param][1]-bounds[param][0])
-        print(recursion)
+        print(f"{coinCodes[cc]} :{recursion}")
 
     print(f"The best params for {coinCodes[cc]} are:\n{str(meilleurParam)}\nyield: {meilleurYield}\nCalculation time: {time.time() - st}")
 
@@ -167,3 +185,4 @@ if __name__ == "__main__":
 
     with Pool(processes=NB_THREADS) as pool:
         pool.map(process_function, range(len(coinCodes)))
+    print(sqrt_error1, sqrt_error2)

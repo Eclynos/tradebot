@@ -6,8 +6,8 @@ from os import remove, path
 import asyncio, time
 
 
-with open('settings.json', 'r') as f:
-    settings = json.load(f)
+with open('settings.json', 'r') as f: settings = json.load(f)
+with open('params.json', 'r') as f: params = json.load(f)
 
 for name in settings["file_names"].values():
     if path.exists(name):
@@ -50,7 +50,7 @@ async def main():
     symbols = read_symbols() # nombre max de symboles : 21
     keys = ["date", "open", "high", "low", "price", "volume"]
     m = Manager(symbols, settings)
-    s = {symbol: Strategy() for symbol in symbols}
+    s = {symbol: Strategy(power1=params[symbol]["power1"], power2=params[symbol]["power2"], buyingBollinger=params[symbol]["buyingBollinger"], sellingBollinger1=params[symbol]["sellingBollinger1"], sellingBollinger2=params[symbol]["sellingBollinger2"]) for symbol in symbols}
 
     if not ping_test():
         print("Not connected to internet")
@@ -114,7 +114,7 @@ async def main():
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
                 s[symbol].updateLists()
-                if is_open_since[symbol] != 0:
+                if is_open_since[symbol]:
                     if s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
                         trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)}")
                         names = await m.close_swap(symbol)
@@ -195,7 +195,7 @@ async def main():
                 s[symbol].candles = s[symbol].candles[1:]
                 s[symbol].candles.append(dict(zip(keys, new_candles[i])))
                 s[symbol].updateLists()
-                if is_open_since[symbol] != 0 and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
+                if is_open_since[symbol] and s[symbol].sellingEvaluation(is_open_since[symbol], bought_type[symbol]):
                     trade_logger.info(f"Close {symbol} at {await m.mi.getPrice(symbol)}")
                     names = await m.close_swap(symbol)
                     if names == []:
@@ -242,3 +242,4 @@ if __name__ == "__main__":
     asyncio.run(main())
 
 # donner une instance de params par crypto
+# tester de trader avec x2 de l'amount en x2

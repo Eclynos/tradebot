@@ -3,9 +3,6 @@ from multiprocessing import Pool, cpu_count
 from tools import *
 from math import sqrt
 
-sqrt_error1 = 0
-sqrt_error2 = 0
-
 class Strategy:
     def __init__(self, candles, ma_size=100, wAvgSize=2000, power1=0.94, power2=0.94, buyingBollinger=1.5, sellingBollinger1=0, sellingBollinger2=1):
         self.MA_SIZE = ma_size
@@ -64,7 +61,6 @@ class Strategy:
         try:
             self.sd[0] = sqrt((sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2]) / sdc[3])
         except:
-            sqrt_error1 += 1
             return []
         self.bbb[0] = self.ma[0] + self.sd[0] * -self.buyingBollinger
         for i in range(1, len(self.candles) - self.MA_SIZE):
@@ -74,7 +70,6 @@ class Strategy:
             try:
                 self.sd[i] = sqrt((sdc[0] - 2/sdc[4] * sdc[1] * sdc[2] + sdc[3]/(sdc[4]*sdc[4]) * sdc[2] * sdc[2]) / sdc[3])
             except:
-                sqrt_error2 += 1
                 return []
             self.bbb[i] = self.ma[i] + self.sd[i] * -self.buyingBollinger
         
@@ -185,4 +180,3 @@ if __name__ == "__main__":
 
     with Pool(processes=NB_THREADS) as pool:
         pool.map(process_function, range(len(coinCodes)))
-    print(sqrt_error1, sqrt_error2)

@@ -243,3 +243,4 @@ if __name__ == "__main__":
 
 # donner une instance de params par crypto
 # tester de trader avec x2 de l'amount en x2
+# enlever les imports à pytorch dans tools ou install pytorch sur rpi

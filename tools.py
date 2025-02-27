@@ -1,4 +1,4 @@
-import requests, csv, time, itertools, sys, torch
+import requests, csv, time, itertools, sys
 from math import ceil
 from datetime import datetime
 
@@ -23,13 +23,6 @@ def readFileToList(coinCode, exchange) -> list:
     with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
         allData = list(csv.DictReader(file_csv))
     return [float(candle["close"]) for candle in allData]
-
-
-def readFileToTensor(coinCode, exchange, float_type):
-    """Lit les fichiers csv et retourne un tenseur PyTorch de bougies (uniquement le prix de fermeture)"""
-    with open(f"./train_candles/{coinCode}-USDT{"-USDT" if exchange == "bitget" else ""}.csv", 'r') as file_csv:
-        allData = list(csv.DictReader(file_csv))
-    return torch.tensor([float(candle["close"]) for candle in allData], dtype=float_type)
 
 
 def time_frame_to_s(time_frame):

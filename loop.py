@@ -2,29 +2,30 @@ import logging, json
 from manager import Manager
 from strategyStandardDevPump import Strategy
 from tools import *
-from os import remove, path
+from os import remove, path, mkdir
 import asyncio, time
 
 
 with open('settings.json', 'r') as f: settings = json.load(f)
 with open('params.json', 'r') as f: params = json.load(f)
 
-for name in settings["file_names"].values():
+if not path.exists(settings["file_names"]["old logs"]):
+    mkdir(settings["file_names"]["old logs"])
+for name in settings["file_names"]["log_files"].values():
     if path.exists(name):
+        copy_file(name, f"./{settings["file_names"]["old logs"]}/{timestamp_to_gmt_date(time.time()* 1000)}-{name}")
         remove(name)
 
-with open(settings["file_names"]["instruction"], "a+", encoding="utf-8") as f:
-    f.write("")
-
+with open(settings["file_names"]["instruction"], "w", encoding="utf-8") as f: f.write("")
 
 logging.basicConfig(level=logging.INFO)
 trade_logger = logging.getLogger('trade_logger')
 execution_logger = logging.getLogger('execution_logger')
 percentage_logger = logging.getLogger('percentage_logger')
 
-trade_handler = logging.FileHandler(settings["file_names"]["trade"])
-execution_handler = logging.FileHandler(settings["file_names"]["execution"])
-percentage_handler = logging.FileHandler(settings["file_names"]["percentage"])
+trade_handler = logging.FileHandler(settings["file_names"]["log_files"]["trade"])
+execution_handler = logging.FileHandler(settings["file_names"]["log_files"]["execution"])
+percentage_handler = logging.FileHandler(settings["file_names"]["log_files"]["percentage"])
 
 trade_handler.setLevel(logging.INFO)
 execution_handler.setLevel(logging.INFO)
@@ -240,7 +241,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-# donner une instance de params par crypto
-# tester de trader avec x2 de l'amount en x2
-# enlever les imports à pytorch dans tools ou install pytorch sur rpi

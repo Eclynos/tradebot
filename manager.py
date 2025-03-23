@@ -108,11 +108,17 @@ class Manager:
             else:
                 self.infos[key] = {}
                 self.wallets[key] = Wallet(w["key_file"], False, self.mi)
-                self.infos[key]['cost'] = w["cost"] # % of wallet to spend at each trade in USDT
-                self.infos[key]['factor'] = w["factor"] # preset leverage factor
+                await self.wallets[key].init()
+                await self.wallets[key].exchange.set_position_mode(hedged=True)
+                self.wallets[key].leverage_mode(self.margin_mode)
+                self.infos[key]['cost'] = w["cost"]
+                self.infos[key]['factor'] = w["factor"]
                 self.infos[key]['amounts'] = {symbol: 0 for symbol in self.symbols}
                 self.infos[key]['buyed?'] = {symbol: False for symbol in self.symbols}
+                self.infos[key]['total'] = 0
+                self.infos[key]['available'] = 0
         
+        await self.calculate_min_amounts()
         await self.update_cost_datas()
         #await self.leverage()
     

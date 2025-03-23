@@ -12,11 +12,13 @@
 	    }
     },
     "file_names": {
-        "execution": "executions.log",
-        "trade": "trades.log",
-        "percentage": "percentages.log",
-        "instruction": "instruction"
-
+        "log_files" : {
+            "execution": "executions.log",
+            "trade": "trades.log",
+            "percentage": "percentages.log"
+        },
+        "instruction": "instruction",
+        "old logs": "old_logs"
     },
     "margin_mode": "isolated"
 }

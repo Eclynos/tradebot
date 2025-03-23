@@ -1,6 +1,7 @@
 import requests, csv, time, itertools, sys
 from math import ceil
-from datetime import datetime
+from os import path
+from datetime import datetime, timezone
 
 
 def left(symbol):
@@ -179,4 +180,20 @@ def timeStampToIndex(data, timeStamp):
 
 def timestamp_to_gmt_date(ms):
     """Convert milliseconds since Unix epoch to GMT date."""
-    return datetime.utcfromtimestamp(ms / 1000.0).strftime('%Y-%m-%d %H:%M:%S')
+    return datetime.fromtimestamp(ms / 1000.0, tz=timezone.utc).strftime('%Y-%m-%d_%H:%M:%S')
+
+
+def copy_file(origin_file_path, created_file_path):
+    if path.exists(origin_file_path):
+        try:
+            with open(origin_file_path, 'rb') as f_source:
+                contenu = f_source.read()
+
+                with open(created_file_path, 'wb') as f_destination:
+                    f_destination.write(contenu)
+
+                print("fichier copié avec succès")
+        except Exception as e:
+            print(f"Erreur de copie fichier:\n{e}")
+    else:
+        print("Le fichier source n'existe pas.")
